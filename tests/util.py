@@ -62,12 +62,12 @@ class FormatFailure(Exception):
 
 
 def assert_format(
-    source: str,
-    expected: str,
-    mode: cercis.Mode = DEFAULT_MODE,
-    *,
-    fast: bool = False,
-    minimum_version: Optional[Tuple[int, int]] = None,
+        source: str,
+        expected: str,
+        mode: cercis.Mode = DEFAULT_MODE,
+        *,
+        fast: bool = False,
+        minimum_version: Optional[Tuple[int, int]] = None,
 ) -> None:
     """Convenience function to check that Black formats as expected.
 
@@ -112,12 +112,12 @@ def assert_format(
 
 
 def _assert_format_inner(
-    source: str,
-    expected: Optional[str] = None,
-    mode: cercis.Mode = DEFAULT_MODE,
-    *,
-    fast: bool = False,
-    minimum_version: Optional[Tuple[int, int]] = None,
+        source: str,
+        expected: Optional[str] = None,
+        mode: cercis.Mode = DEFAULT_MODE,
+        *,
+        fast: bool = False,
+        minimum_version: Optional[Tuple[int, int]] = None,
 ) -> None:
     actual = cercis.format_str(source, mode=mode)
     if expected is not None:
@@ -154,7 +154,7 @@ def all_data_cases(subdir_name: str, data: bool = True) -> List[str]:
 
 
 def get_case_path(
-    subdir_name: str, name: str, data: bool = True, suffix: str = PYTHON_SUFFIX
+        subdir_name: str, name: str, data: bool = True, suffix: str = PYTHON_SUFFIX
 ) -> Path:
     """Get case path from name"""
     case_path = get_base_dir(data) / subdir_name / name

@@ -23,7 +23,7 @@ def patch_dump_to_file(request: Any) -> Iterator[None]:
 
 
 def check_file(
-    subdir: str, filename: str, mode: cercis.Mode, *, data: bool = True
+        subdir: str, filename: str, mode: cercis.Mode, *, data: bool = True
 ) -> None:
     source, expected = read_data(subdir, filename, data=data)
     assert_format(source, expected, mode, fast=False)

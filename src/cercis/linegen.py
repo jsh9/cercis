@@ -193,7 +193,7 @@ class LineGenerator(Visitor[Line]):
         yield from self.line(-1)
 
     def visit_stmt(
-        self, node: Node, keywords: Set[str], parens: Set[str]
+            self, node: Node, keywords: Set[str], parens: Set[str]
     ) -> Iterator[Line]:
         """Visit a statement.
 
@@ -494,7 +494,7 @@ class LineGenerator(Visitor[Line]):
 
 
 def transform_line(
-    line: Line, mode: Mode, features: Collection[Feature] = ()
+        line: Line, mode: Mode, features: Collection[Feature] = ()
 ) -> Iterator[Line]:
     """Transform a `line`, potentially splitting it into many lines.
 
@@ -536,7 +536,7 @@ def transform_line(
     else:
 
         def _rhs(
-            self: object, line: Line, features: Collection[Feature], mode: Mode
+                self: object, line: Line, features: Collection[Feature], mode: Mode
         ) -> Iterator[Line]:
             """Wraps calls to `right_hand_split`.
 
@@ -617,7 +617,7 @@ class _BracketSplitComponent(Enum):
 
 
 def left_hand_split(
-    line: Line, _features: Collection[Feature], mode: Mode
+        line: Line, _features: Collection[Feature], mode: Mode
 ) -> Iterator[Line]:
     """Split line into many lines, starting with the first matching bracket pair.
 
@@ -664,10 +664,10 @@ def left_hand_split(
 
 
 def right_hand_split(
-    line: Line,
-    mode: Mode,
-    features: Collection[Feature] = (),
-    omit: Collection[LeafID] = (),
+        line: Line,
+        mode: Mode,
+        features: Collection[Feature] = (),
+        omit: Collection[LeafID] = (),
 ) -> Iterator[Line]:
     """Split line into many lines, starting with the last matching bracket pair.
 
@@ -684,8 +684,8 @@ def right_hand_split(
 
 
 def _first_right_hand_split(
-    line: Line,
-    omit: Collection[LeafID] = (),
+        line: Line,
+        omit: Collection[LeafID] = (),
 ) -> RHSResult:
     """Split the line into head, body, tail starting with the last bracket pair.
 
@@ -732,11 +732,11 @@ def _first_right_hand_split(
 
 
 def _maybe_split_omitting_optional_parens(
-    rhs: RHSResult,
-    line: Line,
-    mode: Mode,
-    features: Collection[Feature] = (),
-    omit: Collection[LeafID] = (),
+        rhs: RHSResult,
+        line: Line,
+        mode: Mode,
+        features: Collection[Feature] = (),
+        omit: Collection[LeafID] = (),
 ) -> Iterator[Line]:
     if (
         Feature.FORCE_OPTIONAL_PARENTHESES not in features
@@ -864,11 +864,11 @@ def bracket_split_succeeded_or_raise(head: Line, body: Line, tail: Line) -> None
 
 
 def bracket_split_build_line(
-    leaves: List[Leaf],
-    original: Line,
-    opening_bracket: Leaf,
-    *,
-    component: _BracketSplitComponent,
+        leaves: List[Leaf],
+        original: Line,
+        opening_bracket: Leaf,
+        *,
+        component: _BracketSplitComponent,
 ) -> Line:
     """Return a new line with given `leaves` and respective comments from `original`.
 
@@ -882,7 +882,7 @@ def bracket_split_build_line(
     result = Line(mode=original.mode, depth=original.depth)
     if component is _BracketSplitComponent.body:
         result.inside_brackets = True
-        result.depth += (2 if original.is_def else 1)
+        result.depth += 2 if original.is_def else 1
         if leaves:
             # Since body is a new indent level, remove spurious leading whitespace.
             normalize_prefix(leaves[0], inside_brackets=True)
@@ -945,7 +945,7 @@ def dont_increase_indentation(split_func: Transformer) -> Transformer:
 
     @wraps(split_func)
     def split_wrapper(
-        line: Line, features: Collection[Feature], mode: Mode
+            line: Line, features: Collection[Feature], mode: Mode
     ) -> Iterator[Line]:
         for split_line in split_func(line, features, mode):
             normalize_prefix(split_line.leaves[0], inside_brackets=True)
@@ -975,7 +975,7 @@ def _safe_add_trailing_comma(safe: bool, delimiter_priority: int, line: Line) ->
 
 @dont_increase_indentation
 def delimiter_split(
-    line: Line, features: Collection[Feature], mode: Mode
+        line: Line, features: Collection[Feature], mode: Mode
 ) -> Iterator[Line]:
     """Split according to delimiters of the highest priority.
 
@@ -1059,7 +1059,7 @@ def delimiter_split(
 
 @dont_increase_indentation
 def standalone_comment_split(
-    line: Line, features: Collection[Feature], mode: Mode
+        line: Line, features: Collection[Feature], mode: Mode
 ) -> Iterator[Line]:
     """Split standalone comments from the rest of the line."""
     if not line.contains_standalone_comments(0):
@@ -1111,7 +1111,7 @@ def normalize_prefix(leaf: Leaf, *, inside_brackets: bool) -> None:
 
 
 def normalize_invisible_parens(
-    node: Node, parens_after: Set[str], *, mode: Mode, features: Collection[Feature]
+        node: Node, parens_after: Set[str], *, mode: Mode, features: Collection[Feature]
 ) -> None:
     """Make existing optional parentheses invisible or create new ones.
 
@@ -1248,7 +1248,7 @@ def remove_await_parens(node: Node) -> None:
 
 
 def _maybe_wrap_cms_in_parens(
-    node: Node, mode: Mode, features: Collection[Feature]
+        node: Node, mode: Mode, features: Collection[Feature]
 ) -> None:
     """When enabled and safe, wrap the multiple context managers in invisible parens.
 
@@ -1333,9 +1333,9 @@ def remove_with_parens(node: Node, parent: Node) -> None:
 
 
 def maybe_make_parens_invisible_in_atom(
-    node: LN,
-    parent: LN,
-    remove_brackets_around_comma: bool = False,
+        node: LN,
+        parent: LN,
+        remove_brackets_around_comma: bool = False,
 ) -> bool:
     """If it's safe, make the parens in the atom `node` invisible, recursively.
     Additionally, remove repeated, adjacent invisible parens from the atom `node`
@@ -1502,12 +1502,12 @@ def generate_trailers_to_omit(line: Line, line_length: int) -> Iterator[Set[Leaf
 
 
 def run_transformer(
-    line: Line,
-    transform: Transformer,
-    mode: Mode,
-    features: Collection[Feature],
-    *,
-    line_str: str = "",
+        line: Line,
+        transform: Transformer,
+        mode: Mode,
+        features: Collection[Feature],
+        *,
+        line_str: str = "",
 ) -> List[Line]:
     if not line_str:
         line_str = line_to_string(line)

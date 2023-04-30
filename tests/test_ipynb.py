@@ -197,7 +197,7 @@ def test_cell_magic_with_magic() -> None:
     ],
 )
 def test_cell_magic_with_custom_python_magic(
-    mode: Mode, expected_output: str, expectation: ContextManager[object]
+        mode: Mode, expected_output: str, expectation: ContextManager[object]
 ) -> None:
     with expectation:
         result = format_cell(
@@ -433,7 +433,7 @@ def test_ipynb_diff_with_no_change() -> None:
 
 
 def test_cache_isnt_written_if_no_jupyter_deps_single(
-    monkeypatch: MonkeyPatch, tmp_path: pathlib.Path
+        monkeypatch: MonkeyPatch, tmp_path: pathlib.Path
 ) -> None:
     # Check that the cache isn't written to if Jupyter dependencies aren't installed.
     jupyter_dependencies_are_installed.cache_clear()
@@ -459,7 +459,7 @@ def test_cache_isnt_written_if_no_jupyter_deps_single(
 
 
 def test_cache_isnt_written_if_no_jupyter_deps_dir(
-    monkeypatch: MonkeyPatch, tmp_path: pathlib.Path
+        monkeypatch: MonkeyPatch, tmp_path: pathlib.Path
 ) -> None:
     # Check that the cache isn't written to if Jupyter dependencies aren't installed.
     jupyter_dependencies_are_installed.cache_clear()

@@ -59,7 +59,7 @@ class Line:
     magic_trailing_comma: Optional[Leaf] = None
 
     def append(
-        self, leaf: Leaf, preformatted: bool = False, track_bracket: bool = False
+            self, leaf: Leaf, preformatted: bool = False, track_bracket: bool = False
     ) -> None:
         """Add a new `leaf` to the end of the line.
 
@@ -197,7 +197,7 @@ class Line:
         return self.leaves[-1].type == token.COLON
 
     def is_fmt_pass_converted(
-        self, *, first_leaf_matches: Optional[Callable[[Leaf], bool]] = None
+            self, *, first_leaf_matches: Optional[Callable[[Leaf], bool]] = None
     ) -> bool:
         """Is this line converted from fmt off/skip code?
 
@@ -297,7 +297,7 @@ class Line:
         return any(is_multiline_string(leaf) for leaf in self.leaves)
 
     def has_magic_trailing_comma(
-        self, closing: Leaf, ensure_removable: bool = False
+            self, closing: Leaf, ensure_removable: bool = False
     ) -> bool:
         """Return True if we have a magic trailing comma, that is when:
         - there's a trailing comma here
@@ -426,7 +426,7 @@ class Line:
         )
 
     def enumerate_with_length(
-        self, reversed: bool = False
+            self, reversed: bool = False
     ) -> Iterator[Tuple[Index, Leaf, int]]:
         """Return an enumeration of leaves with their length.
 
@@ -641,7 +641,7 @@ class EmptyLineTracker:
         return before, 0
 
     def _maybe_empty_lines_for_class_or_def(
-        self, current_line: Line, before: int
+            self, current_line: Line, before: int
     ) -> Tuple[int, int]:
         if not current_line.is_decorator:
             self.previous_defs.append(current_line)
@@ -726,7 +726,7 @@ def enumerate_reversed(sequence: Sequence[T]) -> Iterator[Tuple[Index, T]]:
 
 
 def append_leaves(
-    new_line: Line, old_line: Line, leaves: List[Leaf], preformatted: bool = False
+        new_line: Line, old_line: Line, leaves: List[Leaf], preformatted: bool = False
 ) -> None:
     """
     Append leaves (taken from @old_line) to @new_line, making sure to fix the
@@ -750,7 +750,7 @@ def append_leaves(
 
 
 def is_line_short_enough(  # noqa: C901
-    line: Line, *, mode: Mode, line_str: str = ""
+        line: Line, *, mode: Mode, line_str: str = ""
 ) -> bool:
     """For non-multiline strings, return True if `line` is no longer than `line_length`.
     For multiline strings, looks at the context around `line` to determine
@@ -877,8 +877,8 @@ def can_be_split(line: Line) -> bool:
 
 
 def can_omit_invisible_parens(
-    rhs: RHSResult,
-    line_length: int,
+        rhs: RHSResult,
+        line_length: int,
 ) -> bool:
     """Does `rhs.body` have a shape safe to reformat without optional parens around it?
 

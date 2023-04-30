@@ -123,7 +123,7 @@ class BlackRunner(CliRunner):
 
 
 def invokeBlack(
-    args: List[str], exit_code: int = 0, ignore_config: bool = True
+        args: List[str], exit_code: int = 0, ignore_config: bool = True
 ) -> None:
     runner = BlackRunner()
     if ignore_config:
@@ -869,7 +869,9 @@ class BlackTestCase(BlackBaseTestCase):
         node = cercis.lib2to3_parse("def f(*, arg): ...\n")
         self.assertEqual(cercis.get_features_used(node), set())
         node = cercis.lib2to3_parse("def f(*, arg,): ...\n")
-        self.assertEqual(cercis.get_features_used(node), {Feature.TRAILING_COMMA_IN_DEF})
+        self.assertEqual(
+            cercis.get_features_used(node), {Feature.TRAILING_COMMA_IN_DEF}
+        )
         node = cercis.lib2to3_parse("f(*arg,)\n")
         self.assertEqual(
             cercis.get_features_used(node), {Feature.TRAILING_COMMA_IN_CALL}
@@ -967,7 +969,9 @@ class BlackTestCase(BlackBaseTestCase):
         self.assertEqual({"cercis"}, cercis.get_future_imports(node))
         node = cercis.lib2to3_parse('"""docstring"""\nfrom __future__ import cercis\n')
         self.assertEqual({"cercis"}, cercis.get_future_imports(node))
-        node = cercis.lib2to3_parse("some(other, code)\nfrom __future__ import cercis\n")
+        node = cercis.lib2to3_parse(
+            "some(other, code)\nfrom __future__ import cercis\n"
+        )
         self.assertEqual(set(), cercis.get_future_imports(node))
         node = cercis.lib2to3_parse("from some.module import cercis\n")
         self.assertEqual(set(), cercis.get_future_imports(node))
@@ -1033,7 +1037,9 @@ class BlackTestCase(BlackBaseTestCase):
         actual = cercis.format_file_contents(just_whitespace_nl, mode=mode, fast=False)
         self.assertEqual("\n", actual)
         just_whitespace_crlf = "\r\n\t\r\n \r\n\t \r\n \t\r\n\r\n"
-        actual = cercis.format_file_contents(just_whitespace_crlf, mode=mode, fast=False)
+        actual = cercis.format_file_contents(
+            just_whitespace_crlf, mode=mode, fast=False
+        )
         self.assertEqual("\r\n", actual)
 
     def test_endmarker(self) -> None:
@@ -1337,7 +1343,7 @@ class BlackTestCase(BlackBaseTestCase):
         ]
 
         def _new_wrapper(
-            output: io.StringIO, io_TextIOWrapper: Type[io.TextIOWrapper]
+                output: io.StringIO, io_TextIOWrapper: Type[io.TextIOWrapper]
         ) -> Callable[[Any, Any], io.TextIOWrapper]:
             def get_output(*args: Any, **kwargs: Any) -> io.TextIOWrapper:
                 if args == (sys.stdout.buffer,):
@@ -1403,7 +1409,12 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_required_version_does_not_match_on_minor_version(self) -> None:
         self.invokeBlack(
-            ["--required-version", cercis.__version__.split(".")[0] + ".999", "-c", "0"],
+            [
+                "--required-version",
+                cercis.__version__.split(".")[0] + ".999",
+                "-c",
+                "0",
+            ],
             exit_code=1,
             ignore_config=True,
         )
@@ -1741,7 +1752,7 @@ class BlackTestCase(BlackBaseTestCase):
 
     @staticmethod
     def compare_results(
-        result: click.testing.Result, expected_value: str, expected_exit_code: int
+            result: click.testing.Result, expected_value: str, expected_exit_code: int
     ) -> None:
         """Helper method to test the value and exit code of a click Result."""
         assert (
@@ -1899,9 +1910,9 @@ class BlackTestCase(BlackBaseTestCase):
 
 class TestCaching:
     def test_get_cache_dir(
-        self,
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
+            self,
+            tmp_path: Path,
+            monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         # Create multiple cache directories
         workspace1 = tmp_path / "ws1"
@@ -2094,15 +2105,15 @@ class TestCaching:
 
 
 def assert_collected_sources(
-    src: Sequence[Union[str, Path]],
-    expected: Sequence[Union[str, Path]],
-    *,
-    ctx: Optional[FakeContext] = None,
-    exclude: Optional[str] = None,
-    include: Optional[str] = None,
-    extend_exclude: Optional[str] = None,
-    force_exclude: Optional[str] = None,
-    stdin_filename: Optional[str] = None,
+        src: Sequence[Union[str, Path]],
+        expected: Sequence[Union[str, Path]],
+        *,
+        ctx: Optional[FakeContext] = None,
+        exclude: Optional[str] = None,
+        include: Optional[str] = None,
+        extend_exclude: Optional[str] = None,
+        force_exclude: Optional[str] = None,
+        stdin_filename: Optional[str] = None,
 ) -> None:
     gs_src = tuple(str(Path(s)) for s in src)
     gs_expected = [Path(s) for s in expected]
@@ -2427,7 +2438,7 @@ except UnicodeDecodeError:
 
 
 def tracefunc(
-    frame: types.FrameType, event: str, arg: Any
+        frame: types.FrameType, event: str, arg: Any
 ) -> Callable[[types.FrameType, str, Any], Any]:
     """Show function calls `from cercis/__init__.py` as they happen.
 

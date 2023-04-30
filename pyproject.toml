@@ -86,7 +86,7 @@ jupyter = [
 ]
 
 [project.scripts]
-cercis = "black:patched_main"
+cercis = "cercis:patched_main"
 blackd = "blackd:patched_main [d]"
 
 [project.urls]

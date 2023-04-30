@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 
 @lru_cache()
 def find_project_root(
-    srcs: Sequence[str], stdin_filename: Optional[str] = None
+        srcs: Sequence[str], stdin_filename: Optional[str] = None
 ) -> Tuple[Path, str]:
     """Return a directory containing .git, .hg, or pyproject.toml.
 
@@ -129,7 +129,7 @@ def parse_pyproject_toml(path_config: str) -> Dict[str, Any]:
 
 
 def infer_target_version(
-    pyproject_toml: Dict[str, Any]
+        pyproject_toml: Dict[str, Any]
 ) -> Optional[List[TargetVersion]]:
     """Infer Black's target version from the project metadata in pyproject.toml.
 
@@ -246,9 +246,9 @@ def get_gitignore(root: Path) -> PathSpec:
 
 
 def normalize_path_maybe_ignore(
-    path: Path,
-    root: Path,
-    report: Optional[Report] = None,
+        path: Path,
+        root: Path,
+        report: Optional[Report] = None,
 ) -> Optional[str]:
     """Normalize `path`. May return `None` if `path` was ignored.
 
@@ -275,7 +275,7 @@ def normalize_path_maybe_ignore(
 
 
 def path_is_ignored(
-    path: Path, gitignore_dict: Dict[Path, PathSpec], report: Report
+        path: Path, gitignore_dict: Dict[Path, PathSpec], report: Report
 ) -> bool:
     for gitignore_path, pattern in gitignore_dict.items():
         relative_path = normalize_path_maybe_ignore(path, gitignore_path, report)
@@ -288,25 +288,25 @@ def path_is_ignored(
 
 
 def path_is_excluded(
-    normalized_path: str,
-    pattern: Optional[Pattern[str]],
+        normalized_path: str,
+        pattern: Optional[Pattern[str]],
 ) -> bool:
     match = pattern.search(normalized_path) if pattern else None
     return bool(match and match.group(0))
 
 
 def gen_python_files(
-    paths: Iterable[Path],
-    root: Path,
-    include: Pattern[str],
-    exclude: Pattern[str],
-    extend_exclude: Optional[Pattern[str]],
-    force_exclude: Optional[Pattern[str]],
-    report: Report,
-    gitignore_dict: Optional[Dict[Path, PathSpec]],
-    *,
-    verbose: bool,
-    quiet: bool,
+        paths: Iterable[Path],
+        root: Path,
+        include: Pattern[str],
+        exclude: Pattern[str],
+        extend_exclude: Optional[Pattern[str]],
+        force_exclude: Optional[Pattern[str]],
+        report: Report,
+        gitignore_dict: Optional[Dict[Path, PathSpec]],
+        *,
+        verbose: bool,
+        quiet: bool,
 ) -> Iterator[Path]:
     """Generate all files under `path` whose paths are not excluded by the
     `exclude_regex`, `extend_exclude`, or `force_exclude` regexes,
@@ -380,7 +380,7 @@ def gen_python_files(
 
 
 def wrap_stream_for_windows(
-    f: io.TextIOWrapper,
+        f: io.TextIOWrapper,
 ) -> Union[io.TextIOWrapper, "colorama.AnsiToWin32"]:
     """
     Wrap stream with colorama's wrap_stream so colors are shown on Windows.

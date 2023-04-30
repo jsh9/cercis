@@ -68,12 +68,12 @@ def shutdown(loop: asyncio.AbstractEventLoop) -> None:
 # not ideal, but this shouldn't cause any issues ... hopefully. ~ichard26
 @mypyc_attr(patchable=True)
 def reformat_many(
-    sources: Set[Path],
-    fast: bool,
-    write_back: WriteBack,
-    mode: Mode,
-    report: Report,
-    workers: Optional[int],
+        sources: Set[Path],
+        fast: bool,
+        write_back: WriteBack,
+        mode: Mode,
+        report: Report,
+        workers: Optional[int],
 ) -> None:
     """Reformat multiple files using a ProcessPoolExecutor."""
     maybe_install_uvloop()
@@ -117,13 +117,13 @@ def reformat_many(
 
 
 async def schedule_formatting(
-    sources: Set[Path],
-    fast: bool,
-    write_back: WriteBack,
-    mode: Mode,
-    report: "Report",
-    loop: asyncio.AbstractEventLoop,
-    executor: "Executor",
+        sources: Set[Path],
+        fast: bool,
+        write_back: WriteBack,
+        mode: Mode,
+        report: "Report",
+        loop: asyncio.AbstractEventLoop,
+        executor: "Executor",
 ) -> None:
     """Run formatting of `sources` in parallel using the provided `executor`.
 

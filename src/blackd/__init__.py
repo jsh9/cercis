@@ -142,7 +142,8 @@ async def handle(request: web.Request, executor: Executor) -> web.Response:
 
         loop = asyncio.get_event_loop()
         formatted_str = await loop.run_in_executor(
-            executor, partial(cercis.format_file_contents, req_str, fast=fast, mode=mode)
+            executor,
+            partial(cercis.format_file_contents, req_str, fast=fast, mode=mode),
         )
 
         # Preserve CRLF line endings

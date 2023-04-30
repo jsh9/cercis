@@ -575,10 +575,10 @@ def is_tuple_containing_walrus(node: LN) -> bool:
 
 
 def is_one_sequence_between(
-    opening: Leaf,
-    closing: Leaf,
-    leaves: List[Leaf],
-    brackets: Tuple[int, int] = (token.LPAR, token.RPAR),
+        opening: Leaf,
+        closing: Leaf,
+        leaves: List[Leaf],
+        brackets: Tuple[int, int] = (token.LPAR, token.RPAR),
 ) -> bool:
     """Return True if content between `opening` and `closing` is a one-sequence."""
     if (opening.type, closing.type) != brackets:

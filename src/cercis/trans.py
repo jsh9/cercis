@@ -86,7 +86,7 @@ def TErr(err_msg: str) -> Err[CannotTransform]:
 
 
 def hug_power_op(
-    line: Line, features: Collection[Feature], mode: Mode
+        line: Line, features: Collection[Feature], mode: Mode
 ) -> Iterator[Line]:
     """A transformer which normalizes spacing around power operators."""
 
@@ -215,7 +215,7 @@ class StringTransformer(ABC):
 
     @abstractmethod
     def do_transform(
-        self, line: Line, string_indices: List[int]
+            self, line: Line, string_indices: List[int]
     ) -> Iterator[TResult[Line]]:
         """
         Yields:
@@ -235,7 +235,7 @@ class StringTransformer(ABC):
         """
 
     def __call__(
-        self, line: Line, _features: Collection[Feature], _mode: Mode
+            self, line: Line, _features: Collection[Feature], _mode: Mode
     ) -> Iterator[Line]:
         """
         StringTransformer instances have a call signature that mirrors that of
@@ -320,7 +320,7 @@ class CustomSplitMapMixin:
         return (id(string), string)
 
     def add_custom_splits(
-        self, string: str, custom_splits: Iterable[CustomSplit]
+            self, string: str, custom_splits: Iterable[CustomSplit]
     ) -> None:
         """Custom Split Map Setter Method
 
@@ -417,7 +417,7 @@ class StringMerger(StringTransformer, CustomSplitMapMixin):
             return TErr("This line has no strings that need merging.")
 
     def do_transform(
-        self, line: Line, string_indices: List[int]
+            self, line: Line, string_indices: List[int]
     ) -> Iterator[TResult[Line]]:
         new_line = line
 
@@ -448,7 +448,7 @@ class StringMerger(StringTransformer, CustomSplitMapMixin):
 
     @staticmethod
     def _remove_backslash_line_continuation_chars(
-        line: Line, string_indices: List[int]
+            line: Line, string_indices: List[int]
     ) -> TResult[Line]:
         """
         Merge strings that were split across multiple lines using
@@ -489,7 +489,7 @@ class StringMerger(StringTransformer, CustomSplitMapMixin):
         return Ok(new_line)
 
     def _merge_string_group(
-        self, line: Line, string_indices: List[int]
+            self, line: Line, string_indices: List[int]
     ) -> TResult[Line]:
         """
         Merges string groups (i.e. set of adjacent strings).
@@ -544,7 +544,7 @@ class StringMerger(StringTransformer, CustomSplitMapMixin):
         return Ok(new_line)
 
     def _merge_one_string_group(
-        self, LL: List[Leaf], string_idx: int, is_valid_index: Callable[[int], bool]
+            self, LL: List[Leaf], string_idx: int, is_valid_index: Callable[[int], bool]
     ) -> Tuple[int, Leaf]:
         """
         Merges one string group where the first string in the group is
@@ -898,7 +898,7 @@ class StringParenStripper(StringTransformer):
         return TErr("This line has no strings wrapped in parens.")
 
     def do_transform(
-        self, line: Line, string_indices: List[int]
+            self, line: Line, string_indices: List[int]
     ) -> Iterator[TResult[Line]]:
         LL = line.leaves
 
@@ -925,7 +925,7 @@ class StringParenStripper(StringTransformer):
             )
 
     def _transform_to_new_line(
-        self, line: Line, string_and_rpar_indices: List[int]
+            self, line: Line, string_and_rpar_indices: List[int]
     ) -> Line:
         LL = line.leaves
 
@@ -1387,7 +1387,7 @@ class StringSplitter(BaseStringSplitter, CustomSplitMapMixin):
         return Ok([string_idx])
 
     def do_transform(
-        self, line: Line, string_indices: List[int]
+            self, line: Line, string_indices: List[int]
     ) -> Iterator[TResult[Line]]:
         LL = line.leaves
         assert len(string_indices) == 1, (
@@ -2069,7 +2069,7 @@ class StringParenWrapper(BaseStringSplitter, CustomSplitMapMixin):
         return None
 
     def do_transform(
-        self, line: Line, string_indices: List[int]
+            self, line: Line, string_indices: List[int]
     ) -> Iterator[TResult[Line]]:
         LL = line.leaves
         assert len(string_indices) == 1, (

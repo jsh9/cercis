@@ -257,7 +257,7 @@ def generate_ignored_nodes(leaf: Leaf, comment: ProtoComment) -> Iterator[LN]:
 
 
 def _generate_ignored_nodes_from_fmt_skip(
-    leaf: Leaf, comment: ProtoComment
+        leaf: Leaf, comment: ProtoComment
 ) -> Iterator[LN]:
     """Generate all leaves that should be ignored by the `# fmt: skip` from `leaf`."""
     prev_sibling = leaf.prev_sibling
