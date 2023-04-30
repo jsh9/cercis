@@ -214,4 +214,4 @@ def test_type_comment_syntax_error() -> None:
 )
 def test_function_definition_extra_indent(filename: str, extra_indent: bool) -> None:
     mode = replace(DEFAULT_MODE, function_definition_extra_indent=extra_indent)
-    check_file("simple_cases", filename, mode)
+    check_file("configurable_cases", filename, mode)
