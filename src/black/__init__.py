@@ -103,7 +103,7 @@ class WriteBack(Enum):
 
     @classmethod
     def from_configuration(
-        cls, *, check: bool, diff: bool, color: bool = False
+            cls, *, check: bool, diff: bool, color: bool = False
     ) -> "WriteBack":
         if check and not diff:
             return cls.CHECK
@@ -119,7 +119,7 @@ FileMode = Mode
 
 
 def read_pyproject_toml(
-    ctx: click.Context, param: click.Parameter, value: Optional[str]
+        ctx: click.Context, param: click.Parameter, value: Optional[str]
 ) -> Optional[str]:
     """Inject Black configuration from "pyproject.toml" into defaults in `ctx`.
 
@@ -165,7 +165,7 @@ def read_pyproject_toml(
 
 
 def target_version_option_callback(
-    c: click.Context, p: Union[click.Option, click.Parameter], v: Tuple[str, ...]
+        c: click.Context, p: Union[click.Option, click.Parameter], v: Tuple[str, ...]
 ) -> List[TargetVersion]:
     """Compute the target versions from a --target-version flag.
 
@@ -187,9 +187,9 @@ def re_compile_maybe_verbose(regex: str) -> Pattern[str]:
 
 
 def validate_regex(
-    ctx: click.Context,
-    param: click.Parameter,
-    value: Optional[str],
+        ctx: click.Context,
+        param: click.Parameter,
+        value: Optional[str],
 ) -> Optional[Pattern[str]]:
     try:
         return re_compile_maybe_verbose(value) if value is not None else None
@@ -425,33 +425,33 @@ def validate_regex(
 )
 @click.pass_context
 def main(  # noqa: C901
-    ctx: click.Context,
-    code: Optional[str],
-    line_length: int,
-    target_version: List[TargetVersion],
-    check: bool,
-    diff: bool,
-    color: bool,
-    fast: bool,
-    pyi: bool,
-    ipynb: bool,
-    python_cell_magics: Sequence[str],
-    skip_source_first_line: bool,
-    skip_string_normalization: bool,
-    skip_magic_trailing_comma: bool,
-    experimental_string_processing: bool,
-    preview: bool,
-    quiet: bool,
-    verbose: bool,
-    required_version: Optional[str],
-    include: Pattern[str],
-    exclude: Optional[Pattern[str]],
-    extend_exclude: Optional[Pattern[str]],
-    force_exclude: Optional[Pattern[str]],
-    stdin_filename: Optional[str],
-    workers: Optional[int],
-    src: Tuple[str, ...],
-    config: Optional[str],
+        ctx: click.Context,
+        code: Optional[str],
+        line_length: int,
+        target_version: List[TargetVersion],
+        check: bool,
+        diff: bool,
+        color: bool,
+        fast: bool,
+        pyi: bool,
+        ipynb: bool,
+        python_cell_magics: Sequence[str],
+        skip_source_first_line: bool,
+        skip_string_normalization: bool,
+        skip_magic_trailing_comma: bool,
+        experimental_string_processing: bool,
+        preview: bool,
+        quiet: bool,
+        verbose: bool,
+        required_version: Optional[str],
+        include: Pattern[str],
+        exclude: Optional[Pattern[str]],
+        extend_exclude: Optional[Pattern[str]],
+        force_exclude: Optional[Pattern[str]],
+        stdin_filename: Optional[str],
+        workers: Optional[int],
+        src: Tuple[str, ...],
+        config: Optional[str],
 ) -> None:
     """The uncompromising code formatter."""
     ctx.ensure_object(dict)
@@ -618,17 +618,17 @@ def main(  # noqa: C901
 
 
 def get_sources(
-    *,
-    ctx: click.Context,
-    src: Tuple[str, ...],
-    quiet: bool,
-    verbose: bool,
-    include: Pattern[str],
-    exclude: Optional[Pattern[str]],
-    extend_exclude: Optional[Pattern[str]],
-    force_exclude: Optional[Pattern[str]],
-    report: "Report",
-    stdin_filename: Optional[str],
+        *,
+        ctx: click.Context,
+        src: Tuple[str, ...],
+        quiet: bool,
+        verbose: bool,
+        include: Pattern[str],
+        exclude: Optional[Pattern[str]],
+        extend_exclude: Optional[Pattern[str]],
+        force_exclude: Optional[Pattern[str]],
+        report: "Report",
+        stdin_filename: Optional[str],
 ) -> Set[Path]:
     """Compute the set of files to be formatted."""
     sources: Set[Path] = set()
@@ -700,7 +700,7 @@ def get_sources(
 
 
 def path_empty(
-    src: Sized, msg: str, quiet: bool, verbose: bool, ctx: click.Context
+        src: Sized, msg: str, quiet: bool, verbose: bool, ctx: click.Context
 ) -> None:
     """
     Exit if there is no `src` provided for formatting
@@ -712,7 +712,7 @@ def path_empty(
 
 
 def reformat_code(
-    content: str, fast: bool, write_back: WriteBack, mode: Mode, report: Report
+        content: str, fast: bool, write_back: WriteBack, mode: Mode, report: Report
 ) -> None:
     """
     Reformat and print out `content` without spawning child processes.
@@ -739,7 +739,7 @@ def reformat_code(
 # not ideal, but this shouldn't cause any issues ... hopefully. ~ichard26
 @mypyc_attr(patchable=True)
 def reformat_one(
-    src: Path, fast: bool, write_back: WriteBack, mode: Mode, report: "Report"
+        src: Path, fast: bool, write_back: WriteBack, mode: Mode, report: "Report"
 ) -> None:
     """Reformat a single file under `src` without spawning child processes.
 
@@ -790,11 +790,11 @@ def reformat_one(
 
 
 def format_file_in_place(
-    src: Path,
-    fast: bool,
-    mode: Mode,
-    write_back: WriteBack = WriteBack.NO,
-    lock: Any = None,  # multiprocessing.Manager().Lock() is some crazy proxy
+        src: Path,
+        fast: bool,
+        mode: Mode,
+        write_back: WriteBack = WriteBack.NO,
+        lock: Any = None,  # multiprocessing.Manager().Lock() is some crazy proxy
 ) -> bool:
     """Format file under `src` path. Return True if changed.
 
@@ -854,11 +854,11 @@ def format_file_in_place(
 
 
 def format_stdin_to_stdout(
-    fast: bool,
-    *,
-    content: Optional[str] = None,
-    write_back: WriteBack = WriteBack.NO,
-    mode: Mode,
+        fast: bool,
+        *,
+        content: Optional[str] = None,
+        write_back: WriteBack = WriteBack.NO,
+        mode: Mode,
 ) -> bool:
     """Format file on stdin. Return True if changed.
 
@@ -905,7 +905,7 @@ def format_stdin_to_stdout(
 
 
 def check_stability_and_equivalence(
-    src_contents: str, dst_contents: str, *, mode: Mode
+        src_contents: str, dst_contents: str, *, mode: Mode
 ) -> None:
     """Perform stability and equivalence checks.
 
@@ -1146,7 +1146,7 @@ def decode_bytes(src: bytes) -> Tuple[FileContent, Encoding, NewLine]:
 
 
 def get_features_used(  # noqa: C901
-    node: Node, *, future_imports: Optional[Set[str]] = None
+        node: Node, *, future_imports: Optional[Set[str]] = None
 ) -> Set[Feature]:
     """Return a set of (relatively) new Python features used in this file.
 
@@ -1279,7 +1279,7 @@ def get_features_used(  # noqa: C901
 
 
 def detect_target_versions(
-    node: Node, *, future_imports: Optional[Set[str]] = None
+        node: Node, *, future_imports: Optional[Set[str]] = None
 ) -> Set[TargetVersion]:
     """Detect the version to target based on the nodes used."""
     features = get_features_used(node, future_imports=future_imports)

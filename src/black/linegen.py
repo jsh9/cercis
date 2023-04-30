@@ -882,7 +882,7 @@ def bracket_split_build_line(
     result = Line(mode=original.mode, depth=original.depth)
     if component is _BracketSplitComponent.body:
         result.inside_brackets = True
-        result.depth += 1
+        result.depth += (2 if original.is_def else 1)
         if leaves:
             # Since body is a new indent level, remove spurious leading whitespace.
             normalize_prefix(leaves[0], inside_brackets=True)
