@@ -203,3 +203,15 @@ def test_type_comment_syntax_error() -> None:
     source, expected = read_data("type_comments", "type_comment_syntax_error")
     assert_format(source, expected)
     cercis.assert_equivalent(source, expected)
+
+
+@pytest.mark.parametrize(
+    "filename, extra_indent",
+    [
+        ("func_def_extra_indent.py", True),
+        ("func_def_no_extra_indent.py", False),
+    ],
+)
+def test_function_definition_extra_indent(filename: str, extra_indent: bool) -> None:
+    mode = replace(DEFAULT_MODE, function_definition_extra_indent=extra_indent)
+    check_file("simple_cases", filename, mode)

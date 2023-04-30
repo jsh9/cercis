@@ -41,6 +41,7 @@ from cercis.const import (
     DEFAULT_INCLUDES,
     DEFAULT_LINE_LENGTH,
     STDIN_PLACEHOLDER,
+    DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT,
 )
 from cercis.files import (
     find_project_root,
@@ -211,6 +212,17 @@ def validate_regex(
     default=DEFAULT_LINE_LENGTH,
     help="How many characters per line to allow.",
     show_default=True,
+)
+@click.option(
+    "-fdei",
+    "--function-definition-extra-indent",
+    type=bool,
+    show_default=True,
+    default=DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT,
+    help=(
+        "If True, use 8 spaces as indent in function definition;"
+        " otherwise, use 8 (Black's default)."
+    ),
 )
 @click.option(
     "-t",
@@ -428,6 +440,7 @@ def main(  # noqa: C901
         ctx: click.Context,
         code: Optional[str],
         line_length: int,
+        function_definition_extra_indent: bool,
         target_version: List[TargetVersion],
         check: bool,
         diff: bool,
@@ -550,6 +563,7 @@ def main(  # noqa: C901
         experimental_string_processing=experimental_string_processing,
         preview=preview,
         python_cell_magics=set(python_cell_magics),
+        function_definition_extra_indent=function_definition_extra_indent,
     )
 
     if code is not None:

@@ -649,13 +649,25 @@ def left_hand_split(
         raise CannotSplit("No brackets found")
 
     head = bracket_split_build_line(
-        head_leaves, line, matching_bracket, component=_BracketSplitComponent.head
+        head_leaves,
+        line,
+        matching_bracket,
+        component=_BracketSplitComponent.head,
+        mode=mode,
     )
     body = bracket_split_build_line(
-        body_leaves, line, matching_bracket, component=_BracketSplitComponent.body
+        body_leaves,
+        line,
+        matching_bracket,
+        component=_BracketSplitComponent.body,
+        mode=mode,
     )
     tail = bracket_split_build_line(
-        tail_leaves, line, matching_bracket, component=_BracketSplitComponent.tail
+        tail_leaves,
+        line,
+        matching_bracket,
+        component=_BracketSplitComponent.tail,
+        mode=mode,
     )
     bracket_split_succeeded_or_raise(head, body, tail)
     for result in (head, body, tail):
@@ -677,7 +689,7 @@ def right_hand_split(
 
     Note: running this function modifies `bracket_depth` on the leaves of `line`.
     """
-    rhs_result = _first_right_hand_split(line, omit=omit)
+    rhs_result = _first_right_hand_split(line, omit=omit, mode=mode)
     yield from _maybe_split_omitting_optional_parens(
         rhs_result, line, mode, features=features, omit=omit
     )
@@ -685,6 +697,7 @@ def right_hand_split(
 
 def _first_right_hand_split(
         line: Line,
+        mode: Mode,
         omit: Collection[LeafID] = (),
 ) -> RHSResult:
     """Split the line into head, body, tail starting with the last bracket pair.
@@ -719,13 +732,25 @@ def _first_right_hand_split(
     body_leaves.reverse()
     head_leaves.reverse()
     head = bracket_split_build_line(
-        head_leaves, line, opening_bracket, component=_BracketSplitComponent.head
+        head_leaves,
+        line,
+        opening_bracket,
+        component=_BracketSplitComponent.head,
+        mode=mode,
     )
     body = bracket_split_build_line(
-        body_leaves, line, opening_bracket, component=_BracketSplitComponent.body
+        body_leaves,
+        line,
+        opening_bracket,
+        component=_BracketSplitComponent.body,
+        mode=mode,
     )
     tail = bracket_split_build_line(
-        tail_leaves, line, opening_bracket, component=_BracketSplitComponent.tail
+        tail_leaves,
+        line,
+        opening_bracket,
+        component=_BracketSplitComponent.tail,
+        mode=mode,
     )
     bracket_split_succeeded_or_raise(head, body, tail)
     return RHSResult(head, body, tail, opening_bracket, closing_bracket)
@@ -757,7 +782,7 @@ def _maybe_split_omitting_optional_parens(
         omit = {id(rhs.closing_bracket), *omit}
         try:
             # The RHSResult Omitting Optional Parens.
-            rhs_oop = _first_right_hand_split(line, omit=omit)
+            rhs_oop = _first_right_hand_split(line, omit=omit, mode=mode)
             if not (
                 Preview.prefer_splitting_right_hand_side_of_assignments in line.mode
                 # the split is right after `=`
@@ -869,6 +894,7 @@ def bracket_split_build_line(
         opening_bracket: Leaf,
         *,
         component: _BracketSplitComponent,
+        mode: Mode,
 ) -> Line:
     """Return a new line with given `leaves` and respective comments from `original`.
 
@@ -882,7 +908,14 @@ def bracket_split_build_line(
     result = Line(mode=original.mode, depth=original.depth)
     if component is _BracketSplitComponent.body:
         result.inside_brackets = True
-        result.depth += 2 if original.is_def else 1
+
+        if mode.function_definition_extra_indent and original.is_def:
+            additional_depth = 2
+        else:
+            additional_depth = 1
+
+        result.depth += additional_depth
+
         if leaves:
             # Since body is a new indent level, remove spurious leading whitespace.
             normalize_prefix(leaves[0], inside_brackets=True)
