@@ -15,13 +15,13 @@ _Black_ is a well-behaved Unix-style command-line tool:
 To get started right away with sensible defaults:
 
 ```sh
-black {source_file_or_directory}
+cercis {source_file_or_directory}
 ```
 
 You can run _Black_ as a package if running it as a script doesn't work:
 
 ```sh
-python -m black {source_file_or_directory}
+python -m cercis {source_file_or_directory}
 ```
 
 ### Command line options

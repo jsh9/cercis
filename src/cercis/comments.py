@@ -9,7 +9,7 @@ if sys.version_info >= (3, 8):
 else:
     from typing_extensions import Final
 
-from black.nodes import (
+from cercis.nodes import (
     CLOSING_BRACKETS,
     STANDALONE_COMMENT,
     WHITESPACE,

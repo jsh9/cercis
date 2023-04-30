@@ -30,10 +30,10 @@ else:
 
 from mypy_extensions import trait
 
-from black.comments import contains_pragma_comment
-from black.lines import Line, append_leaves
-from black.mode import Feature, Mode
-from black.nodes import (
+from cercis.comments import contains_pragma_comment
+from cercis.lines import Line, append_leaves
+from cercis.mode import Feature, Mode
+from cercis.nodes import (
     CLOSING_BRACKETS,
     OPENING_BRACKETS,
     STANDALONE_COMMENT,
@@ -45,8 +45,8 @@ from black.nodes import (
     replace_child,
     syms,
 )
-from black.rusty import Err, Ok, Result
-from black.strings import (
+from cercis.rusty import Err, Ok, Result
+from cercis.strings import (
     assert_is_leaf_string,
     count_chars_in_width,
     get_string_prefix,
@@ -965,7 +965,7 @@ class BaseStringSplitter(StringTransformer):
 
     Requirements:
         * The target string value is responsible for the line going over the
-        line length limit. It follows that after all of black's other line
+        line length limit. It follows that after all of cercis's other line
         split methods have been exhausted, this line (or one of the resulting
         lines after all line splits are performed) would still be over the
         line_length limit unless we split this string.

@@ -5,7 +5,7 @@
 # verbose regular expressions by Black.  Use [ ] to denote a significant space
 # character.
 
-[tool.black]
+[tool.cercis]
 line-length = 88
 target-version = ['py37', 'py38']
 include = '\.pyi?$'
@@ -30,7 +30,7 @@ requires = ["hatchling>=1.8.0", "hatch-vcs", "hatch-fancy-pypi-readme"]
 build-backend = "hatchling.build"
 
 [project]
-name = "black"
+name = "cercis"
 description = "The uncompromising code formatter."
 license = { text = "MIT" }
 requires-python = ">=3.7"
@@ -86,7 +86,7 @@ jupyter = [
 ]
 
 [project.scripts]
-black = "black:patched_main"
+cercis = "black:patched_main"
 blackd = "blackd:patched_main [d]"
 
 [project.urls]

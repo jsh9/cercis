@@ -43,7 +43,7 @@ author = "Łukasz Langa and contributors to Black"
 
 # Autopopulate version
 # The version, including alpha/beta/rc tags, but not commit hash and datestamps
-release = get_distribution("black").version.split("+")[0]
+release = get_distribution("cercis").version.split("+")[0]
 # The short X.Y version.
 version = release
 for sp in "abcfr":
@@ -152,7 +152,7 @@ htmlhelp_basename = "blackdoc"
 latex_documents = [
     (
         master_doc,
-        "black.tex",
+        "cercis.tex",
         "Documentation for Black",
         "Łukasz Langa and contributors to Black",
         "manual",
@@ -164,7 +164,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "black", "Documentation for Black", [author], 1)]
+man_pages = [(master_doc, "cercis", "Documentation for Black", [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------------

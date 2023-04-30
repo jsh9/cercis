@@ -13,8 +13,8 @@ if sys.version_info >= (3, 10):
 else:
     from typing_extensions import TypeGuard
 
-from black.output import out
-from black.report import NothingChanged
+from cercis.output import out
+from cercis.report import NothingChanged
 
 TRANSFORMED_MAGICS = frozenset(
     (
@@ -64,7 +64,7 @@ def jupyter_dependencies_are_installed(*, verbose: bool, quiet: bool) -> bool:
         if verbose or not quiet:
             msg = (
                 "Skipping .ipynb files as Jupyter dependencies are not installed.\n"
-                'You can fix this by running ``pip install "black[jupyter]"``'
+                'You can fix this by running ``pip install "cercis[jupyter]"``'
             )
             out(msg)
         return False
@@ -389,12 +389,12 @@ class MagicFinder(ast.NodeVisitor):
 
         For example,
 
-            black_version = !black --version
+            black_version = !cercis --version
             env = %env var
 
         would have been (respectively) transformed to
 
-            black_version = get_ipython().getoutput('black --version')
+            black_version = get_ipython().getoutput('cercis --version')
             env = get_ipython().run_line_magic('env', 'var')
 
         and we look for instances of any of the latter.

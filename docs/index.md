@@ -1,5 +1,5 @@
 <!--
-black documentation master file, created by
+cercis documentation master file, created by
 sphinx-quickstart on Fri Mar 23 10:53:30 2018.
 -->
 

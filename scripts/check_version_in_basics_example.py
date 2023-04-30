@@ -23,13 +23,13 @@ def main(changes: str, the_basics: str) -> None:
     (version_example,) = [
         code_block.string
         for code_block in the_basics_soup.find_all(class_="language-console")
-        if "$ black --version" in code_block.string
+        if "$ cercis --version" in code_block.string
     ]
 
     for tag in tags:
         if tag in version_example and tag != latest_tag:
             print(
-                "Please set the version in the ``black --version`` "
+                "Please set the version in the ``cercis --version`` "
                 "example from ``the_basics.md`` to be the latest one.\n"
                 f"Expected {latest_tag}, got {tag}.\n"
             )

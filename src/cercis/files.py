@@ -33,10 +33,10 @@ if sys.version_info >= (3, 11):
 else:
     import tomli as tomllib
 
-from black.handle_ipynb_magics import jupyter_dependencies_are_installed
-from black.mode import TargetVersion
-from black.output import err
-from black.report import Report
+from cercis.handle_ipynb_magics import jupyter_dependencies_are_installed
+from cercis.mode import TargetVersion
+from cercis.output import err
+from cercis.report import Report
 
 if TYPE_CHECKING:
     import colorama  # noqa: F401
@@ -117,7 +117,7 @@ def parse_pyproject_toml(path_config: str) -> Dict[str, Any]:
     """
     with open(path_config, "rb") as f:
         pyproject_toml = tomllib.load(f)
-    config: Dict[str, Any] = pyproject_toml.get("tool", {}).get("black", {})
+    config: Dict[str, Any] = pyproject_toml.get("tool", {}).get("cercis", {})
     config = {k.replace("--", "").replace("-", "_"): v for k, v in config.items()}
 
     if "target_version" not in config:
@@ -212,9 +212,9 @@ def strip_specifier_set(specifier_set: SpecifierSet) -> SpecifierSet:
 
 @lru_cache()
 def find_user_pyproject_toml() -> Path:
-    r"""Return the path to the top-level user configuration for black.
+    r"""Return the path to the top-level user configuration for cercis.
 
-    This looks for ~\.black on Windows and ~/.config/black on Linux and other
+    This looks for ~\.cercis on Windows and ~/.config/cercis on Linux and other
     Unix systems.
 
     May raise:
@@ -223,10 +223,10 @@ def find_user_pyproject_toml() -> Path:
     """
     if sys.platform == "win32":
         # Windows
-        user_config_path = Path.home() / ".black"
+        user_config_path = Path.home() / ".cercis"
     else:
         config_root = os.environ.get("XDG_CONFIG_HOME", "~/.config")
-        user_config_path = Path(config_root).expanduser() / "black"
+        user_config_path = Path(config_root).expanduser() / "cercis"
     return user_config_path.resolve()
 
 

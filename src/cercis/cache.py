@@ -9,7 +9,7 @@ from typing import Dict, Iterable, Set, Tuple
 from platformdirs import user_cache_dir
 
 from _black_version import version as __version__
-from black.mode import Mode
+from cercis.mode import Mode
 
 # types
 Timestamp = float
@@ -19,17 +19,17 @@ Cache = Dict[str, CacheInfo]
 
 
 def get_cache_dir() -> Path:
-    """Get the cache directory used by black.
+    """Get the cache directory used by cercis.
 
     Users can customize this directory on all systems using `BLACK_CACHE_DIR`
     environment variable. By default, the cache directory is the user cache directory
-    under the black application.
+    under the cercis application.
 
-    This result is immediately set to a constant `black.cache.CACHE_DIR` as to avoid
+    This result is immediately set to a constant `cercis.cache.CACHE_DIR` as to avoid
     repeated calls.
     """
     # NOTE: Function mostly exists as a clean way to test getting the cache directory.
-    default_cache_dir = user_cache_dir("black", version=__version__)
+    default_cache_dir = user_cache_dir("cercis", version=__version__)
     cache_dir = Path(os.environ.get("BLACK_CACHE_DIR", default_cache_dir))
     return cache_dir
 

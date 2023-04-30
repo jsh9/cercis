@@ -9,7 +9,7 @@ repos:
   - repo: https://github.com/psf/black
     rev: 23.3.0
     hooks:
-      - id: black
+      - id: cercis
         # It is recommended to specify the latest version of Python
         # supported by your project here, or alternatively use
         # pre-commit's default_language_version, see
@@ -33,7 +33,7 @@ repos:
   - repo: https://github.com/psf/black
     rev: 23.3.0
     hooks:
-      - id: black-jupyter
+      - id: cercis-jupyter
         # It is recommended to specify the latest version of Python
         # supported by your project here, or alternatively use
         # pre-commit's default_language_version, see

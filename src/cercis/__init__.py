@@ -34,15 +34,15 @@ from pathspec import PathSpec
 from pathspec.patterns.gitwildmatch import GitWildMatchPatternError
 
 from _black_version import version as __version__
-from black.cache import Cache, get_cache_info, read_cache, write_cache
-from black.comments import normalize_fmt_off
-from black.const import (
+from cercis.cache import Cache, get_cache_info, read_cache, write_cache
+from cercis.comments import normalize_fmt_off
+from cercis.const import (
     DEFAULT_EXCLUDES,
     DEFAULT_INCLUDES,
     DEFAULT_LINE_LENGTH,
     STDIN_PLACEHOLDER,
 )
-from black.files import (
+from cercis.files import (
     find_project_root,
     find_pyproject_toml,
     find_user_pyproject_toml,
@@ -52,7 +52,7 @@ from black.files import (
     parse_pyproject_toml,
     wrap_stream_for_windows,
 )
-from black.handle_ipynb_magics import (
+from cercis.handle_ipynb_magics import (
     PYTHON_CELL_MAGICS,
     TRANSFORMED_MAGICS,
     jupyter_dependencies_are_installed,
@@ -61,9 +61,9 @@ from black.handle_ipynb_magics import (
     remove_trailing_semicolon,
     unmask_cell,
 )
-from black.linegen import LN, LineGenerator, transform_line
-from black.lines import EmptyLineTracker, LinesBlock
-from black.mode import (
+from cercis.linegen import LN, LineGenerator, transform_line
+from cercis.lines import EmptyLineTracker, LinesBlock
+from cercis.mode import (
     FUTURE_FLAG_TO_FEATURE,
     VERSION_TO_FEATURES,
     Feature,
@@ -71,18 +71,18 @@ from black.mode import (
     TargetVersion,
     supports_feature,
 )
-from black.nodes import (
+from cercis.nodes import (
     STARS,
     is_number_token,
     is_simple_decorator_expression,
     is_string_token,
     syms,
 )
-from black.output import color_diff, diff, dump_to_file, err, ipynb_diff, out
-from black.parsing import InvalidInput  # noqa F401
-from black.parsing import lib2to3_parse, parse_ast, stringify_ast
-from black.report import Changed, NothingChanged, Report
-from black.trans import iter_fexpr_spans
+from cercis.output import color_diff, diff, dump_to_file, err, ipynb_diff, out
+from cercis.parsing import InvalidInput  # noqa F401
+from cercis.parsing import lib2to3_parse, parse_ast, stringify_ast
+from cercis.report import Changed, NothingChanged, Report
+from cercis.trans import iter_fexpr_spans
 from blib2to3.pgen2 import token
 from blib2to3.pytree import Leaf, Node
 
@@ -597,7 +597,7 @@ def main(  # noqa: C901
                 report=report,
             )
         else:
-            from black.concurrency import reformat_many
+            from cercis.concurrency import reformat_many
 
             reformat_many(
                 sources=sources,
@@ -1050,18 +1050,18 @@ def format_str(src_contents: str, *, mode: Mode) -> str:
     `mode` determines formatting options, such as how many characters per line are
     allowed.  Example:
 
-    >>> import black
-    >>> print(black.format_str("def f(arg:str='')->None:...", mode=black.Mode()))
+    >>> import cercis
+    >>> print(cercis.format_str("def f(arg:str='')->None:...", mode=cercis.Mode()))
     def f(arg: str = "") -> None:
         ...
 
     A more complex example:
 
     >>> print(
-    ...   black.format_str(
+    ...   cercis.format_str(
     ...     "def f(arg:str='')->None: hey",
-    ...     mode=black.Mode(
-    ...       target_versions={black.TargetVersion.PY36},
+    ...     mode=cercis.Mode(
+    ...       target_versions={cercis.TargetVersion.PY36},
     ...       line_length=10,
     ...       string_normalization=False,
     ...       is_pyi=False,

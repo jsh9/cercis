@@ -14,7 +14,7 @@ if sys.version_info < (3, 8):
 else:
     from typing import Final
 
-from black._width_table import WIDTH_TABLE
+from cercis._width_table import WIDTH_TABLE
 
 STRING_PREFIX_CHARS: Final = "furbFURB"  # All possible string prefix characters.
 STRING_PREFIX_RE: Final = re.compile(

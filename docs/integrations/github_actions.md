@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: psf/black@stable
+      - uses: psf/cercis@stable
 ```
 
 We recommend the use of the `@stable` tag, but per version tags also exist if you prefer
@@ -51,7 +51,7 @@ finds files that need to be formatted.
 Here's an example configuration:
 
 ```yaml
-- uses: psf/black@stable
+- uses: psf/cercis@stable
   with:
     options: "--check --verbose"
     src: "./src"
@@ -64,7 +64,7 @@ If you want to match versions covered by Black's
 (`~=`):
 
 ```yaml
-- uses: psf/black@stable
+- uses: psf/cercis@stable
   with:
     options: "--check --verbose"
     src: "./src"
