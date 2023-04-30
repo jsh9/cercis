@@ -1,5 +1,3 @@
-[![Black Logo](https://raw.githubusercontent.com/psf/black/main/docs/_static/logo2-readme.png)](https://black.readthedocs.io/en/stable/)
-
 <h2 align="center">The Uncompromising Code Formatter</h2>
 
 <p align="center">
