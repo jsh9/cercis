@@ -2,14 +2,15 @@
 
 [![](https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Red_bud_2009.jpg/320px-Red_bud_2009.jpg)](https://en.wikipedia.org/wiki/Cercis)
 
-_**Cercis**_ /ˈsɜːrsɪs/ is a more configurable Python code formatter.
+_**Cercis**_ /ˈsɜːrsɪs/ is a Python code formatter that is more configurable than the
+[Black](https://github.com/psf/black) formatter.
 
 [_Cercis_](https://en.wikipedia.org/wiki/Cercis) is also the name of a family of trees
 with beautiful flowers.
 
-This code repository is forked from and directly inspired by the
-[Black](https://github.com/psf/black) code formatter. The original license of Black is
-included in this repository: see [LICENSE_ORIGINAL](./LICENSE_ORIGINAL).
+This code repository is forked from and directly inspired by
+[Black](https://github.com/psf/black). The original license of Black is included in this
+repository: see [LICENSE_ORIGINAL](./LICENSE_ORIGINAL).
 
 ## 1. Motivations
 
