@@ -1,6 +1,6 @@
 - id: cercis
   name: cercis
-  description: "Black: The uncompromising Python code formatter"
+  description: "Cercis: a more configurable Python code formatter"
   entry: cercis
   language: python
   minimum_pre_commit_version: 2.9.2
@@ -9,7 +9,7 @@
 - id: cercis-jupyter
   name: cercis-jupyter
   description:
-    "Black: The uncompromising Python code formatter (with Jupyter Notebook support)"
+    "Cercis: a more configurable Python code formatter (with Jupyter Notebook support)"
   entry: cercis
   language: python
   minimum_pre_commit_version: 2.9.2
