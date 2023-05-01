@@ -8,7 +8,7 @@ from typing import Dict, Iterable, Set, Tuple
 
 from platformdirs import user_cache_dir
 
-from _black_version import version as __version__
+from _cercis_version import version as __version__
 from cercis.mode import Mode
 
 # types

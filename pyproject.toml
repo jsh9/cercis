@@ -103,6 +103,15 @@ fragments = [
   { path = "CHANGES.md" },
 ]
 
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/_cercis_version.py"
+template = '''
+version = "{version}"
+'''
+
 [tool.hatch.build.targets.sdist]
 exclude = ["/profiling"]
 
@@ -181,7 +190,7 @@ profile = "cercis"
 line_length = 88
 skip_gitignore = true
 skip_glob = ["src/blib2to3", "tests/data", "profiling"]
-known_first_party = ["cercis", "blib2to3", "blackd", "_black_version"]
+known_first_party = ["cercis", "blib2to3", "blackd", "_cercis_version"]
 
 [tool.pytest.ini_options]
 # Option below requires `tests/optional.py`

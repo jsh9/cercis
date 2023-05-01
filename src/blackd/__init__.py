@@ -20,7 +20,7 @@ except ImportError as ie:
 import click
 
 import cercis
-from _black_version import version as __version__
+from _cercis_version import version as __version__
 from cercis.concurrency import maybe_install_uvloop
 
 # This is used internally by tests to shut down the server prematurely

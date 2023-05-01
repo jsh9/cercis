@@ -33,7 +33,7 @@ from mypy_extensions import mypyc_attr
 from pathspec import PathSpec
 from pathspec.patterns.gitwildmatch import GitWildMatchPatternError
 
-from _black_version import version as __version__
+from _cercis_version import version as __version__
 from cercis.cache import Cache, get_cache_info, read_cache, write_cache
 from cercis.comments import normalize_fmt_off
 from cercis.const import (
