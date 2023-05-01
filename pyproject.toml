@@ -186,7 +186,7 @@ AIOHTTP_NO_EXTENSIONS = "1"
 
 [tool.isort]
 atomic = true
-profile = "cercis"
+profile = "black"
 line_length = 88
 skip_gitignore = true
 skip_glob = ["src/blib2to3", "tests/data", "profiling"]
