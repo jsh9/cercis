@@ -4,22 +4,30 @@
 
 _**Cercis**_ /ˈsɜːrsɪs/ is a more configurable Python code formatter.
 
-[_Cercis_](https://en.wikipedia.org/wiki/Cercis) is also the name of a family of trees with beautiful flowers.
+[_Cercis_](https://en.wikipedia.org/wiki/Cercis) is also the name of a family of trees
+with beautiful flowers.
 
-This code repository is forked from and directly inspired by the [Black](https://github.com/psf/black) code formatter.  The original license of Black is included in this repository: see [LICENSE_ORIGINAL](./LICENSE_ORIGINAL).
+This code repository is forked from and directly inspired by the
+[Black](https://github.com/psf/black) code formatter. The original license of Black is
+included in this repository: see [LICENSE_ORIGINAL](./LICENSE_ORIGINAL).
 
 ## 1. Motivations
 
-While we like the idea of auto-formatting and making code readable, we take issue with some style choices and the lack of configurability of the Black formatter.  We acknowledge that people have different style preferences, and we believe this is totally OK.
+While we like the idea of auto-formatting and making code readable, we take issue with
+some style choices and the lack of configurability of the Black formatter. We
+acknowledge that people have different style preferences, and we believe this is totally
+OK.
 
-Therefore, _Cercis_ aims at providing some configurability beyond Black's limited offering.
+Therefore, _Cercis_ aims at providing some configurability beyond Black's limited
+offering.
 
 ## 2. Installation and usage
 
 ### 2.1. Installation
 
-_Cercis_ can be installed by running `pip install cercis`. It requires Python 3.7+ to run.
-If you want to format Jupyter Notebooks, install with `pip install "cercis[jupyter]"`.
+_Cercis_ can be installed by running `pip install cercis`. It requires Python 3.7+ to
+run. If you want to format Jupyter Notebooks, install with
+`pip install "cercis[jupyter]"`.
 
 ### 2.2. Usage
 
@@ -41,35 +49,39 @@ The commands above reformat entire file(s) in place.
 
 #### 2.2.2. As pre-commit hook
 
-To format Python files (.py), put the following into your `.pre-commit-config.yaml` file. Remember to replace `<VERSION>` with your version of this tool (such as `v0.1.0`):
+To format Python files (.py), put the following into your `.pre-commit-config.yaml`
+file. Remember to replace `<VERSION>` with your version of this tool (such as `v0.1.0`):
+
 ```yaml
--   repo: https://github.com/jsh9/cercis
-    rev: <VERSION>
-    hooks:
-    -   id: cercis
+- repo: https://github.com/jsh9/cercis
+  rev: <VERSION>
+  hooks:
+    - id: cercis
 ```
 
-To format Jupyter notebooks (.ipynb), put the following into your `.pre-commit-config.yaml` file:
+To format Jupyter notebooks (.ipynb), put the following into your
+`.pre-commit-config.yaml` file:
+
 ```yaml
--   repo: https://github.com/jsh9/cercis
-    rev: <VERSION>
-    hooks:
-    -   id: cercis-jupyter
+- repo: https://github.com/jsh9/cercis
+  rev: <VERSION>
+  hooks:
+    - id: cercis-jupyter
 ```
 
 See [pre-commit](https://github.com/pre-commit/pre-commit) for more instructions.
 
-
 ## 3. The code style
 
-The code style in _Cercis_ is largely consistent with the [style of of _Black_](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html).
-
+The code style in _Cercis_ is largely consistent with the
+[style of of _Black_](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html).
 
 The differences are summarized below:
 
 ### 3.1. Extra indentation of at function definition
 
 For this example input:
+
 ```python
 def very_important_function(template: str, *variables, file: os.PathLike, engine: str, header: bool = True, debug: bool = False):
     """Applies `variables` to the `template` and writes to `file`."""
@@ -109,8 +121,10 @@ def very_important_function(
         ...
 ```
 
-We choose to indent an extra 4 spaces because it adds a clear visual separation between the function name and the argument list. Not adding extra indentation is also called out as wrong in the the official [PEP8 style guide](https://peps.python.org/pep-0008/#indentation).
-
+We choose to indent an extra 4 spaces because it adds a clear visual separation between
+the function name and the argument list. Not adding extra indentation is also called out
+as wrong in the the official
+[PEP8 style guide](https://peps.python.org/pep-0008/#indentation).
 
 ## 4. Configuration
 
