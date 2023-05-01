@@ -7,6 +7,8 @@ from enum import Enum, auto
 from functools import partial, wraps
 from typing import Collection, Iterator, List, Optional, Set, Union, cast
 
+from blib2to3.pgen2 import token
+from blib2to3.pytree import Leaf, Node
 from cercis.brackets import (
     COMMA_PRIORITY,
     DOT_PRIORITY,
@@ -72,8 +74,6 @@ from cercis.trans import (
     Transformer,
     hug_power_op,
 )
-from blib2to3.pgen2 import token
-from blib2to3.pytree import Leaf, Node
 
 # types
 LeafID = int

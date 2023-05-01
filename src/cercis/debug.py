@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from typing import Iterator, TypeVar, Union
 
+from blib2to3.pgen2 import token
+from blib2to3.pytree import Leaf, Node, type_repr
 from cercis.nodes import Visitor
 from cercis.output import out
 from cercis.parsing import lib2to3_parse
-from blib2to3.pgen2 import token
-from blib2to3.pytree import Leaf, Node, type_repr
 
 LN = Union[Leaf, Node]
 T = TypeVar("T")

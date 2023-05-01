@@ -34,14 +34,16 @@ from pathspec import PathSpec
 from pathspec.patterns.gitwildmatch import GitWildMatchPatternError
 
 from _cercis_version import version as __version__
+from blib2to3.pgen2 import token
+from blib2to3.pytree import Leaf, Node
 from cercis.cache import Cache, get_cache_info, read_cache, write_cache
 from cercis.comments import normalize_fmt_off
 from cercis.const import (
     DEFAULT_EXCLUDES,
+    DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT,
     DEFAULT_INCLUDES,
     DEFAULT_LINE_LENGTH,
     STDIN_PLACEHOLDER,
-    DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT,
 )
 from cercis.files import (
     find_project_root,
@@ -84,8 +86,6 @@ from cercis.parsing import InvalidInput  # noqa F401
 from cercis.parsing import lib2to3_parse, parse_ast, stringify_ast
 from cercis.report import Changed, NothingChanged, Report
 from cercis.trans import iter_fexpr_spans
-from blib2to3.pgen2 import token
-from blib2to3.pytree import Leaf, Node
 
 COMPILED = Path(__file__).suffix in (".pyd", ".so")
 

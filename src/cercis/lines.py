@@ -15,6 +15,8 @@ from typing import (
     cast,
 )
 
+from blib2to3.pgen2 import token
+from blib2to3.pytree import Leaf, Node
 from cercis.brackets import COMMA_PRIORITY, DOT_PRIORITY, BracketTracker
 from cercis.mode import Mode, Preview
 from cercis.nodes import (
@@ -34,8 +36,6 @@ from cercis.nodes import (
     whitespace,
 )
 from cercis.strings import str_width
-from blib2to3.pgen2 import token
-from blib2to3.pytree import Leaf, Node
 
 # types
 T = TypeVar("T")

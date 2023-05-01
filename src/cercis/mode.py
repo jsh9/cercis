@@ -17,10 +17,7 @@ if sys.version_info < (3, 8):
 else:
     from typing import Final
 
-from cercis.const import (
-    DEFAULT_LINE_LENGTH,
-    DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT,
-)
+from cercis.const import DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT, DEFAULT_LINE_LENGTH
 
 
 class TargetVersion(Enum):
