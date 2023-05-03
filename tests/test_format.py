@@ -222,6 +222,6 @@ def test_function_definition_extra_indent(filename: str, extra_indent: bool) -> 
     "filename",
     all_data_cases("configurable_cases/single_quote"),
 )
-def test_single_quote(filename):
+def test_single_quote(filename: str) -> None:
     mode = replace(DEFAULT_MODE, single_quote=True)
     check_file("configurable_cases/single_quote", filename, mode)
