@@ -226,7 +226,7 @@ def convert_to_single_quotes(s: str) -> str:
         if body != new_body:
             # Consider the string without unnecessary escapes as the original
             body = new_body
-            s = f'{prefix}{orig_quote}{body}{orig_quote}'
+            s = f"{prefix}{orig_quote}{body}{orig_quote}"
         new_body = sub_twice(escaped_orig_quote, rf"\1\2{orig_quote}", new_body)
         new_body = sub_twice(unescaped_new_quote, rf"\1\\{new_quote}", new_body)
     if "f" in prefix.casefold():

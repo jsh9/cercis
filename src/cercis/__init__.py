@@ -231,7 +231,7 @@ def validate_regex(
     type=bool,
     show_default=True,
     default=DEFAULT_SINGLE_QUOTE,
-    help=("If True, format code using single quotes; otherwise use double quotes."),
+    help="If True, format code using single quotes; otherwise use double quotes.",
 )
 @click.option(
     "-t",
