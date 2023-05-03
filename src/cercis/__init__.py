@@ -328,15 +328,6 @@ def validate_regex(
     help="If --fast given, skip temporary sanity checks. [default: --safe]",
 )
 @click.option(
-    "--required-version",
-    type=str,
-    help=(
-        "Require a specific version of Black to be running (useful for unifying results"
-        " across many environments e.g. with a pyproject.toml file). It can be"
-        " either a major version number or an exact version."
-    ),
-)
-@click.option(
     "--include",
     type=str,
     default=DEFAULT_INCLUDES,
@@ -466,7 +457,6 @@ def main(  # noqa: C901
         preview: bool,
         quiet: bool,
         verbose: bool,
-        required_version: Optional[str],
         include: Pattern[str],
         exclude: Optional[Pattern[str]],
         extend_exclude: Optional[Pattern[str]],
@@ -542,16 +532,7 @@ def main(  # noqa: C901
                     out(f"{param}: {value}")
 
     error_msg = "Oh no! 💥 💔 💥"
-    if (
-        required_version
-        and required_version != __version__
-        and required_version != __version__.split(".")[0]
-    ):
-        err(
-            f"{error_msg} The required version `{required_version}` does not match"
-            f" the running version `{__version__}`!"
-        )
-        ctx.exit(1)
+
     if ipynb and pyi:
         err("Cannot pass both `pyi` and `ipynb` flags!")
         ctx.exit(1)
