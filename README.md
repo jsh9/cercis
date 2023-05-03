@@ -77,59 +77,129 @@ arguments in pre-commit config.
 The code style in _Cercis_ is largely consistent with the
 [style of of _Black_](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html).
 
-The differences are summarized below:
+The main difference is that _Cercis_ provides several configurable options that Black
+doesn't. That's also our main motivation of creating _Cercis_.
 
-### 3.1. Extra indentation of at function definition
+_Cercis_ offers the following configurable options:
 
-For this example input:
+- [Extra indentation at function definition](#31-extra-indentation-at-function-definition)
+- [Single quote vs double quote](#32-single-quote-vs-double-quote)
 
-```python
-def very_important_function(template: str, *variables, file: os.PathLike, engine: str, header: bool = True, debug: bool = False):
-    """Applies `variables` to the `template` and writes to `file`."""
-    with open(file, 'w') as f:
-        ...
-```
+The next section ([How to configure _Cercis_](#4-how-to-configure-cercis)) contains
+detailed instructions of how to configure these options.
 
-_Black_ formats it as this:
+### 3.1. Extra indentation at function definition
 
-```python
-def very_important_function(
-    template: str,
-    *variables,
-    file: os.PathLike,
-    engine: str,
-    header: bool = True,
-    debug: bool = False,
-):
-    """Applies `variables` to the `template` and writes to `file`."""
-    with open(file, "w") as f:
-        ...
-```
-
-while _Cercis_ formats it as:
+<table>
+  <tr>
+    <td>
 
 ```python
-def very_important_function(
-        template: str,
-        *variables,
-        file: os.PathLike,
-        engine: str,
-        header: bool = True,
-        debug: bool = False,
-):
-    """Applies `variables` to the `template` and writes to `file`."""
-    with open(file, "w") as f:
-        ...
+# Cercis's default style
+def some_function(
+        arg1_with_long_name: str,
+        arg2_with_longer_name: int,
+        arg3_with_longer_name: float,
+        arg4_with_longer_name: bool,
+) -> None:
+    ...
 ```
+
+  </td>
+
+  <td>
+
+```python
+# Black's style (not configurable)
+def some_function(
+    arg1_with_long_name: str,
+    arg2_with_longer_name: int,
+    arg3_with_longer_name: float,
+    arg4_with_longer_name: bool,
+) -> None:
+    ...
+```
+
+  </td>
+
+  </tr>
+</table>
 
 We choose to indent an extra 4 spaces because it adds a clear visual separation between
 the function name and the argument list. Not adding extra indentation is also called out
 as wrong in the the official
 [PEP8 style guide](https://peps.python.org/pep-0008/#indentation).
 
-## 4. Configuration
+If you do not like this default, you can easily turn it off.
 
-_Cercis_ is able to read project-specific default values for its command line options
-from a `pyproject.toml` file. This is especially useful for specifying custom
-`--include` and `--exclude`/`--force-exclude`/`--extend-exclude` patterns for your
-project.
+| Details                |                                                                 |
+| ---------------------- | --------------------------------------------------------------- |
+| Name                   | `--function-definition-extra-indent`                            |
+| Abbreviation           | `-fdei`                                                         |
+| Default                | `True`                                                          |
+| Command line usage     | `cercis -fdei=False myScript.py`                                |
+| `pyproject.toml` usage | `function-definition-extra-indent = true` under `[tool.cercis]` |
+| `pre-commit` usage     | `args: [--function-definition-extra-indent=False]`              |
+
+### 3.2. Single quote vs double quote
+
+Both _Cercis_ and Black default to using double quotes. But in _Cercis_ you can specify
+using single quotes as the default style.
+
+| Details                |                                             |
+| ---------------------- | ------------------------------------------- |
+| Name                   | `--single-quote`                            |
+| Abbreviation           | `-sq`                                       |
+| Default                | `False`                                     |
+| Command line usage     | `cercis -sq=True myScript.py`               |
+| `pyproject.toml` usage | `single-quote = true` under `[tool.cercis]` |
+| `pre-commit` usage     | `args: [--single-quote=False]`              |
+
+## 4. How to configure _Cercis_
+
+### 4.1. Dynamically in the command line
+
+Here are some examples:
+
+- `cercis --single-quote=True myScript.py` to format files to single quotes
+- `cercis --function-definition-extra-indent=False myScript.py` to format files without
+  extra indentation at function definition
+- `cercis --line-length=79 myScript.py` to format files with a line length of 79
+  characters
+
+### 4.2. In your project's `pyproject.toml` file
+
+You can specify the options under the `[tool.cercis]` section of the file:
+
+```toml
+[tool.cercis]
+line-length = 88
+function-definition-extra-indent = true
+single-quote = false
+```
+
+### 4.3. In your project's `.pre-commit-config.yaml` file
+
+You can specify the options under the `args` section of your `.pre-commit-config.yaml`
+file.
+
+For example:
+
+```yaml
+repos:
+  - repo: https://github.com/jsh9/cercis
+    rev: 0.1.0
+    hooks:
+      - id: cercis
+        args: [--function-definition-extra-indent=False, --ling-length=79]
+  - repo: https://github.com/jsh9/cercis
+    rev: 0.1.0
+    hooks:
+      - id: cercis-jupyter
+        args: [--function-definition-extra-indent=False, --line-length=79]
+```
+
+### 4.4. Specify options in `tox.ini`
+
+Currently, _Cercis_ does not support a config section in `tox.ini`. Instead, you can
+specify the options in `pyproject.toml`.

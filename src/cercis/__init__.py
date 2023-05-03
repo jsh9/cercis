@@ -43,6 +43,7 @@ from cercis.const import (
     DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT,
     DEFAULT_INCLUDES,
     DEFAULT_LINE_LENGTH,
+    DEFAULT_SINGLE_QUOTE,
     STDIN_PLACEHOLDER,
 )
 from cercis.files import (
@@ -122,7 +123,7 @@ FileMode = Mode
 def read_pyproject_toml(
         ctx: click.Context, param: click.Parameter, value: Optional[str]
 ) -> Optional[str]:
-    """Inject Black configuration from "pyproject.toml" into defaults in `ctx`.
+    """Inject Cercis configuration from "pyproject.toml" into defaults in `ctx`.
 
     Returns the path to a successfully found and read configuration file, None
     otherwise.
@@ -225,15 +226,24 @@ def validate_regex(
     ),
 )
 @click.option(
+    "-sq",
+    "--single-quote",
+    type=bool,
+    show_default=True,
+    default=DEFAULT_SINGLE_QUOTE,
+    help="If True, format code using single quotes; otherwise use double quotes.",
+)
+@click.option(
     "-t",
     "--target-version",
     type=click.Choice([v.name.lower() for v in TargetVersion]),
     callback=target_version_option_callback,
     multiple=True,
     help=(
-        "Python versions that should be supported by Black's output. By default, Black"
-        " will try to infer this from the project metadata in pyproject.toml. If this"
-        " does not yield conclusive results, Black will use per-file auto-detection."
+        "Python versions that should be supported by Cercis's output. By default,"
+        " Cercis will try to infer this from the project metadata in pyproject.toml."
+        " If this does not yield conclusive results, Cercis will use per-file"
+        " auto-detection."
     ),
 )
 @click.option(
@@ -290,8 +300,8 @@ def validate_regex(
     "--preview",
     is_flag=True,
     help=(
-        "Enable potentially disruptive style changes that may be added to Black's main"
-        " functionality in the next major release."
+        "Enable potentially disruptive style changes that may be added to"
+        " Cercis's main functionality in the next major release."
     ),
 )
 @click.option(
@@ -322,9 +332,9 @@ def validate_regex(
     "--required-version",
     type=str,
     help=(
-        "Require a specific version of Black to be running (useful for unifying results"
-        " across many environments e.g. with a pyproject.toml file). It can be"
-        " either a major version number or an exact version."
+        "Require a specific version of Cercis to be running (useful for unifying"
+        " results across many environments e.g. with a pyproject.toml file). It"
+        " can be either a major version number or an exact version."
     ),
 )
 @click.option(
@@ -376,7 +386,7 @@ def validate_regex(
     type=str,
     help=(
         "The name of the file when passing it through stdin. Useful to make "
-        "sure Black will respect --force-exclude option on some "
+        "sure Cercis will respect --force-exclude option on some "
         "editors that rely on using stdin."
     ),
 )
@@ -441,6 +451,7 @@ def main(  # noqa: C901
         code: Optional[str],
         line_length: int,
         function_definition_extra_indent: bool,
+        single_quote: bool,
         target_version: List[TargetVersion],
         check: bool,
         diff: bool,
@@ -564,6 +575,7 @@ def main(  # noqa: C901
         preview=preview,
         python_cell_magics=set(python_cell_magics),
         function_definition_extra_indent=function_definition_extra_indent,
+        single_quote=single_quote,
     )
 
     if code is not None:
@@ -1360,7 +1372,7 @@ def assert_equivalent(src: str, dst: str) -> None:
         raise AssertionError(
             "cannot use --safe with this file; failed to parse source file AST: "
             f"{exc}\n"
-            "This could be caused by running Black with an older Python version "
+            "This could be caused by running Cercis with an older Python version "
             "that does not support new syntax used in your source file."
         ) from exc
 
@@ -1369,7 +1381,7 @@ def assert_equivalent(src: str, dst: str) -> None:
     except Exception as exc:
         log = dump_to_file("".join(traceback.format_tb(exc.__traceback__)), dst)
         raise AssertionError(
-            f"INTERNAL ERROR: Black produced invalid code: {exc}. "
+            f"INTERNAL ERROR: Cercis produced invalid code: {exc}. "
             "Please report a bug on https://github.com/psf/black/issues.  "
             f"This invalid output might be helpful: {log}"
         ) from None
@@ -1379,7 +1391,7 @@ def assert_equivalent(src: str, dst: str) -> None:
     if src_ast_str != dst_ast_str:
         log = dump_to_file(diff(src_ast_str, dst_ast_str, "src", "dst"))
         raise AssertionError(
-            "INTERNAL ERROR: Black produced code that is not equivalent to the"
+            "INTERNAL ERROR: Cercis produced code that is not equivalent to the"
             " source.  Please report a bug on "
             f"https://github.com/psf/black/issues.  This diff might be helpful: {log}"
         ) from None
@@ -1398,7 +1410,7 @@ def assert_stable(src: str, dst: str, mode: Mode) -> None:
             diff(dst, newdst, "first pass", "second pass"),
         )
         raise AssertionError(
-            "INTERNAL ERROR: Black produced different code on the second pass of the"
+            "INTERNAL ERROR: Cercis produced different code on the second pass of the"
             " formatter.  Please report a bug on https://github.com/psf/black/issues."
             f"  This diff might be helpful: {log}"
         ) from None
@@ -1420,7 +1432,7 @@ def patch_click() -> None:
     default which restricts paths that it can access during the lifetime of the
     application.  Click refuses to work in this scenario by raising a RuntimeError.
 
-    In case of Black the likelihood that non-ASCII characters are going to be used in
+    In case of Cercis the likelihood that non-ASCII characters are going to be used in
     file paths is minimal since it's Python source code.  Moreover, this crash was
     spurious on Python 3.7 thanks to PEP 538 and PEP 540.
     """

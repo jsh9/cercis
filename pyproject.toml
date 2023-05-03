@@ -8,6 +8,7 @@
 [tool.cercis]
 line-length = 88
 function-definition-extra-indent = true
+single-quote = false
 target-version = ['py37', 'py38']
 include = '\.pyi?$'
 extend-exclude = '''
@@ -32,7 +33,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cercis"
-version = "0.1.0"
+version = "0.1.1"
 description = "A more configurable Python code formatter"
 license = { text = "MIT" }
 requires-python = ">=3.7"
