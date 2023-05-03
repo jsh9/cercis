@@ -208,11 +208,11 @@ def convert_to_single_quotes(s: str) -> str:
         return s  # There's an internal error
 
     prefix = s[:first_quote_pos]
-    unescaped_new_quote = _cached_compile(rf'(([^\\]|^)(\\\\)*){new_quote}')
-    escaped_new_quote = _cached_compile(rf'([^\\]|^)\\((?:\\\\)*){new_quote}')
-    escaped_orig_quote = _cached_compile(rf'([^\\]|^)\\((?:\\\\)*){orig_quote}')
+    unescaped_new_quote = _cached_compile(rf"(([^\\]|^)(\\\\)*){new_quote}")
+    escaped_new_quote = _cached_compile(rf"([^\\]|^)\\((?:\\\\)*){new_quote}")
+    escaped_orig_quote = _cached_compile(rf"([^\\]|^)\\((?:\\\\)*){orig_quote}")
     body = s[first_quote_pos + len(orig_quote) : -len(orig_quote)]
-    if 'r' in prefix.casefold():
+    if "r" in prefix.casefold():
         if unescaped_new_quote.search(body):
             # There's at least one unescaped new_quote in this raw string
             # so converting is impossible
@@ -222,14 +222,14 @@ def convert_to_single_quotes(s: str) -> str:
         new_body = body
     else:
         # remove unnecessary escapes
-        new_body = sub_twice(escaped_new_quote, rf'\1\2{new_quote}', body)
+        new_body = sub_twice(escaped_new_quote, rf"\1\2{new_quote}", body)
         if body != new_body:
             # Consider the string without unnecessary escapes as the original
             body = new_body
             s = f'{prefix}{orig_quote}{body}{orig_quote}'
-        new_body = sub_twice(escaped_orig_quote, rf'\1\2{orig_quote}', new_body)
-        new_body = sub_twice(unescaped_new_quote, rf'\1\\{new_quote}', new_body)
-    if 'f' in prefix.casefold():
+        new_body = sub_twice(escaped_orig_quote, rf"\1\2{orig_quote}", new_body)
+        new_body = sub_twice(unescaped_new_quote, rf"\1\\{new_quote}", new_body)
+    if "f" in prefix.casefold():
         matches = re.findall(
             r"""
             (?:(?<!\{)|^)\{  # start of the string or a non-{ followed by a single {
@@ -240,22 +240,22 @@ def convert_to_single_quotes(s: str) -> str:
             re.VERBOSE,
         )
         for m in matches:
-            if '\\' in str(m):
+            if "\\" in str(m):
                 # Do not introduce backslashes in interpolated expressions
                 return s
 
     if new_quote == "'''" and new_body[-1:] == "'":
         # edge case:
         new_body = new_body[:-1] + "\\'"
-    orig_escape_count = body.count('\\')
-    new_escape_count = new_body.count('\\')
+    orig_escape_count = body.count("\\")
+    new_escape_count = new_body.count("\\")
     if new_escape_count > orig_escape_count:
         return s  # Do not introduce more escaping
 
     if new_escape_count == orig_escape_count and orig_quote == "'":
         return s  # Prefer double quotes
 
-    return f'{prefix}{new_quote}{new_body}{new_quote}'
+    return f"{prefix}{new_quote}{new_body}{new_quote}"
 
 
 def convert_to_double_quotes(s: str) -> str:
