@@ -33,10 +33,9 @@ def check_file(
 @pytest.mark.parametrize("filename", all_data_cases("simple_cases"))
 def test_simple_format(filename: str) -> None:
     magic_trailing_comma = filename != "skip_magic_trailing_comma"
-    wrap_line_with_long_string = filename == "comments6"
     mode = cercis.Mode(
         magic_trailing_comma=magic_trailing_comma,
-        wrap_line_with_long_string=wrap_line_with_long_string,
+        wrap_line_with_long_string=True,
     )
     check_file("simple_cases", filename, mode)
 
