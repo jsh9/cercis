@@ -21,6 +21,7 @@ from cercis.const import (
     DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT,
     DEFAULT_LINE_LENGTH,
     DEFAULT_SINGLE_QUOTE,
+    DEFAULT_WRAP_LINE_WITH_LONG_STRING,
 )
 
 
@@ -190,6 +191,7 @@ class Mode:
     preview: bool = False
     function_definition_extra_indent: bool = DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT
     single_quote: bool = DEFAULT_SINGLE_QUOTE
+    wrap_line_with_long_string: bool = DEFAULT_WRAP_LINE_WITH_LONG_STRING
 
     def __post_init__(self) -> None:
         if self.experimental_string_processing:

@@ -208,13 +208,13 @@ def test_type_comment_syntax_error() -> None:
 @pytest.mark.parametrize(
     "filename, extra_indent",
     [
-        ("func_def_extra_indent.py", True),
-        ("func_def_no_extra_indent.py", False),
+        ("func_def_extra_indent.py", True),  # Cercis's default
+        ("func_def_no_extra_indent.py", False),  # Black's default
     ],
 )
 def test_function_definition_extra_indent(filename: str, extra_indent: bool) -> None:
     mode = replace(DEFAULT_MODE, function_definition_extra_indent=extra_indent)
-    check_file("configurable_cases", filename, mode)
+    check_file("configurable_cases/func_def_indent", filename, mode)
 
 
 @pytest.mark.filterwarnings("ignore:invalid escape sequence.*:DeprecationWarning")
@@ -225,3 +225,15 @@ def test_function_definition_extra_indent(filename: str, extra_indent: bool) -> 
 def test_single_quote(filename: str) -> None:
     mode = replace(DEFAULT_MODE, single_quote=True)
     check_file("configurable_cases/single_quote", filename, mode)
+
+
+@pytest.mark.parametrize(
+    "filename, wrap_line",
+    [
+        ("opt_out_of_wrapping.py", False),  # Cercis's default
+        ("opt_in_wrapping.py", True),  # Black's default
+    ],
+)
+def test_opt_out_of_wrapping(filename: str, wrap_line: bool) -> None:
+    mode = replace(DEFAULT_MODE, wrap_line_with_long_string=wrap_line)
+    check_file("configurable_cases/line_with_long_string", filename, mode)
