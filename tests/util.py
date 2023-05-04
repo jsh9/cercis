@@ -1,5 +1,6 @@
 import os
 import sys
+import traceback
 import unittest
 from contextlib import contextmanager
 from dataclasses import replace
@@ -91,8 +92,9 @@ def assert_format(
         )
     except Exception as e:
         text = "non-preview" if mode.preview else "preview"
+        tb = traceback.format_exc()
         raise FormatFailure(
-            f"Black crashed formatting this case in {text} mode."
+            f"Black crashed formatting this case in {text} mode.\n{e}\n{tb}"
         ) from e
     # Similarly, setting line length to 1 is a good way to catch
     # stability bugs. But only in non-preview mode because preview mode

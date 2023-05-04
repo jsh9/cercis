@@ -47,6 +47,7 @@ import cercis
         ("3.14159265358979323846", False),
         ("pi = 3.14159265358979323846", False),
         ("pi = '3.14159265358979323846'", True),
+        ('a = "hello",', False),
     ]
 )
 def test_check_line_eligibility_to_opt_out_of_line_wrapping(

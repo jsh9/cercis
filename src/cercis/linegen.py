@@ -523,6 +523,11 @@ def transform_line(
     string_split = StringSplitter(ll, sn, sq)
     string_paren_wrap = StringParenWrapper(ll, sn)
 
+    eligible_to_opt_out = check_line_eligibility_to_opt_out_of_line_wrapping(
+        line,
+        mode.wrap_line_with_long_string,
+    )
+
     transformers: List[Transformer]
     if (
         not line.contains_uncollapsable_type_comments()
@@ -573,11 +578,6 @@ def transform_line(
         # Unfortunately a nested class breaks mypyc too. So a class must be created
         # via type ... https://github.com/mypyc/mypyc/issues/884
         rhs = type("rhs", (), {"__call__": _rhs})()
-
-        eligible_to_opt_out = check_line_eligibility_to_opt_out_of_line_wrapping(
-            line,
-            mode.wrap_line_with_long_string,
-        )
 
         if Preview.string_processing in mode:
             if line.inside_brackets:
@@ -650,7 +650,7 @@ def check_line_eligibility_to_opt_out_of_line_wrapping(
     if wrap_line_with_long_string:
         return False  # not eligible; always use Black's default behavior
 
-    if not line.leaves:
+    if len(line.leaves) == 0:
         return False
 
     # LPAR and RPAR are added during node visiting (in `lines.visit(src_node)`)
@@ -661,7 +661,7 @@ def check_line_eligibility_to_opt_out_of_line_wrapping(
         leaves = _clone_leaves(line.leaves)
         has_rpar = False
 
-    if not _is_string(leaves[-1]):
+    if len(leaves) == 0 or not _is_string(leaves[-1]):
         return False
 
     while len(leaves) > 0:  # check leaf by leaf from right hand side
