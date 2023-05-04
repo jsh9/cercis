@@ -33,14 +33,18 @@ def check_file(
 @pytest.mark.parametrize("filename", all_data_cases("simple_cases"))
 def test_simple_format(filename: str) -> None:
     magic_trailing_comma = filename != "skip_magic_trailing_comma"
-    check_file(
-        "simple_cases", filename, cercis.Mode(magic_trailing_comma=magic_trailing_comma)
+    wrap_line_with_long_string = filename == "comments6"
+    mode = cercis.Mode(
+        magic_trailing_comma=magic_trailing_comma,
+        wrap_line_with_long_string=wrap_line_with_long_string,
     )
+    check_file("simple_cases", filename, mode)
 
 
 @pytest.mark.parametrize("filename", all_data_cases("preview"))
 def test_preview_format(filename: str) -> None:
-    check_file("preview", filename, cercis.Mode(preview=True))
+    mode = cercis.Mode(preview=True, wrap_line_with_long_string=True)
+    check_file("preview", filename, mode)
 
 
 def test_preview_context_managers_targeting_py38() -> None:
@@ -176,7 +180,11 @@ def test_preview_docstring_no_string_normalization() -> None:
 def test_long_strings_flag_disabled() -> None:
     """Tests for turning off the string processing logic."""
     source, expected = read_data("miscellaneous", "long_strings_flag_disabled")
-    mode = replace(DEFAULT_MODE, experimental_string_processing=False)
+    mode = replace(
+        DEFAULT_MODE,
+        experimental_string_processing=False,
+        wrap_line_with_long_string=True,
+    )
     assert_format(source, expected, mode)
 
 
@@ -223,7 +231,7 @@ def test_function_definition_extra_indent(filename: str, extra_indent: bool) -> 
     all_data_cases("configurable_cases/single_quote"),
 )
 def test_single_quote(filename: str) -> None:
-    mode = replace(DEFAULT_MODE, single_quote=True)
+    mode = replace(DEFAULT_MODE, single_quote=True, wrap_line_with_long_string=True)
     check_file("configurable_cases/single_quote", filename, mode)
 
 
