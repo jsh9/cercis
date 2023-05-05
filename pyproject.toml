@@ -101,7 +101,7 @@ Homepage = "https://github.com/jsh9/cercis"
 content-type = "text/markdown"
 fragments = [
   { path = "README.md" },
-  { path = "CHANGES.md" },
+  { path = "CHANGELOG.md" },
 ]
 
 [tool.hatch.version]
