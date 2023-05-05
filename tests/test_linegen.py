@@ -2,7 +2,6 @@ import pytest
 
 import cercis
 
-
 str1 = 'variable = "very very very very very very very very very very very very very very long string"'  # noqa: B950
 str2 = 'some_class.a.b.some_variable_name = ("Once upon a time there is"  " a village alongside the river that flows quitely.")'  # noqa: B950
 

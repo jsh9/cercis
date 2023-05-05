@@ -235,7 +235,7 @@ def validate_regex(
     help="If True, format code using single quotes; otherwise use double quotes.",
 )
 @click.option(
-    "-wlwls",
+    "-wl",
     "--wrap-line-with-long-string",
     type=bool,
     show_default=True,
