@@ -33,14 +33,17 @@ def check_file(
 @pytest.mark.parametrize("filename", all_data_cases("simple_cases"))
 def test_simple_format(filename: str) -> None:
     magic_trailing_comma = filename != "skip_magic_trailing_comma"
-    check_file(
-        "simple_cases", filename, cercis.Mode(magic_trailing_comma=magic_trailing_comma)
+    mode = cercis.Mode(
+        magic_trailing_comma=magic_trailing_comma,
+        wrap_line_with_long_string=True,
     )
+    check_file("simple_cases", filename, mode)
 
 
 @pytest.mark.parametrize("filename", all_data_cases("preview"))
 def test_preview_format(filename: str) -> None:
-    check_file("preview", filename, cercis.Mode(preview=True))
+    mode = cercis.Mode(preview=True, wrap_line_with_long_string=True)
+    check_file("preview", filename, mode)
 
 
 def test_preview_context_managers_targeting_py38() -> None:
@@ -176,7 +179,11 @@ def test_preview_docstring_no_string_normalization() -> None:
 def test_long_strings_flag_disabled() -> None:
     """Tests for turning off the string processing logic."""
     source, expected = read_data("miscellaneous", "long_strings_flag_disabled")
-    mode = replace(DEFAULT_MODE, experimental_string_processing=False)
+    mode = replace(
+        DEFAULT_MODE,
+        experimental_string_processing=False,
+        wrap_line_with_long_string=True,
+    )
     assert_format(source, expected, mode)
 
 
@@ -208,13 +215,13 @@ def test_type_comment_syntax_error() -> None:
 @pytest.mark.parametrize(
     "filename, extra_indent",
     [
-        ("func_def_extra_indent.py", True),
-        ("func_def_no_extra_indent.py", False),
+        ("func_def_extra_indent.py", True),  # Cercis's default
+        ("func_def_no_extra_indent.py", False),  # Black's default
     ],
 )
 def test_function_definition_extra_indent(filename: str, extra_indent: bool) -> None:
     mode = replace(DEFAULT_MODE, function_definition_extra_indent=extra_indent)
-    check_file("configurable_cases", filename, mode)
+    check_file("configurable_cases/func_def_indent", filename, mode)
 
 
 @pytest.mark.filterwarnings("ignore:invalid escape sequence.*:DeprecationWarning")
@@ -223,5 +230,19 @@ def test_function_definition_extra_indent(filename: str, extra_indent: bool) -> 
     all_data_cases("configurable_cases/single_quote"),
 )
 def test_single_quote(filename: str) -> None:
-    mode = replace(DEFAULT_MODE, single_quote=True)
+    mode = replace(DEFAULT_MODE, single_quote=True, wrap_line_with_long_string=True)
     check_file("configurable_cases/single_quote", filename, mode)
+
+
+@pytest.mark.parametrize(
+    "filename, wrap_line",
+    [
+        ("test_cases__Cercis_default.py", False),
+        ("test_cases__Black_default.py", True),
+        ("long_strings_flag_disabled__Cercis_default.py", False),
+        ("long_strings_flag_disabled__Black_default.py", True),
+    ],
+)
+def test_opt_out_of_wrapping(filename: str, wrap_line: bool) -> None:
+    mode = replace(DEFAULT_MODE, wrap_line_with_long_string=wrap_line)
+    check_file("configurable_cases/line_with_long_string", filename, mode)

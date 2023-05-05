@@ -44,6 +44,7 @@ from cercis.const import (
     DEFAULT_INCLUDES,
     DEFAULT_LINE_LENGTH,
     DEFAULT_SINGLE_QUOTE,
+    DEFAULT_WRAP_LINE_WITH_LONG_STRING,
     STDIN_PLACEHOLDER,
 )
 from cercis.files import (
@@ -232,6 +233,18 @@ def validate_regex(
     show_default=True,
     default=DEFAULT_SINGLE_QUOTE,
     help="If True, format code using single quotes; otherwise use double quotes.",
+)
+@click.option(
+    "-wl",
+    "--wrap-line-with-long-string",
+    type=bool,
+    show_default=True,
+    default=DEFAULT_WRAP_LINE_WITH_LONG_STRING,
+    help=(
+        "If False, do not wrap lines with just a variable, an operator, and"
+        " a long string, even if it exceeds the line length limit. If True,"
+        " wrap that line with the string put in parentheses."
+    ),
 )
 @click.option(
     "-t",
@@ -452,6 +465,7 @@ def main(  # noqa: C901
         line_length: int,
         function_definition_extra_indent: bool,
         single_quote: bool,
+        wrap_line_with_long_string: bool,
         target_version: List[TargetVersion],
         check: bool,
         diff: bool,
@@ -576,6 +590,7 @@ def main(  # noqa: C901
         python_cell_magics=set(python_cell_magics),
         function_definition_extra_indent=function_definition_extra_indent,
         single_quote=single_quote,
+        wrap_line_with_long_string=wrap_line_with_long_string,
     )
 
     if code is not None:

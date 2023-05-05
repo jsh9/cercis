@@ -84,6 +84,7 @@ _Cercis_ offers the following configurable options:
 
 - [Extra indentation at function definition](#31-extra-indentation-at-function-definition)
 - [Single quote vs double quote](#32-single-quote-vs-double-quote)
+- ["Simple" lines with long strings](#33-simple-lines-with-long-strings)
 
 The next section ([How to configure _Cercis_](#4-how-to-configure-cercis)) contains
 detailed instructions of how to configure these options.
@@ -132,7 +133,7 @@ as wrong in the the official
 
 If you do not like this default, you can easily turn it off.
 
-| Details                |                                                                 |
+| Option                 |                                                                 |
 | ---------------------- | --------------------------------------------------------------- |
 | Name                   | `--function-definition-extra-indent`                            |
 | Abbreviation           | `-fdei`                                                         |
@@ -146,7 +147,7 @@ If you do not like this default, you can easily turn it off.
 Both _Cercis_ and Black default to using double quotes. But in _Cercis_ you can specify
 using single quotes as the default style.
 
-| Details                |                                             |
+| Option                 |                                             |
 | ---------------------- | ------------------------------------------- |
 | Name                   | `--single-quote`                            |
 | Abbreviation           | `-sq`                                       |
@@ -154,6 +155,58 @@ using single quotes as the default style.
 | Command line usage     | `cercis -sq=True myScript.py`               |
 | `pyproject.toml` usage | `single-quote = true` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--single-quote=False]`              |
+
+### 3.3. "Simple" lines with long strings
+
+By default, Black wraps lines that exceed length limit. But for very simple lines (such
+as assigning a long string to a variable), line wrapping is not necessary.
+
+Also, as seen below, Black's default style can be a bit hard to predict (`var2` vs
+`var3`).
+
+<table>
+  <tr>
+    <td>
+
+```python
+# Cercis's default style
+var1 = "not wrapped even if too long"
+
+var2 = "not wrapped even if too long"  # comment
+
+var3 = "not wrapped, if the line gets too long"
+```
+
+  </td>
+
+  <td>
+
+```python
+# Black's style (not configurable)
+var1 = (
+    "wrapped when too long"
+)
+
+var2 = (
+    "wrapped when too long"
+)  # comment
+
+var3 = "not wrapped, if the line gets too long"
+```
+
+  </td>
+
+  </tr>
+</table>
+
+| Option                 |                                                           |
+| ---------------------- | --------------------------------------------------------- |
+| Name                   | `--wrap-line-with-long-string`                            |
+| Abbreviation           | `-wl`                                                     |
+| Default                | `False`                                                   |
+| Command line usage     | `cercis -wl=True myScript.py`                             |
+| `pyproject.toml` usage | `wrap-line-with-long-string = true` under `[tool.cercis]` |
+| `pre-commit` usage     | `args: [--wrap-line-with-long-string=False]`              |
 
 ## 4. How to configure _Cercis_
 

@@ -255,6 +255,7 @@ def test_empty_cell() -> None:
 def test_entire_notebook_empty_metadata() -> None:
     content = read_jupyter_notebook("jupyter", "notebook_empty_metadata")
     result = format_file_contents(content, fast=True, mode=JUPYTER_MODE)
+    # fmt: off
     expected = (
         "{\n"
         ' "cells": [\n'
@@ -284,12 +285,14 @@ def test_entire_notebook_empty_metadata() -> None:
         ' "nbformat_minor": 4\n'
         "}\n"
     )
+    # fmt: on
     assert result == expected
 
 
 def test_entire_notebook_trailing_newline() -> None:
     content = read_jupyter_notebook("jupyter", "notebook_trailing_newline")
     result = format_file_contents(content, fast=True, mode=JUPYTER_MODE)
+    # fmt: off
     expected = (
         "{\n"
         ' "cells": [\n'
@@ -331,12 +334,14 @@ def test_entire_notebook_trailing_newline() -> None:
         ' "nbformat_minor": 4\n'
         "}\n"
     )
+    # fmt: on
     assert result == expected
 
 
 def test_entire_notebook_no_trailing_newline() -> None:
     content = read_jupyter_notebook("jupyter", "notebook_no_trailing_newline")
     result = format_file_contents(content, fast=True, mode=JUPYTER_MODE)
+    # fmt: off
     expected = (
         "{\n"
         ' "cells": [\n'
@@ -378,6 +383,7 @@ def test_entire_notebook_no_trailing_newline() -> None:
         ' "nbformat_minor": 4\n'
         "}"
     )
+    # fmt: on
     assert result == expected
 
 

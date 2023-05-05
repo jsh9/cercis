@@ -74,6 +74,7 @@ from cercis.trans import (
     Transformer,
     hug_power_op,
 )
+from cercis.utils_line_wrapping import check_eligibility_to_opt_out_of_line_wrapping
 
 # types
 LeafID = int
@@ -523,6 +524,11 @@ def transform_line(
     string_split = StringSplitter(ll, sn, sq)
     string_paren_wrap = StringParenWrapper(ll, sn)
 
+    eligible_to_opt_out = check_eligibility_to_opt_out_of_line_wrapping(
+        line,
+        mode.wrap_line_with_long_string,
+    )
+
     transformers: List[Transformer]
     if (
         not line.contains_uncollapsable_type_comments()
@@ -583,7 +589,6 @@ def transform_line(
                     delimiter_split,
                     standalone_comment_split,
                     string_paren_wrap,
-                    rhs,
                 ]
             else:
                 transformers = [
@@ -591,13 +596,16 @@ def transform_line(
                     string_paren_strip,
                     string_split,
                     string_paren_wrap,
-                    rhs,
                 ]
         else:
             if line.inside_brackets:
-                transformers = [delimiter_split, standalone_comment_split, rhs]
+                transformers = [delimiter_split, standalone_comment_split]
             else:
-                transformers = [rhs]
+                transformers = []
+
+        if not eligible_to_opt_out:
+            transformers.append(rhs)
+
     # It's always safe to attempt hugging of power operations and pretty much every line
     # could match.
     transformers.append(hug_power_op)
