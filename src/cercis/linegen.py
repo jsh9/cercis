@@ -74,9 +74,7 @@ from cercis.trans import (
     Transformer,
     hug_power_op,
 )
-from cercis.utils_line_wrapping import (
-    check_line_eligibility_to_opt_out_of_line_wrapping,
-)
+from cercis.utils_line_wrapping import check_eligibility_to_opt_out_of_line_wrapping
 
 # types
 LeafID = int
@@ -526,7 +524,7 @@ def transform_line(
     string_split = StringSplitter(ll, sn, sq)
     string_paren_wrap = StringParenWrapper(ll, sn)
 
-    eligible_to_opt_out = check_line_eligibility_to_opt_out_of_line_wrapping(
+    eligible_to_opt_out = check_eligibility_to_opt_out_of_line_wrapping(
         line,
         mode.wrap_line_with_long_string,
     )

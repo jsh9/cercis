@@ -5,7 +5,7 @@ from blib2to3.pytree import Leaf
 from cercis.lines import Line
 
 
-def check_line_eligibility_to_opt_out_of_line_wrapping(
+def check_eligibility_to_opt_out_of_line_wrapping(
         line: Line,
         wrap_line_with_long_string: bool,
 ) -> bool:
