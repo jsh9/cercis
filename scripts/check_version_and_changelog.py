@@ -47,6 +47,7 @@ def should_fail_version_check(
 
     raise RuntimeError('Internal error; please contact the authors')
 
+
 def main() -> int:
     mode = sys.argv[1] if len(sys.argv) > 1 else 'branch'
 
