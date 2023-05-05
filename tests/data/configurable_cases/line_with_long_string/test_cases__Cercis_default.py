@@ -1,14 +1,51 @@
+from dataclasses import dataclass
+
 variable_1 = "very very very very very very very very very very very very very very long string"
 
 variable_2 = "very very very very very very very very very very very very very very very long string"
 
 variable_3 = 'very very very very very very very very very very very very very very long string'
 
+
+@dataclass
+class E:
+    f: str = ""
+
+
+@dataclass
+class D:
+    e: E = None
+
+
+@dataclass
+class C:
+    d: D = None
+
+
+@dataclass
+class B:
+    c: C = None
+
+
+@dataclass
+class A:
+    b: B = None
+
+
+
+a = A(B(C(D(E("")))))
+
+a.b.c.d.e.some_attr = ("Once upon a time there is"  " a village alongside the river that flows quitely.")
+
 a.b.c.d.e = "Once upon a time there is"  " a village alongside the river that flows quitely."
 
 a.b.c.d.e = "Once upon a time there is"		" a village alongside the river that flows quitely."  # two tabs
 
-some_class.a.b.some_variable_name = ("Once upon a time there is"  " a village alongside the river that flows quitely.")
+a.b.c.d.e = ("Once upon a time there is"  " a village alongside the river that flows quitely.")
+
+a.b.c = "Once upon a time there is"   " a village alongside the river that flows quitely. QED"
+
+a.b.c = "Once upon a time there is"   " a village alongside the river that flows quitely. The end."
 
 abc = "this line has two parts; the first string is already long than the line limit of 88 characters;" " this is the 2nd part"
 
@@ -63,6 +100,7 @@ three_strings_2 = (
 
 
 # output
+from dataclasses import dataclass
 
 variable_1 = "very very very very very very very very very very very very very very long string"
 
@@ -70,11 +108,45 @@ variable_2 = "very very very very very very very very very very very very very v
 
 variable_3 = "very very very very very very very very very very very very very very long string"
 
+
+@dataclass
+class E:
+    f: str = ""
+
+
+@dataclass
+class D:
+    e: E = None
+
+
+@dataclass
+class C:
+    d: D = None
+
+
+@dataclass
+class B:
+    c: C = None
+
+
+@dataclass
+class A:
+    b: B = None
+
+
+a = A(B(C(D(E("")))))
+
+a.b.c.d.e.some_attr = "Once upon a time there is" " a village alongside the river that flows quitely."
+
 a.b.c.d.e = "Once upon a time there is" " a village alongside the river that flows quitely."
 
 a.b.c.d.e = "Once upon a time there is" " a village alongside the river that flows quitely."  # two tabs
 
-some_class.a.b.some_variable_name = "Once upon a time there is" " a village alongside the river that flows quitely."
+a.b.c.d.e = "Once upon a time there is" " a village alongside the river that flows quitely."
+
+a.b.c = "Once upon a time there is" " a village alongside the river that flows quitely. QED"
+
+a.b.c = "Once upon a time there is" " a village alongside the river that flows quitely. The end."
 
 abc = "this line has two parts; the first string is already long than the line limit of 88 characters;" " this is the 2nd part"
 
