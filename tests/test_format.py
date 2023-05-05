@@ -237,8 +237,10 @@ def test_single_quote(filename: str) -> None:
 @pytest.mark.parametrize(
     "filename, wrap_line",
     [
-        ("opt_out_of_wrapping.py", False),  # Cercis's default
-        ("opt_in_wrapping.py", True),  # Black's default
+        ("test_cases__Cercis_default.py", False),
+        ("test_cases__Black_default.py", True),
+        ("long_strings_flag_disabled__Cercis_default.py", False),
+        ("long_strings_flag_disabled__Black_default.py", True),
     ],
 )
 def test_opt_out_of_wrapping(filename: str, wrap_line: bool) -> None:

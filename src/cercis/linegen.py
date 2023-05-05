@@ -647,8 +647,8 @@ def check_line_eligibility_to_opt_out_of_line_wrapping(
     For a more comprehensive list of examples, go to `test_lingen.py` and
     check out the test cases.
     """
-    if wrap_line_with_long_string:
-        return False  # not eligible; always use Black's default behavior
+    if wrap_line_with_long_string:  # comes from top-level config
+        return False  # not eligible (always use Black's default behavior)
 
     if len(line.leaves) == 0:
         return False
