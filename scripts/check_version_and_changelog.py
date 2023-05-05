@@ -38,7 +38,7 @@ def should_fail_version_check(
         mode: str,
         local_latest_ver: Version,
         pypi_latest_ver: Version,
-):
+) -> bool:
     if mode == 'branch':
         return local_latest_ver < pypi_latest_ver
 
