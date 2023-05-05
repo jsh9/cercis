@@ -84,6 +84,7 @@ _Cercis_ offers the following configurable options:
 
 - [Extra indentation at function definition](#31-extra-indentation-at-function-definition)
 - [Single quote vs double quote](#32-single-quote-vs-double-quote)
+- ["Simple" lines with long strings](#33-simple-lines-with-long-strings)
 
 The next section ([How to configure _Cercis_](#4-how-to-configure-cercis)) contains
 detailed instructions of how to configure these options.
