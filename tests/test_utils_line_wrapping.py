@@ -1,6 +1,7 @@
 import pytest
 
 import cercis
+from cercis.utils_line_wrapping import check_line_eligibility_to_opt_out_of_line_wrapping
 
 str1 = 'variable = "very very very very very very very very very very very very very very long string"'  # noqa: B950
 str2 = 'some_class.a.b.some_variable_name = ("Once upon a time there is"  " a village alongside the river that flows quitely.")'  # noqa: B950
@@ -57,7 +58,7 @@ def test_check_line_eligibility_to_opt_out_of_line_wrapping(
     lines = list(line_generator.visit(src_node))
     assert len(lines) == 1
 
-    eligible = cercis.linegen.check_line_eligibility_to_opt_out_of_line_wrapping(
+    eligible = check_line_eligibility_to_opt_out_of_line_wrapping(
         lines[0],
         wrap_line_with_long_string=False,
     )
