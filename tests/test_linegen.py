@@ -3,6 +3,10 @@ import pytest
 import cercis
 
 
+str1 = 'variable = "very very very very very very very very very very very very very very long string"'  # noqa: B950
+str2 = 'some_class.a.b.some_variable_name = ("Once upon a time there is"  " a village alongside the river that flows quitely.")'  # noqa: B950
+
+
 @pytest.mark.parametrize(
     "src_in, expected",
     [
@@ -31,14 +35,8 @@ import cercis
         ('a.b.c.d.e.f.g.h.i.j.k.l.m.n[0] = "hello"', False),
         ('a.b.c.d.e.f.g.h.i.j.k.l.m.n() = "hello"', False),
         ('a.b.c.d.e.f.g.h.i.j.k.l.m.n.__str__ = "hello"', True),
-        (
-            'variable = "very very very very very very very very very very very very very very long string"',  # noqa: B950
-            True,
-        ),
-        (
-            'some_class.a.b.some_variable_name = ("Once upon a time there is"  " a village alongside the river that flows quitely.")',  # noqa: B950
-            True,
-        ),
+        (str1, True),
+        (str2, True),
         ('"a string"', True),
         ('("another string")', True),
         ('(("a third string"))', False),
@@ -48,7 +46,7 @@ import cercis
         ("pi = 3.14159265358979323846", False),
         ("pi = '3.14159265358979323846'", True),
         ('a = "hello",', False),
-    ]
+    ],
 )
 def test_check_line_eligibility_to_opt_out_of_line_wrapping(
         src_in: str,
