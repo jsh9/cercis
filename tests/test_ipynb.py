@@ -26,7 +26,7 @@ pytestmark = pytest.mark.jupyter
 pytest.importorskip("IPython", reason="IPython is an optional dependency")
 pytest.importorskip("tokenize_rt", reason="tokenize-rt is an optional dependency")
 
-JUPYTER_MODE = Mode(is_ipynb=True)
+JUPYTER_MODE = Mode(is_ipynb=True, single_quote=True)
 
 EMPTY_CONFIG = DATA_DIR / "empty_pyproject.toml"
 
@@ -34,7 +34,7 @@ runner = CliRunner()
 
 
 def test_noop() -> None:
-    src = 'foo = "a"'
+    src = "foo = 'a'"
     with pytest.raises(NothingChanged):
         format_cell(src, fast=True, mode=JUPYTER_MODE)
 
@@ -43,14 +43,14 @@ def test_noop() -> None:
 def test_trailing_semicolon(fast: bool) -> None:
     src = 'foo = "a" ;'
     result = format_cell(src, fast=fast, mode=JUPYTER_MODE)
-    expected = 'foo = "a";'
+    expected = "foo = 'a';"
     assert result == expected
 
 
 def test_trailing_semicolon_with_comment() -> None:
     src = 'foo = "a" ;  # bar'
     result = format_cell(src, fast=True, mode=JUPYTER_MODE)
-    expected = 'foo = "a";  # bar'
+    expected = "foo = 'a';  # bar"
     assert result == expected
 
 
@@ -67,7 +67,7 @@ def test_trailing_semicolon_indented() -> None:
 
 
 def test_trailing_semicolon_noop() -> None:
-    src = 'foo = "a";'
+    src = "foo = 'a';"
     with pytest.raises(NothingChanged):
         format_cell(src, fast=True, mode=JUPYTER_MODE)
 
@@ -109,16 +109,16 @@ def test_cell_magic_noop() -> None:
     "src, expected",
     (
         pytest.param("ls =!ls", "ls = !ls", id="System assignment"),
-        pytest.param("!ls\n'foo'", '!ls\n"foo"', id="System call"),
-        pytest.param("!!ls\n'foo'", '!!ls\n"foo"', id="Other system call"),
-        pytest.param("?str\n'foo'", '?str\n"foo"', id="Help"),
-        pytest.param("??str\n'foo'", '??str\n"foo"', id="Other help"),
+        pytest.param('!ls\n"foo"', "!ls\n'foo'", id="System call"),
+        pytest.param('!!ls\n"foo"', "!!ls\n'foo'", id="Other system call"),
+        pytest.param('?str\n"foo"', "?str\n'foo'", id="Help"),
+        pytest.param('??str\n"foo"', "??str\n'foo'", id="Other help"),
         pytest.param(
-            "%matplotlib inline\n'foo'",
             '%matplotlib inline\n"foo"',
+            "%matplotlib inline\n'foo'",
             id="Line magic with argument",
         ),
-        pytest.param("%time\n'foo'", '%time\n"foo"', id="Line magic without argument"),
+        pytest.param('%time\n"foo"', "%time\n'foo'", id="Line magic without argument"),
         pytest.param(
             "env =  %env var", "env = %env var", id="Assignment to environment variable"
         ),
@@ -269,7 +269,7 @@ def test_entire_notebook_empty_metadata() -> None:
         '   "source": [\n'
         '    "%%time\\n",\n'
         '    "\\n",\n'
-        '    "print(\\"foo\\")"\n'
+        '    "print(\'foo\')"\n'
         "   ]\n"
         "  },\n"
         "  {\n"
@@ -306,7 +306,7 @@ def test_entire_notebook_trailing_newline() -> None:
         '   "source": [\n'
         '    "%%time\\n",\n'
         '    "\\n",\n'
-        '    "print(\\"foo\\")"\n'
+        '    "print(\'foo\')"\n'
         "   ]\n"
         "  },\n"
         "  {\n"
@@ -355,7 +355,7 @@ def test_entire_notebook_no_trailing_newline() -> None:
         '   "source": [\n'
         '    "%%time\\n",\n'
         '    "\\n",\n'
-        '    "print(\\"foo\\")"\n'
+        '    "print(\'foo\')"\n'
         "   ]\n"
         "  },\n"
         "  {\n"
@@ -421,7 +421,7 @@ def test_ipynb_diff_with_change() -> None:
             f"--config={EMPTY_CONFIG}",
         ],
     )
-    expected = "@@ -1,3 +1,3 @@\n %%time\n \n-print('foo')\n+print(\"foo\")\n"
+    expected = "@@ -1,3 +1,3 @@\n %%time\n \n-print(\"foo\")\n+print('foo')\n"
     assert expected in result.output
 
 
@@ -500,7 +500,7 @@ def test_ipynb_flag(tmp_path: pathlib.Path) -> None:
             f"--config={EMPTY_CONFIG}",
         ],
     )
-    expected = "@@ -1,3 +1,3 @@\n %%time\n \n-print('foo')\n+print(\"foo\")\n"
+    expected = "@@ -1,3 +1,3 @@\n %%time\n \n-print(\"foo\")\n+print('foo')\n"
     assert expected in result.output
 
 

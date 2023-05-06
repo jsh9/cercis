@@ -138,6 +138,7 @@ If you do not like this default, you can easily turn it off.
 | Name                   | `--function-definition-extra-indent`                            |
 | Abbreviation           | `-fdei`                                                         |
 | Default                | `True`                                                          |
+| Black's default        | `False`                                                         |
 | Command line usage     | `cercis -fdei=False myScript.py`                                |
 | `pyproject.toml` usage | `function-definition-extra-indent = true` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--function-definition-extra-indent=False]`              |
@@ -151,7 +152,8 @@ using single quotes as the default style.
 | ---------------------- | ------------------------------------------- |
 | Name                   | `--single-quote`                            |
 | Abbreviation           | `-sq`                                       |
-| Default                | `False`                                     |
+| Default                | `True`                                      |
+| Black's default        | `False`                                     |
 | Command line usage     | `cercis -sq=True myScript.py`               |
 | `pyproject.toml` usage | `single-quote = true` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--single-quote=False]`              |
@@ -204,6 +206,7 @@ var3 = "not wrapped, if the line gets too long"
 | Name                   | `--wrap-line-with-long-string`                            |
 | Abbreviation           | `-wl`                                                     |
 | Default                | `False`                                                   |
+| Black's default        | `True`                                                    |
 | Command line usage     | `cercis -wl=True myScript.py`                             |
 | `pyproject.toml` usage | `wrap-line-with-long-string = true` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--wrap-line-with-long-string=False]`              |

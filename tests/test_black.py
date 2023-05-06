@@ -196,6 +196,7 @@ class BlackTestCase(BlackBaseTestCase):
                 "--fast",
                 f"--line-length={cercis.DEFAULT_LINE_LENGTH}",
                 f"--config={EMPTY_CONFIG}",
+                "--single-quote=False",
             ],
             input=BytesIO(source.encode("utf8")),
         )
@@ -362,7 +363,7 @@ class BlackTestCase(BlackBaseTestCase):
     @patch("cercis.dump_to_file", dump_to_stderr)
     def test_string_quotes(self) -> None:
         source, expected = read_data("miscellaneous", "string_quotes")
-        mode = cercis.Mode(preview=True)
+        mode = cercis.Mode(preview=True, single_quote=False)
         assert_format(source, expected, mode)
         mode = replace(mode, string_normalization=False)
         not_normalized = fs(source, mode=mode)
@@ -1082,15 +1083,19 @@ class BlackTestCase(BlackBaseTestCase):
 
     @event_loop()
     def test_check_diff_use_together(self) -> None:
+        sq_arg = "--single-quote=False"
         with cache_dir():
             # Files which will be reformatted.
             src1 = get_case_path("miscellaneous", "string_quotes")
-            self.invokeBlack([str(src1), "--diff", "--check"], exit_code=1)
+            self.invokeBlack([str(src1), "--diff", "--check", sq_arg], exit_code=1)
             # Files which will not be reformatted.
             src2 = get_case_path("simple_cases", "composition")
-            self.invokeBlack([str(src2), "--diff", "--check"])
+            self.invokeBlack([str(src2), "--diff", "--check", sq_arg])
             # Multi file command.
-            self.invokeBlack([str(src1), str(src2), "--diff", "--check"], exit_code=1)
+            self.invokeBlack(
+                [str(src1), str(src2), "--diff", "--check", sq_arg],
+                exit_code=1,
+            )
 
     def test_no_src_fails(self) -> None:
         with cache_dir():
@@ -1762,18 +1767,18 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_code_option(self) -> None:
         """Test the code option with no changes."""
-        code = 'print("Hello world")\n'
-        args = ["--code", code]
+        code = "print('Hello world')\n"
+        args = ["--code", code, "--single-quote=True"]
         result = CliRunner().invoke(cercis.main, args)
 
         self.compare_results(result, code, 0)
 
     def test_code_option_changed(self) -> None:
         """Test the code option when changes are required."""
-        code = "print('hello world')"
+        code = 'print("hello world")'
         formatted = cercis.format_str(code, mode=DEFAULT_MODE)
 
-        args = ["--code", code]
+        args = ["--code", code, "--single-quote=True"]
         result = CliRunner().invoke(cercis.main, args)
 
         self.compare_results(result, formatted, 0)
@@ -1792,11 +1797,11 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_code_option_diff(self) -> None:
         """Test the code option when diff is passed."""
-        code = "print('hello world')"
+        code = 'print("hello world")'
         formatted = cercis.format_str(code, mode=DEFAULT_MODE)
         result_diff = diff(code, formatted, "STDIN", "STDOUT")
 
-        args = ["--diff", "--code", code]
+        args = ["--diff", "--code", code, "--single-quote=True"]
         result = CliRunner().invoke(cercis.main, args)
 
         # Remove time from diff
@@ -1807,13 +1812,13 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_code_option_color_diff(self) -> None:
         """Test the code option when color and diff are passed."""
-        code = "print('hello world')"
+        code = 'print("hello world")'
         formatted = cercis.format_str(code, mode=DEFAULT_MODE)
 
         result_diff = diff(code, formatted, "STDIN", "STDOUT")
         result_diff = color_diff(result_diff)
 
-        args = ["--diff", "--color", "--code", code]
+        args = ["--diff", "--color", "--code", code, "--single-quote=True"]
         result = CliRunner().invoke(cercis.main, args)
 
         # Remove time from diff
@@ -1839,10 +1844,10 @@ class BlackTestCase(BlackBaseTestCase):
         """Test that the code option ignores errors when the sanity checks fail."""
         # Patch cercis.assert_equivalent to ensure the sanity checks fail
         with patch.object(cercis, "assert_equivalent", side_effect=AssertionError):
-            code = 'print("Hello world")'
+            code = "print('Hello world')"
             formatted = cercis.format_str(code, mode=DEFAULT_MODE)
 
-            args = ["--fast", "--code", code]
+            args = ["--fast", "--code", code, "--single-quote=True"]
             result = CliRunner().invoke(cercis.main, args)
 
             self.compare_results(result, formatted, 0)
@@ -1970,7 +1975,7 @@ class TestCaching:
             with two.open("w") as fobj:
                 fobj.write("print('hello')")
             cercis.write_cache({}, [one], mode)
-            invokeBlack([str(workspace)])
+            invokeBlack([str(workspace), "--single-quote=False"])
             with one.open("r") as fobj:
                 assert fobj.read() == "print('hello')"
             with two.open("r") as fobj:
