@@ -17,7 +17,7 @@ jobs:
           echo "PR Number: $PR_NUMBER"
           UPDATED_CHANGELOG=$(git diff --name-only origin/main...HEAD | grep CHANGELOG.md)
           if [ -z "$UPDATED_CHANGELOG" ]; then
-            echo "::error::CHANGELOG.md not updated in this pull request"
+            echo "CHANGELOG.md not updated in this pull request"
             exit 1
           else
             echo "CHANGELOG.md updated in this pull request"
