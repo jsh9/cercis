@@ -2,7 +2,8 @@
 
 ## [Unreleased]
 
-## [0.1.3] - 2023-05-06
+- Changed
+  - Changed the default quote to single quote
 
 - Added
   - A new configurable option: `--collapse-nested-brackets`
