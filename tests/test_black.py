@@ -1768,7 +1768,7 @@ class BlackTestCase(BlackBaseTestCase):
     def test_code_option(self) -> None:
         """Test the code option with no changes."""
         code = "print('Hello world')\n"
-        args = ["--code", code, "--single-quote", True]
+        args = ["--code", code, "--single-quote=True"]
         result = CliRunner().invoke(cercis.main, args)
 
         self.compare_results(result, code, 0)
@@ -1778,7 +1778,7 @@ class BlackTestCase(BlackBaseTestCase):
         code = 'print("hello world")'
         formatted = cercis.format_str(code, mode=DEFAULT_MODE)
 
-        args = ["--code", code, "--single-quote", True]
+        args = ["--code", code, "--single-quote=True"]
         result = CliRunner().invoke(cercis.main, args)
 
         self.compare_results(result, formatted, 0)
@@ -1801,7 +1801,7 @@ class BlackTestCase(BlackBaseTestCase):
         formatted = cercis.format_str(code, mode=DEFAULT_MODE)
         result_diff = diff(code, formatted, "STDIN", "STDOUT")
 
-        args = ["--diff", "--code", code, "--single-quote", True]
+        args = ["--diff", "--code", code, "--single-quote=True"]
         result = CliRunner().invoke(cercis.main, args)
 
         # Remove time from diff
@@ -1818,7 +1818,7 @@ class BlackTestCase(BlackBaseTestCase):
         result_diff = diff(code, formatted, "STDIN", "STDOUT")
         result_diff = color_diff(result_diff)
 
-        args = ["--diff", "--color", "--code", code, "--single-quote", True]
+        args = ["--diff", "--color", "--code", code, "--single-quote=True"]
         result = CliRunner().invoke(cercis.main, args)
 
         # Remove time from diff
@@ -1847,7 +1847,7 @@ class BlackTestCase(BlackBaseTestCase):
             code = "print('Hello world')"
             formatted = cercis.format_str(code, mode=DEFAULT_MODE)
 
-            args = ["--fast", "--code", code, "--single-quote", True]
+            args = ["--fast", "--code", code, "--single-quote=True"]
             result = CliRunner().invoke(cercis.main, args)
 
             self.compare_results(result, formatted, 0)

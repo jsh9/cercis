@@ -15,6 +15,7 @@ from tests.util import (
     read_data,
 )
 
+
 def _override_single_quote_for_cleaner_future_rebase(mode: cercis.Mode) -> None:
     mode.single_quote = False
 
