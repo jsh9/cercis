@@ -3,7 +3,6 @@
 ## [Unreleased]
 
 - Changed
-
   - Changed the default quote to single quote
 
 - Added
