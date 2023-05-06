@@ -1,9 +1,6 @@
 name: Changelog Check
 
-on:
-  pull_request:
-    paths:
-      - 'CHANGELOG.md'
+on: [push, pull_request]
 
 jobs:
   check_changelog:
