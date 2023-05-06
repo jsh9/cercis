@@ -44,14 +44,14 @@ class BlackDTestCase(AioHTTPTestCase):  # type: ignore[misc]
 
     @unittest_run_loop
     async def test_blackd_request_needs_formatting(self) -> None:
-        response = await self.client.post("/", data=b"print('hello world')")
+        response = await self.client.post("/", data=b'print("hello world")')
         self.assertEqual(response.status, 200)
         self.assertEqual(response.charset, "utf8")
-        self.assertEqual(await response.read(), b'print("hello world")\n')
+        self.assertEqual(await response.read(), b"print('hello world')\n")
 
     @unittest_run_loop
     async def test_blackd_request_no_change(self) -> None:
-        response = await self.client.post("/", data=b'print("hello world")\n')
+        response = await self.client.post("/", data=b"print('hello world')\n")
         self.assertEqual(response.status, 204)
         self.assertEqual(await response.read(), b"")
 
@@ -194,7 +194,7 @@ class BlackDTestCase(AioHTTPTestCase):  # type: ignore[misc]
     @unittest_run_loop
     async def test_blackd_preview(self) -> None:
         response = await self.client.post(
-            "/", data=b'print("hello")\n', headers={blackd.PREVIEW: "true"}
+            "/", data=b"print('hello')\n", headers={blackd.PREVIEW: "true"}
         )
         self.assertEqual(response.status, 204)
 
