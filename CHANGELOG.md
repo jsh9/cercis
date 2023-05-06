@@ -2,8 +2,8 @@
 
 ## [Unreleased]
 
-
 ## [0.1.3] - 2023-05-06
+
 - Added
   - A new configurable option: `--collapse-nested-brackets`
   - A helper script and corresponding tox testenv to check version and changelog
