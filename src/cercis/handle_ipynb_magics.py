@@ -191,7 +191,7 @@ def get_token(src: str, magic: str) -> str:
             ) from None
     if len(token) + 2 < len(magic):
         token = f"{token}."
-    return f'"{token}"'
+    return f"'{token}'"
 
 
 def replace_cell_magics(src: str) -> Tuple[str, List[Replacement]]:
