@@ -1,6 +1,6 @@
 ...
-'some_string'
-b'\\xa3'
+"some_string"
+b"\\xa3"
 Name
 None
 True
@@ -36,8 +36,8 @@ flags & ~ select.EPOLLIN and waiters.write_task is not None
 lambda arg: None
 lambda a=True: a
 lambda a, b, c=True: a
-lambda a, b, c=True, *, d=(1 << v2), e='str': a
-lambda a, b, c=True, *vararg, d=(v1 << 2), e='str', **kwargs: a + b
+lambda a, b, c=True, *, d=(1 << v2), e="str": a
+lambda a, b, c=True, *vararg, d=(v1 << 2), e="str", **kwargs: a + b
 manylambdas = lambda x=lambda y=lambda z=1: z: y(): x()
 foo = (lambda port_id, ignore_missing: {"port1": port1_resource, "port2": port2_resource}[port_id])
 1 if True else 2
@@ -46,11 +46,11 @@ str or None if True else str or bytes or None
 str or None if (1 if True else 2) else str or bytes or None
 (str or None) if (1 if True else 2) else (str or bytes or None)
 ((super_long_variable_name or None) if (1 if super_long_test_name else 2) else (str or bytes or None))
-{'2.7': dead, '3.7': (long_live or die_hard)}
-{'2.7': dead, '3.7': (long_live or die_hard), **{'3.6': verygood}}
+{"2.7": dead, "3.7": (long_live or die_hard)}
+{"2.7": dead, "3.7": (long_live or die_hard), **{"3.6": verygood}}
 {**a, **b, **c}
-{'2.7', '3.6', '3.7', '3.8', '3.9', ('4.0' if gilectomy else '3.10')}
-({'a': 'b'}, (True or False), (+value), 'string', b'bytes') or None
+{"2.7", "3.6", "3.7", "3.8", "3.9", ("4.0" if gilectomy else "3.10")}
+({"a": "b"}, (True or False), (+value), "string", b"bytes") or None
 ()
 (1,)
 (1, 2)
@@ -65,14 +65,14 @@ str or None if (1 if True else 2) else str or bytes or None
 [this_is_a_very_long_variable_which_will_force_a_delimiter_split, element, another, *more]
 {i for i in (1, 2, 3)}
 {(i ** 2) for i in (1, 2, 3)}
-{(i ** 2) for i, _ in ((1, 'a'), (2, 'b'), (3, 'c'))}
+{(i ** 2) for i, _ in ((1, "a"), (2, "b"), (3, "c"))}
 {((i ** 2) + j) for i in (1, 2, 3) for j in (1, 2, 3)}
 [i for i in (1, 2, 3)]
 [(i ** 2) for i in (1, 2, 3)]
-[(i ** 2) for i, _ in ((1, 'a'), (2, 'b'), (3, 'c'))]
+[(i ** 2) for i, _ in ((1, "a"), (2, "b"), (3, "c"))]
 [((i ** 2) + j) for i in (1, 2, 3) for j in (1, 2, 3)]
 {i: 0 for i in (1, 2, 3)}
-{i: j for i, j in ((1, 'a'), (2, 'b'), (3, 'c'))}
+{i: j for i, j in ((1, "a"), (2, "b"), (3, "c"))}
 {a: b * 2 for a, b in dictionary.items()}
 {a: b * -2 for a, b in dictionary.items()}
 {k: v for k, v in this_is_a_very_long_variable_which_will_cause_a_trailing_comma_which_breaks_the_comprehension}
@@ -80,10 +80,10 @@ Python3 > Python2 > COBOL
 Life is Life
 call()
 call(arg)
-call(kwarg='hey')
-call(arg, kwarg='hey')
-call(arg, another, kwarg='hey', **kwargs)
-call(this_is_a_very_long_variable_which_will_force_a_delimiter_split, arg, another, kwarg='hey', **kwargs)  # note: no trailing comma pre-3.6
+call(kwarg="hey")
+call(arg, kwarg="hey")
+call(arg, another, kwarg="hey", **kwargs)
+call(this_is_a_very_long_variable_which_will_force_a_delimiter_split, arg, another, kwarg="hey", **kwargs)  # note: no trailing comma pre-3.6
 call(*gidgets[:2])
 call(a, *gidgets[:2])
 call(**self.screen_kwargs)
@@ -139,15 +139,15 @@ numpy[:, l[-2]]
 numpy[:, ::-1]
 numpy[np.newaxis, :]
 (str or None) if (sys.version_info[0] > (3,)) else (str or bytes or None)
-{'2.7': dead, '3.7': long_live or die_hard}
-{'2.7', '3.6', '3.7', '3.8', '3.9', '4.0' if gilectomy else '3.10'}
+{"2.7": dead, "3.7": long_live or die_hard}
+{"2.7", "3.6", "3.7", "3.8", "3.9", "4.0" if gilectomy else "3.10"}
 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10 or A, 11 or B, 12 or C]
 (SomeName)
 SomeName
 (Good, Bad, Ugly)
 (i for i in (1, 2, 3))
 ((i ** 2) for i in (1, 2, 3))
-((i ** 2) for i, _ in ((1, 'a'), (2, 'b'), (3, 'c')))
+((i ** 2) for i, _ in ((1, "a"), (2, "b"), (3, "c")))
 (((i ** 2) + j) for i in (1, 2, 3) for j in (1, 2, 3))
 (*starred,)
 {"id": "1","type": "type","started_at": now(),"ended_at": now() + timedelta(days=10),"priority": 1,"import_session_id": 1,**kwargs}
@@ -157,7 +157,7 @@ c = 1
 d = (1,) + a + (2,)
 e = (1,).count(1)
 f = 1, *range(10)
-g = 1, *"ten"
+g = 1, *'ten'
 what_is_up_with_those_new_coord_names = (coord_names + set(vars_to_create)) + set(vars_to_remove)
 what_is_up_with_those_new_coord_names = (coord_names | set(vars_to_create)) - set(vars_to_remove)
 result = session.query(models.Customer.id).filter(models.Customer.account_id == account_id, models.Customer.email == email_address).order_by(models.Customer.id.asc()).all()
@@ -182,8 +182,8 @@ async def f():
 print(* [] or [1])
 print(**{1: 3} if False else {x: x for x in range(3)})
 print(* lambda x: x)
-assert(not Test),("Short message")
-assert this is ComplexTest and not requirements.fit_in_a_single_line(force=False), "Short message"
+assert(not Test),('Short message')
+assert this is ComplexTest and not requirements.fit_in_a_single_line(force=False), 'Short message'
 assert(((parens is TooMany)))
 for x, in (1,), (2,), (3,): ...
 for y in (): ...
