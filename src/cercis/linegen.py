@@ -75,6 +75,7 @@ from cercis.trans import (
     hug_power_op,
 )
 from cercis.utils_line_wrapping import check_eligibility_to_opt_out_of_line_wrapping
+from cercis.utils_linegen import perform_collapse_nested_brackets
 
 # types
 LeafID = int
@@ -747,6 +748,24 @@ def _first_right_hand_split(
     tail_leaves.reverse()
     body_leaves.reverse()
     head_leaves.reverse()
+
+    collapse_nested_brackets_return_values = perform_collapse_nested_brackets(
+        line=line,
+        opening_bracket=opening_bracket,
+        closing_bracket=closing_bracket,
+        head_leaves=head_leaves,
+        body_leaves=body_leaves,
+        tail_leaves=tail_leaves,
+        mode=mode,
+        bracket_split_build_line_func=bracket_split_build_line,
+        bracket_split_component=_BracketSplitComponent,
+    )
+
+    head_leaves = collapse_nested_brackets_return_values.head_leaves
+    body_leaves = collapse_nested_brackets_return_values.body_leaves
+    tail_leaves = collapse_nested_brackets_return_values.tail_leaves
+    body = collapse_nested_brackets_return_values.body
+
     head = bracket_split_build_line(
         head_leaves,
         line,
@@ -754,12 +773,16 @@ def _first_right_hand_split(
         component=_BracketSplitComponent.head,
         mode=mode,
     )
-    body = bracket_split_build_line(
-        body_leaves,
-        line,
-        opening_bracket,
-        component=_BracketSplitComponent.body,
-        mode=mode,
+    body = (
+        body
+        if body is not None
+        else bracket_split_build_line(
+            body_leaves,
+            line,
+            opening_bracket,
+            component=_BracketSplitComponent.body,
+            mode=mode,
+        )
     )
     tail = bracket_split_build_line(
         tail_leaves,

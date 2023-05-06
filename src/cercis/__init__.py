@@ -39,6 +39,7 @@ from blib2to3.pytree import Leaf, Node
 from cercis.cache import Cache, get_cache_info, read_cache, write_cache
 from cercis.comments import normalize_fmt_off
 from cercis.const import (
+    DEFAULT_COLLAPSE_NESTED_BRACKETS,
     DEFAULT_EXCLUDES,
     DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT,
     DEFAULT_INCLUDES,
@@ -244,6 +245,17 @@ def validate_regex(
         "If False, do not wrap lines with just a variable, an operator, and"
         " a long string, even if it exceeds the line length limit. If True,"
         " wrap that line with the string put in parentheses."
+    ),
+)
+@click.option(
+    "-cnb",
+    "--collapse-nested-brackets",
+    type=bool,
+    show_default=True,
+    default=DEFAULT_COLLAPSE_NESTED_BRACKETS,
+    help=(
+        "If True, collapse nested brackets on one line, instead of exploding"
+        " into multiple levels in multiple lines"
     ),
 )
 @click.option(
@@ -466,6 +478,7 @@ def main(  # noqa: C901
         function_definition_extra_indent: bool,
         single_quote: bool,
         wrap_line_with_long_string: bool,
+        collapse_nested_brackets: bool,
         target_version: List[TargetVersion],
         check: bool,
         diff: bool,
@@ -591,6 +604,7 @@ def main(  # noqa: C901
         function_definition_extra_indent=function_definition_extra_indent,
         single_quote=single_quote,
         wrap_line_with_long_string=wrap_line_with_long_string,
+        collapse_nested_brackets=collapse_nested_brackets,
     )
 
     if code is not None:

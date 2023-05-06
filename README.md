@@ -208,6 +208,82 @@ var3 = "not wrapped, if the line gets too long"
 | `pyproject.toml` usage | `wrap-line-with-long-string = true` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--wrap-line-with-long-string=False]`              |
 
+### 3.4. Collapse nested brackets
+
+_Cercis_ by default collapses nested brackets to make the code more compact.
+
+<table>
+  <tr>
+    <td>
+
+```python
+# Cercis's default style
+
+# If line length limit is 30
+value = np.array([
+    [1, 2, 3, 4, 5],
+    [6, 7, 8, 9, 0],
+])
+
+
+
+# If line length limit is 10
+value = function({
+    1,
+    2,
+    3,
+    4,
+    5,
+})
+
+
+```
+
+  </td>
+
+  <td>
+
+```python
+# Black's style (not configurable)
+
+# If line length limit is 30
+value = np.array(
+    [
+        [1, 2, 3, 4, 5],
+        [6, 7, 8, 9, 0],
+    ]
+)
+
+# If line length limit is 10
+value = function(
+    {
+        1,
+        2,
+        3,
+        4,
+        5,
+    }
+)
+```
+
+  </td>
+
+  </tr>
+</table>
+
+| Option                 |                                                         |
+| ---------------------- | ------------------------------------------------------- |
+| Name                   | `--collapse-nested-brackets`                            |
+| Abbreviation           | `-cnb`                                                  |
+| Default                | `True`                                                  |
+| Black's style          | `False`                                                 |
+| Command line usage     | `cercis -cnb=True myScript.py`                          |
+| `pyproject.toml` usage | `collapse-nested-brackets = true` under `[tool.cercis]` |
+| `pre-commit` usage     | `args: [--collapse-nested-brackets=False]`              |
+
+The code implementation of this option comes from
+[Pyink](https://github.com/google/pyink), another forked project from Black.
+
 ## 4. How to configure _Cercis_
 
 ### 4.1. Dynamically in the command line

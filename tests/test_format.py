@@ -36,13 +36,18 @@ def test_simple_format(filename: str) -> None:
     mode = cercis.Mode(
         magic_trailing_comma=magic_trailing_comma,
         wrap_line_with_long_string=True,
+        collapse_nested_brackets=False,
     )
     check_file("simple_cases", filename, mode)
 
 
 @pytest.mark.parametrize("filename", all_data_cases("preview"))
 def test_preview_format(filename: str) -> None:
-    mode = cercis.Mode(preview=True, wrap_line_with_long_string=True)
+    mode = cercis.Mode(
+        preview=True,
+        wrap_line_with_long_string=True,
+        collapse_nested_brackets=False,
+    )
     check_file("preview", filename, mode)
 
 
@@ -230,7 +235,12 @@ def test_function_definition_extra_indent(filename: str, extra_indent: bool) -> 
     all_data_cases("configurable_cases/single_quote"),
 )
 def test_single_quote(filename: str) -> None:
-    mode = replace(DEFAULT_MODE, single_quote=True, wrap_line_with_long_string=True)
+    mode = replace(
+        DEFAULT_MODE,
+        single_quote=True,
+        wrap_line_with_long_string=True,
+        collapse_nested_brackets=False,
+    )
     check_file("configurable_cases/single_quote", filename, mode)
 
 
@@ -246,3 +256,17 @@ def test_single_quote(filename: str) -> None:
 def test_opt_out_of_wrapping(filename: str, wrap_line: bool) -> None:
     mode = replace(DEFAULT_MODE, wrap_line_with_long_string=wrap_line)
     check_file("configurable_cases/line_with_long_string", filename, mode)
+
+
+@pytest.mark.parametrize(
+    "filename, collapse_nested_brackets",
+    [
+        ("nested_brackets__Cercis_default.py", True),
+        ("nested_brackets__Black_default.py", False),
+        ("nested_brackets_explodes__Cercis_default.py", True),
+        ("nested_brackets_explodes__Black_default.py", False),
+    ],
+)
+def test_nested_brackets(filename: str, collapse_nested_brackets: bool) -> None:
+    mode = replace(DEFAULT_MODE, collapse_nested_brackets=collapse_nested_brackets)
+    check_file("configurable_cases/nested_brackets", filename, mode)
