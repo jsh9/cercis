@@ -15,6 +15,9 @@ from tests.util import (
     read_data,
 )
 
+def _override_single_quote_for_cleaner_future_rebase(mode: cercis.Mode) -> None:
+    mode.single_quote = False
+
 
 @pytest.fixture(autouse=True)
 def patch_dump_to_file(request: Any) -> Iterator[None]:
@@ -33,10 +36,12 @@ def check_file(
 @pytest.mark.parametrize("filename", all_data_cases("simple_cases"))
 def test_simple_format(filename: str) -> None:
     magic_trailing_comma = filename != "skip_magic_trailing_comma"
+    single_quote = filename == "expression"
     mode = cercis.Mode(
         magic_trailing_comma=magic_trailing_comma,
         wrap_line_with_long_string=True,
         collapse_nested_brackets=False,
+        single_quote=single_quote,
     )
     check_file("simple_cases", filename, mode)
 
@@ -48,18 +53,21 @@ def test_preview_format(filename: str) -> None:
         wrap_line_with_long_string=True,
         collapse_nested_brackets=False,
     )
+    _override_single_quote_for_cleaner_future_rebase(mode)
     check_file("preview", filename, mode)
 
 
 def test_preview_context_managers_targeting_py38() -> None:
     source, expected = read_data("preview_context_managers", "targeting_py38.py")
     mode = cercis.Mode(preview=True, target_versions={cercis.TargetVersion.PY38})
+    _override_single_quote_for_cleaner_future_rebase(mode)
     assert_format(source, expected, mode, minimum_version=(3, 8))
 
 
 def test_preview_context_managers_targeting_py39() -> None:
     source, expected = read_data("preview_context_managers", "targeting_py39.py")
     mode = cercis.Mode(preview=True, target_versions={cercis.TargetVersion.PY39})
+    _override_single_quote_for_cleaner_future_rebase(mode)
     assert_format(source, expected, mode, minimum_version=(3, 9))
 
 
@@ -71,6 +79,7 @@ def test_preview_context_managers_auto_detect(filename: str) -> None:
     assert match is not None, "Unexpected filename format: %s" % filename
     source, expected = read_data("preview_context_managers/auto_detect", filename)
     mode = cercis.Mode(preview=True)
+    _override_single_quote_for_cleaner_future_rebase(mode)
     assert_format(source, expected, mode, minimum_version=(3, int(match.group(1))))
 
 
@@ -102,6 +111,7 @@ def test_python_37(filename: str) -> None:
 def test_python_38(filename: str) -> None:
     source, expected = read_data("py_38", filename)
     mode = cercis.Mode(target_versions={cercis.TargetVersion.PY38})
+    _override_single_quote_for_cleaner_future_rebase(mode)
     assert_format(source, expected, mode, minimum_version=(3, 8))
 
 
@@ -109,6 +119,7 @@ def test_python_38(filename: str) -> None:
 def test_python_39(filename: str) -> None:
     source, expected = read_data("py_39", filename)
     mode = cercis.Mode(target_versions={cercis.TargetVersion.PY39})
+    _override_single_quote_for_cleaner_future_rebase(mode)
     assert_format(source, expected, mode, minimum_version=(3, 9))
 
 
@@ -116,6 +127,7 @@ def test_python_39(filename: str) -> None:
 def test_python_310(filename: str) -> None:
     source, expected = read_data("py_310", filename)
     mode = cercis.Mode(target_versions={cercis.TargetVersion.PY310})
+    _override_single_quote_for_cleaner_future_rebase(mode)
     assert_format(source, expected, mode, minimum_version=(3, 10))
 
 
@@ -123,6 +135,7 @@ def test_python_310(filename: str) -> None:
 def test_python_310_without_target_version(filename: str) -> None:
     source, expected = read_data("py_310", filename)
     mode = cercis.Mode()
+    _override_single_quote_for_cleaner_future_rebase(mode)
     assert_format(source, expected, mode, minimum_version=(3, 10))
 
 
@@ -139,6 +152,7 @@ def test_patma_invalid() -> None:
 def test_python_311(filename: str) -> None:
     source, expected = read_data("py_311", filename)
     mode = cercis.Mode(target_versions={cercis.TargetVersion.PY311})
+    _override_single_quote_for_cleaner_future_rebase(mode)
     assert_format(source, expected, mode, minimum_version=(3, 11))
 
 
@@ -189,6 +203,7 @@ def test_long_strings_flag_disabled() -> None:
         experimental_string_processing=False,
         wrap_line_with_long_string=True,
     )
+    _override_single_quote_for_cleaner_future_rebase(mode)
     assert_format(source, expected, mode)
 
 
@@ -226,6 +241,7 @@ def test_type_comment_syntax_error() -> None:
 )
 def test_function_definition_extra_indent(filename: str, extra_indent: bool) -> None:
     mode = replace(DEFAULT_MODE, function_definition_extra_indent=extra_indent)
+    _override_single_quote_for_cleaner_future_rebase(mode)
     check_file("configurable_cases/func_def_indent", filename, mode)
 
 
@@ -255,6 +271,7 @@ def test_single_quote(filename: str) -> None:
 )
 def test_opt_out_of_wrapping(filename: str, wrap_line: bool) -> None:
     mode = replace(DEFAULT_MODE, wrap_line_with_long_string=wrap_line)
+    _override_single_quote_for_cleaner_future_rebase(mode)
     check_file("configurable_cases/line_with_long_string", filename, mode)
 
 
@@ -269,4 +286,5 @@ def test_opt_out_of_wrapping(filename: str, wrap_line: bool) -> None:
 )
 def test_nested_brackets(filename: str, collapse_nested_brackets: bool) -> None:
     mode = replace(DEFAULT_MODE, collapse_nested_brackets=collapse_nested_brackets)
+    _override_single_quote_for_cleaner_future_rebase(mode)
     check_file("configurable_cases/nested_brackets", filename, mode)
