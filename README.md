@@ -96,7 +96,7 @@ _Cercis_ offers the following configurable options:
 The next section ([How to configure _Cercis_](#4-how-to-configure-cercis))
 contains detailed instructions of how to configure these options.
 
-### 3.1. Line length [^](#3-cerciss-code-style)
+### 3.1. Line length
 
 _Cercis_ uses 79 characters as the line length limit, instead of 88 (Black's
 default).
@@ -113,7 +113,7 @@ You can override this default if necessary.
 | `pyproject.toml` usage | `line-length = 120` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--line-length=120]`               |
 
-### 3.2. Single quote vs double quote [^](#3-cerciss-code-style)
+### 3.2. Single quote vs double quote
 
 _Cercis_ uses single quotes (`'`) as the default for strings, instead of double
 quotes (`"`) which is Black's default.
@@ -130,7 +130,7 @@ You can override this default if necessary.
 | `pyproject.toml` usage | `single-quote = false` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--single-quote=False]`               |
 
-### 3.3. Extra indentation at function definition [^](#3-cerciss-code-style)
+### 3.3. Extra indentation at function definition
 
 <table>
   <tr>
@@ -184,7 +184,7 @@ You can override this default if necessary.
 | `pyproject.toml` usage | `function-definition-extra-indent = true` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--function-definition-extra-indent=False]`              |
 
-### 3.4. "Simple" lines with long strings [^](#3-cerciss-code-style)
+### 3.4. "Simple" lines with long strings
 
 By default, Black wraps lines that exceed length limit. But for very simple
 lines (such as assigning a long string to a variable), line wrapping is not
@@ -251,7 +251,7 @@ var3 = (
 | `pyproject.toml` usage | `wrap-line-with-long-string = true` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--wrap-line-with-long-string=False]`              |
 
-### 3.5. Collapse nested brackets [^](#3-cerciss-code-style)
+### 3.5. Collapse nested brackets
 
 _Cercis_ by default collapses nested brackets to make the code more compact.
 
