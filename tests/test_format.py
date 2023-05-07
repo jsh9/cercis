@@ -20,6 +20,10 @@ def _override_single_quote_for_cleaner_future_rebase(mode: cercis.Mode) -> None:
     mode.single_quote = False
 
 
+def _use_line_length_of_88_for_cleaner_future_rebase(mode: cercis.Mode) -> None:
+    mode.line_length = 88
+
+
 @pytest.fixture(autouse=True)
 def patch_dump_to_file(request: Any) -> Iterator[None]:
     with patch("cercis.dump_to_file", dump_to_stderr):
@@ -44,6 +48,7 @@ def test_simple_format(filename: str) -> None:
         collapse_nested_brackets=False,
         single_quote=single_quote,
         wrap_pragma_comments=True,
+        line_length=88,
     )
     check_file("simple_cases", filename, mode)
 
@@ -55,6 +60,7 @@ def test_preview_format(filename: str) -> None:
         wrap_line_with_long_string=True,
         collapse_nested_brackets=False,
         wrap_pragma_comments=True,
+        line_length=88,
     )
     _override_single_quote_for_cleaner_future_rebase(mode)
     check_file("preview", filename, mode)
@@ -71,6 +77,7 @@ def test_preview_context_managers_targeting_py39() -> None:
     source, expected = read_data("preview_context_managers", "targeting_py39.py")
     mode = cercis.Mode(preview=True, target_versions={cercis.TargetVersion.PY39})
     _override_single_quote_for_cleaner_future_rebase(mode)
+    _use_line_length_of_88_for_cleaner_future_rebase(mode)
     assert_format(source, expected, mode, minimum_version=(3, 9))
 
 
@@ -131,6 +138,7 @@ def test_python_310(filename: str) -> None:
     source, expected = read_data("py_310", filename)
     mode = cercis.Mode(target_versions={cercis.TargetVersion.PY310})
     _override_single_quote_for_cleaner_future_rebase(mode)
+    _use_line_length_of_88_for_cleaner_future_rebase(mode)
     assert_format(source, expected, mode, minimum_version=(3, 10))
 
 
@@ -139,6 +147,7 @@ def test_python_310_without_target_version(filename: str) -> None:
     source, expected = read_data("py_310", filename)
     mode = cercis.Mode()
     _override_single_quote_for_cleaner_future_rebase(mode)
+    _use_line_length_of_88_for_cleaner_future_rebase(mode)
     assert_format(source, expected, mode, minimum_version=(3, 10))
 
 
@@ -260,6 +269,7 @@ def test_single_quote(filename: str) -> None:
         wrap_line_with_long_string=True,
         collapse_nested_brackets=False,
         wrap_pragma_comments=True,
+        line_length=88,
     )
     check_file("configurable_cases/single_quote", filename, mode)
 
@@ -278,6 +288,7 @@ def test_single_quote(filename: str) -> None:
 def test_opt_out_of_wrapping(filename: str, wrap_line: bool) -> None:
     mode = replace(DEFAULT_MODE, wrap_line_with_long_string=wrap_line)
     _override_single_quote_for_cleaner_future_rebase(mode)
+    _use_line_length_of_88_for_cleaner_future_rebase(mode)
     check_file("configurable_cases/line_with_long_string", filename, mode)
 
 

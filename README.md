@@ -72,26 +72,60 @@ See [pre-commit](https://github.com/pre-commit/pre-commit) for more instructions
 particular, [here](https://pre-commit.com/#passing-arguments-to-hooks) is how to specify
 arguments in pre-commit config.
 
-## 3. The code style
+## 3. _Cercis_'s code style
 
-The code style in _Cercis_ is largely consistent with the
-[style of of _Black_](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html).
+_Cercis_'s code style is largely consistent with the
+[style of of Black](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html).
 
 The main difference is that _Cercis_ provides several configurable options that Black
-doesn't. That's also our main motivation of creating _Cercis_.
+doesn't. Configurability is our main motivation behind creating _Cercis_.
 
 _Cercis_ offers the following configurable options:
 
-1. [Extra indentation at function definition](#31-extra-indentation-at-function-definition)
+1. [Line length](#31-line-length)
 2. [Single quote vs double quote](#32-single-quote-vs-double-quote)
-3. ["Simple" lines with long strings](#33-simple-lines-with-long-strings)
-4. [Collapse nested brackets](#34-collapse-nested-brackets)
-5. [Wrap pragma comments](#35-wrapping-long-lines-ending-with-pragma-comments)
+3. [Extra indentation at function definition](#33-extra-indentation-at-function-definition)
+4. ["Simple" lines with long strings](#34-simple-lines-with-long-strings)
+5. [Collapse nested brackets](#35-collapse-nested-brackets)
+6. [Wrap pragma comments](#36-wrapping-long-lines-ending-with-pragma-comments)
 
 The next section ([How to configure _Cercis_](#4-how-to-configure-cercis)) contains
 detailed instructions of how to configure these options.
 
-### 3.1. Extra indentation at function definition
+### 3.1. Line length [^](#3-cerciss-code-style)
+
+_Cercis_ uses 79 characters as the line length limit, instead of 88 (Black's default).
+
+You can override this default if necessary.
+
+| Option                 |                                           |
+| ---------------------- | ----------------------------------------- |
+| Name                   | `--line-length`                           |
+| Abbreviation           | `-l`                                      |
+| Default                | 79                                        |
+| Black's default        | 88                                        |
+| Command line usage     | `cercis -l=120 myScript.py`               |
+| `pyproject.toml` usage | `line-length = 120` under `[tool.cercis]` |
+| `pre-commit` usage     | `args: [--line-length=120]`               |
+
+### 3.2. Single quote vs double quote [^](#3-cerciss-code-style)
+
+_Cercis_ uses single quotes (`'`) as the default for strings, instead of double quotes
+(`"`) which is Black's default.
+
+You can override this default if necessary.
+
+| Option                 |                                              |
+| ---------------------- | -------------------------------------------- |
+| Name                   | `--single-quote`                             |
+| Abbreviation           | `-sq`                                        |
+| Default                | `True`                                       |
+| Black's default        | `False`                                      |
+| Command line usage     | `cercis -sq=True myScript.py`                |
+| `pyproject.toml` usage | `single-quote = false` under `[tool.cercis]` |
+| `pre-commit` usage     | `args: [--single-quote=False]`               |
+
+### 3.3. Extra indentation at function definition [^](#3-cerciss-code-style)
 
 <table>
   <tr>
@@ -128,12 +162,12 @@ def some_function(
   </tr>
 </table>
 
-We choose to indent an extra 4 spaces because it adds a clear visual separation between
-the function name and the argument list. Not adding extra indentation is also called out
-as wrong in the the official
+We choose to indent an extra 4 spaces (8 in total) because it adds a clear visual
+separation between the function name and the argument list. Not adding extra indentation
+is also called out as wrong in the the official
 [PEP8 style guide](https://peps.python.org/pep-0008/#indentation).
 
-If you do not like this default, you can easily turn it off.
+You can override this default if necessary.
 
 | Option                 |                                                                 |
 | ---------------------- | --------------------------------------------------------------- |
@@ -145,28 +179,10 @@ If you do not like this default, you can easily turn it off.
 | `pyproject.toml` usage | `function-definition-extra-indent = true` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--function-definition-extra-indent=False]`              |
 
-### 3.2. Single quote vs double quote
-
-Both _Cercis_ and Black default to using double quotes. But in _Cercis_ you can specify
-using single quotes as the default style.
-
-| Option                 |                                             |
-| ---------------------- | ------------------------------------------- |
-| Name                   | `--single-quote`                            |
-| Abbreviation           | `-sq`                                       |
-| Default                | `True`                                      |
-| Black's default        | `False`                                     |
-| Command line usage     | `cercis -sq=True myScript.py`               |
-| `pyproject.toml` usage | `single-quote = true` under `[tool.cercis]` |
-| `pre-commit` usage     | `args: [--single-quote=False]`              |
-
-### 3.3. "Simple" lines with long strings
+### 3.4. "Simple" lines with long strings [^](#3-cerciss-code-style)
 
 By default, Black wraps lines that exceed length limit. But for very simple lines (such
 as assigning a long string to a variable), line wrapping is not necessary.
-
-Also, as seen below, Black's default style can be a bit hard to predict (`var2` vs
-`var3`).
 
 <table>
   <tr>
@@ -229,7 +245,7 @@ var3 = (
 | `pyproject.toml` usage | `wrap-line-with-long-string = true` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--wrap-line-with-long-string=False]`              |
 
-### 3.4. Collapse nested brackets
+### 3.5. Collapse nested brackets [^](#3-cerciss-code-style)
 
 _Cercis_ by default collapses nested brackets to make the code more compact.
 
@@ -305,7 +321,7 @@ value = function(
 The code implementation of this option comes from
 [Pyink](https://github.com/google/pyink), another forked project from Black.
 
-### 3.5. Wrapping long lines ending with pragma comments
+### 3.6. Wrapping long lines ending with pragma comments [^](#3-cerciss-code-style)
 
 "Pragma comments", in this context, mean the directives for Python linters usually to
 tell them to ignore certain errors. Pragma comments that _Cercis_ currently recognizes
@@ -427,7 +443,15 @@ repos:
         args: [--function-definition-extra-indent=False, --line-length=79]
 ```
 
+The value in `rev` can be any _Cercis_ release, or it can be `main`, which means to
+always use the latest (including unreleased) _Cercis_ features.
+
 ### 4.4. Specify options in `tox.ini`
 
 Currently, _Cercis_ does not support a config section in `tox.ini`. Instead, you can
 specify the options in `pyproject.toml`.
+
+### 4.5. How to reproduce Black's behavior
+
+If you'd like to reproduce Black's behavior, simply set all the configurable options in
+[Section 3](#3-cerciss-code-style) to Black's default values.
