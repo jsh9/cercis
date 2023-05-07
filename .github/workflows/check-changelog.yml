@@ -1,8 +1,11 @@
 name: Changelog Check
 
 on:
-  pull_request:
+  push:
     branches-ignore:
+      - main
+  pull_request:
+    branches:
       - main
 
 jobs:
