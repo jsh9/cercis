@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased]
+## [0.1.4] - 2023-05-07
 
 - Added
   - A new configurable option: `--closing-bracket-extra-indent`
