@@ -295,6 +295,7 @@ def test_nested_brackets(filename: str, collapse_nested_brackets: bool) -> None:
     _override_single_quote_for_cleaner_future_rebase(mode)
     check_file("configurable_cases/nested_brackets", filename, mode)
 
+
 @pytest.mark.parametrize(
     "filename, wrap",
     [
