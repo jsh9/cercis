@@ -7,6 +7,7 @@
   - Changed the default quote to single quote
 
 - Added
+  - A new configurable option: `--wrap-pragma-comments`
   - A Github Action to check whether CHANGELOG.md is updated in a PR
   - A new configurable option: `--collapse-nested-brackets`
   - A helper script and corresponding tox testenv to check version and changelog
