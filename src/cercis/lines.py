@@ -1,5 +1,6 @@
 import itertools
 import math
+import re
 import sys
 from dataclasses import dataclass, field
 from typing import (
@@ -43,6 +44,8 @@ Index = int
 LeafID = int
 LN = Union[Leaf, Node]
 
+# This regex should contain a single capture group capturing the entire match.
+_PRAGMA_REGEX = re.compile("( *# (?:pylint:|pytype:|noqa:|type: ignore|type:ignore))")
 
 @dataclass
 class Line:
@@ -225,6 +228,16 @@ class Line:
         return False
 
     def contains_uncollapsable_type_comments(self) -> bool:
+        if not self.mode.wrap_pragma_comments:
+            # We bypass this method entirely because we are handling
+            # all pragma comments (such as "noqa", "pylint", "type: ignore")
+            # together elsewhere.
+            return False
+
+        # The following is Black's default (wrap_pragma_comment == True).
+        # With this style, if a line has "# type: ignore" as the comment,
+        # it will not be wrapped no matter how long it is.
+
         ignored_ids = set()
         try:
             last_leaf = self.leaves[-1]
@@ -262,6 +275,16 @@ class Line:
         return False
 
     def contains_unsplittable_type_ignore(self) -> bool:
+        if not self.mode.wrap_pragma_comments:
+            # We bypass this method entirely because we are handling
+            # all pragma comments (such as "noqa", "pylint", "type: ignore")
+            # together elsewhere.
+            return False
+
+        # The following is Black's default (wrap_pragma_comment == True).
+        # With this style, if a line has "# type: ignore" as the comment,
+        # it will not be wrapped no matter how long it is.
+
         if not self.leaves:
             return False
 
@@ -296,6 +319,26 @@ class Line:
                         return True
 
         return False
+
+    def trailing_pragma_comment_length(self) -> int:
+        """
+        This method comes from the wonderful implementation in Pyink:
+        https://github.com/google/pyink/blob/f93771c02e9a26ce9508c59d69c9337c95797eac/src/pyink/lines.py#L316-L328
+
+        Pyink is another fork from Black, and inherits Black's MIT license.
+        """
+        if not self.leaves:
+            return 0
+
+        last_leaf = self.leaves[-1]
+        length = 0
+        for comment in self.comments.get(id(last_leaf), []):
+            # str(comment) contains the whitespace preceding the `#`
+            comment_str = str(comment)
+            parts = _PRAGMA_REGEX.split(comment_str, maxsplit=1)
+            if len(parts) == 3:
+                length += len(parts[1]) + len(parts[2])
+        return length
 
     def contains_multiline_strings(self) -> bool:
         return any(is_multiline_string(leaf) for leaf in self.leaves)
@@ -765,10 +808,14 @@ def is_line_short_enough(  # noqa: C901
         line_str = line_to_string(line)
 
     width = str_width if mode.preview else len
+    if mode.wrap_pragma_comments:  # Black's default
+        effective_length = width(line_str)
+    else:  # Cercis's default
+        effective_length = width(line_str) - line.trailing_pragma_comment_length()
 
     if Preview.multiline_string_handling not in mode:
         return (
-            width(line_str) <= mode.line_length
+            effective_length <= mode.line_length
             and "\n" not in line_str  # multiline strings
             and not line.contains_standalone_comments()
         )
@@ -777,7 +824,7 @@ def is_line_short_enough(  # noqa: C901
         return False
     if "\n" not in line_str:
         # No multiline strings (MLS) present
-        return width(line_str) <= mode.line_length
+        return effective_length <= mode.line_length
 
     first, *_, last = line_str.split("\n")
     if width(first) > mode.line_length or width(last) > mode.line_length:

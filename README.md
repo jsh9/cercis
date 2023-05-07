@@ -82,9 +82,11 @@ doesn't. That's also our main motivation of creating _Cercis_.
 
 _Cercis_ offers the following configurable options:
 
-- [Extra indentation at function definition](#31-extra-indentation-at-function-definition)
-- [Single quote vs double quote](#32-single-quote-vs-double-quote)
-- ["Simple" lines with long strings](#33-simple-lines-with-long-strings)
+1. [Extra indentation at function definition](#31-extra-indentation-at-function-definition)
+2. [Single quote vs double quote](#32-single-quote-vs-double-quote)
+3. ["Simple" lines with long strings](#33-simple-lines-with-long-strings)
+4. [Collapse nested brackets](#34-collapse-nested-brackets)
+5. []
 
 The next section ([How to configure _Cercis_](#4-how-to-configure-cercis)) contains
 detailed instructions of how to configure these options.
@@ -286,6 +288,13 @@ value = function(
 
 The code implementation of this option comes from
 [Pyink](https://github.com/google/pyink), another forked project from Black.
+
+### 3.5. Wrapping long lines ending with pragma comments
+
+"Pragma comments", in this context, mean the directives for Python linters to pick up, so that they can take or not take actions.
+
+Pragma comments include
+
 
 ## 4. How to configure _Cercis_
 

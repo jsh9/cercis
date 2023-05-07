@@ -46,6 +46,7 @@ from cercis.const import (
     DEFAULT_LINE_LENGTH,
     DEFAULT_SINGLE_QUOTE,
     DEFAULT_WRAP_LINE_WITH_LONG_STRING,
+    DEFAULT_WRAP_PRAGMA_COMMENTS,
     STDIN_PLACEHOLDER,
 )
 from cercis.files import (
@@ -256,6 +257,18 @@ def validate_regex(
     help=(
         "If True, collapse nested brackets on one line, instead of exploding"
         " into multiple levels in multiple lines"
+    ),
+)
+@click.option(
+    "-wpc",
+    "--wrap-pragma-comments",
+    type=bool,
+    show_default=True,
+    default=DEFAULT_WRAP_PRAGMA_COMMENTS,
+    help=(
+        "If False, do not wrap long lines if the line exceeds length limit"
+        " only because of trailing pragma comments. Black's default behavior"
+        " is 'True'."
     ),
 )
 @click.option(
@@ -479,6 +492,7 @@ def main(  # noqa: C901
         single_quote: bool,
         wrap_line_with_long_string: bool,
         collapse_nested_brackets: bool,
+        wrap_pragma_comments: bool,
         target_version: List[TargetVersion],
         check: bool,
         diff: bool,
@@ -605,6 +619,7 @@ def main(  # noqa: C901
         single_quote=single_quote,
         wrap_line_with_long_string=wrap_line_with_long_string,
         collapse_nested_brackets=collapse_nested_brackets,
+        wrap_pragma_comments=wrap_pragma_comments,
     )
 
     if code is not None:
