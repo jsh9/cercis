@@ -20,6 +20,7 @@ else:
 from cercis.const import (
     DEFAULT_COLLAPSE_NESTED_BRACKETS,
     DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT,
+    DEFAULT_CLOSING_BRACKET_EXTRA_INDENT,
     DEFAULT_LINE_LENGTH,
     DEFAULT_SINGLE_QUOTE,
     DEFAULT_WRAP_LINE_WITH_LONG_STRING,
@@ -192,6 +193,7 @@ class Mode:
     python_cell_magics: Set[str] = field(default_factory=set)
     preview: bool = False
     function_definition_extra_indent: bool = DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT
+    closing_bracket_extra_indent: bool = DEFAULT_CLOSING_BRACKET_EXTRA_INDENT
     single_quote: bool = DEFAULT_SINGLE_QUOTE
     wrap_line_with_long_string: bool = DEFAULT_WRAP_LINE_WITH_LONG_STRING
     collapse_nested_brackets: bool = DEFAULT_COLLAPSE_NESTED_BRACKETS

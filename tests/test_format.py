@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 
 import cercis
+from cercis import TargetVersion
 from tests.util import (
     DEFAULT_MODE,
     PY36_VERSIONS,
@@ -252,9 +253,29 @@ def test_type_comment_syntax_error() -> None:
     ],
 )
 def test_function_definition_extra_indent(filename: str, extra_indent: bool) -> None:
-    mode = replace(DEFAULT_MODE, function_definition_extra_indent=extra_indent)
-    _override_single_quote_for_cleaner_future_rebase(mode)
+    mode = replace(
+        DEFAULT_MODE,
+        function_definition_extra_indent=extra_indent,
+        # Adding trailing commas after *args etc. are only supported in py36+
+        target_versions={TargetVersion.PY36},
+    )
     check_file("configurable_cases/func_def_indent", filename, mode)
+
+
+@pytest.mark.parametrize(
+    "filename, extra_indent",
+    [
+        ("no_extra_indent.py", False),
+        ("extra_indent.py", True),
+    ],
+)
+def test_closing_bracket_extra_indent(filename: str, extra_indent: bool) -> None:
+    mode = replace(
+        DEFAULT_MODE,
+        line_length=30,
+        closing_bracket_extra_indent=extra_indent,
+    )
+    check_file("configurable_cases/closing_bracket_indent", filename, mode)
 
 
 @pytest.mark.filterwarnings("ignore:invalid escape sequence.*:DeprecationWarning")
