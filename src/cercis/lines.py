@@ -265,7 +265,6 @@ class Line:
                 if is_type_comment(comment):
                     if comment_seen or (
                         not is_type_comment(comment, " ignore")
-                        and not is_type_comment(comment, "ignore")
                         and leaf_id not in ignored_ids
                     ):
                         return True
@@ -312,10 +311,7 @@ class Line:
             # line.
             for node in self.leaves[-2:]:
                 for comment in self.comments.get(id(node), []):
-                    if (
-                        is_type_comment(comment, " ignore")
-                        or is_type_comment(comment, "ignore")
-                    ):
+                    if is_type_comment(comment, " ignore"):
                         return True
 
         return False

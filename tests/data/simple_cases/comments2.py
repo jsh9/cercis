@@ -154,14 +154,6 @@ class Test:
                 not parsed.hostname.strip()):
             pass
 
-
-class Test2:
-    def _init_host(self, parsed) -> None:
-        if (parsed.hostname is None or  # type:ignore
-                not parsed.hostname.strip()):
-            return
-
-
 #######################
 ### SECTION COMMENT ###
 #######################
@@ -338,12 +330,6 @@ class Test:
     def _init_host(self, parsed) -> None:
         if parsed.hostname is None or not parsed.hostname.strip():  # type: ignore
             pass
-
-
-class Test2:
-    def _init_host(self, parsed) -> None:
-        if parsed.hostname is None or not parsed.hostname.strip():  # type:ignore
-            return
 
 
 #######################
