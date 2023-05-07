@@ -298,7 +298,6 @@ def test_nested_brackets(filename: str, collapse_nested_brackets: bool) -> None:
     [
         ("Cercis_default.py", False),
         ("Black_default.py", True),
-        # ("temp.py", False),
     ],
 )
 def test_wrap_pragma_comments(filename: str, wrap: bool) -> None:
