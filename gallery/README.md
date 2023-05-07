@@ -1,7 +1,8 @@
 # Gallery
 
-Gallery is a script that automates the process of applying different _Black_ versions to
-a selected PyPI package and seeing the results between _Black_ versions.
+Gallery is a script that automates the process of applying different _Black_
+versions to a selected PyPI package and seeing the results between _Black_
+versions.
 
 ## Build
 

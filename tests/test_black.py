@@ -194,7 +194,7 @@ class BlackTestCase(BlackBaseTestCase):
             [
                 "-",
                 "--fast",
-                f"--line-length={cercis.DEFAULT_LINE_LENGTH}",
+                "--line-length=88",
                 f"--config={EMPTY_CONFIG}",
                 "--single-quote=False",
             ],
@@ -216,7 +216,7 @@ class BlackTestCase(BlackBaseTestCase):
         args = [
             "-",
             "--fast",
-            f"--line-length={cercis.DEFAULT_LINE_LENGTH}",
+            "--line-length=88",
             "--diff",
             f"--config={EMPTY_CONFIG}",
         ]
@@ -233,7 +233,7 @@ class BlackTestCase(BlackBaseTestCase):
         args = [
             "-",
             "--fast",
-            f"--line-length={cercis.DEFAULT_LINE_LENGTH}",
+            "--line-length=88",
             "--diff",
             "--color",
             f"--config={EMPTY_CONFIG}",
@@ -275,8 +275,9 @@ class BlackTestCase(BlackBaseTestCase):
     def test_expression_ff(self) -> None:
         source, expected = read_data("simple_cases", "expression.py")
         tmp_file = Path(cercis.dump_to_file(source))
+        mode = replace(DEFAULT_MODE, line_length=88)
         try:
-            self.assertTrue(ff(tmp_file, write_back=cercis.WriteBack.YES))
+            self.assertTrue(ff(tmp_file, write_back=cercis.WriteBack.YES, mode=mode))
             with open(tmp_file, encoding="utf8") as f:
                 actual = f.read()
         finally:
@@ -284,7 +285,7 @@ class BlackTestCase(BlackBaseTestCase):
         self.assertFormatEqual(expected, actual)
         with patch("cercis.dump_to_file", dump_to_stderr):
             cercis.assert_equivalent(source, actual)
-            cercis.assert_stable(source, actual, DEFAULT_MODE)
+            cercis.assert_stable(source, actual, mode)
 
     def test_expression_diff(self) -> None:
         source, _ = read_data("simple_cases", "expression.py")
@@ -296,7 +297,13 @@ class BlackTestCase(BlackBaseTestCase):
         )
         try:
             result = BlackRunner().invoke(
-                cercis.main, ["--diff", str(tmp_file), f"--config={EMPTY_CONFIG}"]
+                cercis.main,
+                [
+                    "--diff",
+                    str(tmp_file),
+                    f"--config={EMPTY_CONFIG}",
+                    "--line-length=88",
+                ],
             )
             self.assertEqual(result.exit_code, 0)
         finally:
@@ -407,7 +414,14 @@ class BlackTestCase(BlackBaseTestCase):
         )
         try:
             result = BlackRunner().invoke(
-                cercis.main, ["-C", "--diff", str(tmp_file), f"--config={EMPTY_CONFIG}"]
+                cercis.main,
+                [
+                    "-C",
+                    "--diff",
+                    str(tmp_file),
+                    f"--config={EMPTY_CONFIG}",
+                    "--line-length=88",
+                ],
             )
             self.assertEqual(result.exit_code, 0)
         finally:
@@ -1083,17 +1097,18 @@ class BlackTestCase(BlackBaseTestCase):
 
     @event_loop()
     def test_check_diff_use_together(self) -> None:
-        sq_arg = "--single-quote=False"
+        sq = "--single-quote=False"
+        ll = "--line-length=88"
         with cache_dir():
             # Files which will be reformatted.
             src1 = get_case_path("miscellaneous", "string_quotes")
-            self.invokeBlack([str(src1), "--diff", "--check", sq_arg], exit_code=1)
+            self.invokeBlack([str(src1), "--diff", "--check", sq, ll], exit_code=1)
             # Files which will not be reformatted.
             src2 = get_case_path("simple_cases", "composition")
-            self.invokeBlack([str(src2), "--diff", "--check", sq_arg])
+            self.invokeBlack([str(src2), "--diff", "--check", sq, ll])
             # Multi file command.
             self.invokeBlack(
-                [str(src1), str(src2), "--diff", "--check", sq_arg],
+                [str(src1), str(src2), "--diff", "--check", sq, ll],
                 exit_code=1,
             )
 
