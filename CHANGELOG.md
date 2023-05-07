@@ -5,13 +5,12 @@
 - Changed
 
   - Changed the default quote to single quote
+  - Changed the default line length to 79 characters
 
 - Added
   - A new configurable option: `--wrap-pragma-comments`
   - A Github Action to check whether CHANGELOG.md is updated in a PR
   - A new configurable option: `--collapse-nested-brackets`
-  - A helper script and corresponding tox testenv to check version and
-    changelog
 
 ## [0.1.2] - 2023-05-04
 
