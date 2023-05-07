@@ -35,7 +35,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cercis"
-version = "0.1.3"
+version = "0.1.4"
 description = "A more configurable Python code formatter"
 license = { text = "MIT" }
 requires-python = ">=3.7"
