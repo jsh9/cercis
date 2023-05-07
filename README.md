@@ -86,7 +86,7 @@ _Cercis_ offers the following configurable options:
 2. [Single quote vs double quote](#32-single-quote-vs-double-quote)
 3. ["Simple" lines with long strings](#33-simple-lines-with-long-strings)
 4. [Collapse nested brackets](#34-collapse-nested-brackets)
-5. []
+5. [Wrap pragma comments](#35-wrapping-long-lines-ending-with-pragma-comments)
 
 The next section ([How to configure _Cercis_](#4-how-to-configure-cercis)) contains
 detailed instructions of how to configure these options.
@@ -291,9 +291,79 @@ The code implementation of this option comes from
 
 ### 3.5. Wrapping long lines ending with pragma comments
 
-"Pragma comments", in this context, mean the directives for Python linters to pick up, so that they can take or not take actions.
+"Pragma comments", in this context, mean the directives for Python linters usually to tell them to ignore certain errors. Pragma comments that _Cercis_ currently recognizes include:
 
-Pragma comments include
+- *noqa*: `# noqa: E501`
+- *type: ignore*: `# type: ignore[no-untyped-def]`
+- *pylint*: `# pylint: disable=protected-access`
+- *pytype*: `# pytype: disable=attribute-error`
+
+<table>
+  <tr>
+    <td>
+
+```python
+# Cercis's default style
+# (Suppose line length limit is 30)
+
+# This line has 30 characters
+var = some_func(some_long_arg)  # noqa:F501
+
+# This line has 31 characters
+var_ = some_func(
+    some_long_arg
+)  # type: ignore
+
+# Cercis doesn't wraps a line if its main
+# content (without the comment) does not
+# exceed the line length limit.
+
+
+
+
+
+```
+
+  </td>
+
+  <td>
+
+```python
+# Black's style (not configurable)
+# (Suppose line length limit is 30)
+
+# Black doesn't wrap lines, no matter
+# how long, if the line has
+# a "# type: ignore..." comment.
+# (This line has 31 characters.)
+var_ = some_func(some_long_arg)  # type: ignore
+
+# Black does not recognize "# type:ignore",
+# even though mypy recognizes it.
+var_ = some_func(
+    some_long_arg
+)  # type:ignore
+
+# Black only recognizes "# type: ignore"
+var_ = some_func(
+    some_long_arg
+)  # noqa:F501
+```
+
+  </td>
+
+  </tr>
+</table>
+
+| Option                 |                                                         |
+| ---------------------- | ------------------------------------------------------- |
+| Name                   | `--wrap-pragma-comments`                            |
+| Abbreviation           | `-wpc`                                                  |
+| Default                | `False`                                                  |
+| Black's style          | `True`                                                 |
+| Command line usage     | `cercis -wpc=True myScript.py`                          |
+| `pyproject.toml` usage | `wrap-pragma-comments = true` under `[tool.cercis]` |
+| `pre-commit` usage     | `args: [--wrap-pragma-comments=False]`              |
 
 
 ## 4. How to configure _Cercis_

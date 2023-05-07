@@ -8,8 +8,9 @@
 [tool.cercis]
 line-length = 88
 function-definition-extra-indent = true
-single-quote = false
-collapse-nested-brackets = false  # use Black style to reduce chances of future merge conflicts
+single-quote = false  # use Black style for easier rebasing in the future
+collapse-nested-brackets = false  # use Black style for easier rebasing
+wrap-pragma-comments = true  # use Black style for easier rebasing
 target-version = ['py37', 'py38']
 include = '\.pyi?$'
 extend-exclude = '''
