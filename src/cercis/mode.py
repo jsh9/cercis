@@ -23,6 +23,7 @@ from cercis.const import (
     DEFAULT_LINE_LENGTH,
     DEFAULT_SINGLE_QUOTE,
     DEFAULT_WRAP_LINE_WITH_LONG_STRING,
+    DEFAULT_WRAP_PRAGMA_COMMENTS,
 )
 
 
@@ -194,6 +195,7 @@ class Mode:
     single_quote: bool = DEFAULT_SINGLE_QUOTE
     wrap_line_with_long_string: bool = DEFAULT_WRAP_LINE_WITH_LONG_STRING
     collapse_nested_brackets: bool = DEFAULT_COLLAPSE_NESTED_BRACKETS
+    wrap_pragma_comments: bool = DEFAULT_WRAP_PRAGMA_COMMENTS
 
     def __post_init__(self) -> None:
         if self.experimental_string_processing:

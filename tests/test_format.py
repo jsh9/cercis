@@ -43,6 +43,7 @@ def test_simple_format(filename: str) -> None:
         wrap_line_with_long_string=True,
         collapse_nested_brackets=False,
         single_quote=single_quote,
+        wrap_pragma_comments=True,
     )
     check_file("simple_cases", filename, mode)
 
@@ -53,6 +54,7 @@ def test_preview_format(filename: str) -> None:
         preview=True,
         wrap_line_with_long_string=True,
         collapse_nested_brackets=False,
+        wrap_pragma_comments=True,
     )
     _override_single_quote_for_cleaner_future_rebase(mode)
     check_file("preview", filename, mode)
@@ -257,6 +259,7 @@ def test_single_quote(filename: str) -> None:
         single_quote=True,
         wrap_line_with_long_string=True,
         collapse_nested_brackets=False,
+        wrap_pragma_comments=True,
     )
     check_file("configurable_cases/single_quote", filename, mode)
 
@@ -268,6 +271,8 @@ def test_single_quote(filename: str) -> None:
         ("test_cases__Black_default.py", True),
         ("long_strings_flag_disabled__Cercis_default.py", False),
         ("long_strings_flag_disabled__Black_default.py", True),
+        ("edge_cases.py", False),
+        ("edge_cases.py", True),
     ],
 )
 def test_opt_out_of_wrapping(filename: str, wrap_line: bool) -> None:
@@ -289,3 +294,15 @@ def test_nested_brackets(filename: str, collapse_nested_brackets: bool) -> None:
     mode = replace(DEFAULT_MODE, collapse_nested_brackets=collapse_nested_brackets)
     _override_single_quote_for_cleaner_future_rebase(mode)
     check_file("configurable_cases/nested_brackets", filename, mode)
+
+
+@pytest.mark.parametrize(
+    "filename, wrap",
+    [
+        ("Cercis_default.py", False),
+        ("Black_default.py", True),
+    ],
+)
+def test_wrap_pragma_comments(filename: str, wrap: bool) -> None:
+    mode = replace(DEFAULT_MODE, wrap_pragma_comments=wrap, line_length=80)
+    check_file("configurable_cases/pragma_comments", filename, mode)
