@@ -174,11 +174,17 @@ Also, as seen below, Black's default style can be a bit hard to predict (`var2` 
 
 ```python
 # Cercis's default style
-var1 = "not wrapped even if too long"
 
-var2 = "not wrapped even if too long"  # comment
+# (Suppose line length limit is 30 chars)
+var1 = 'This line has 31 chars'
 
-var3 = "not wrapped, if the line gets too long"
+
+
+var2 = (
+    'shorter line'  # comment
+)
+
+var3 = 'This line has 43 characters_______'
 ```
 
   </td>
@@ -187,15 +193,17 @@ var3 = "not wrapped, if the line gets too long"
 
 ```python
 # Black's style (not configurable)
+
+# (Suppose line length limit is 30 chars)
 var1 = (
-    "wrapped when too long"
+    "This line has 31 chars"
 )
 
 var2 = (
-    "wrapped when too long"
-)  # comment
+    "shorter line"  # comment
+)
 
-var3 = "not wrapped, if the line gets too long"
+var3 = "This line has 43 characters_______"
 ```
 
   </td>
