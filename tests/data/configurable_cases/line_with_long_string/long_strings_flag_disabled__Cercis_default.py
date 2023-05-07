@@ -276,21 +276,6 @@ def foo():
 
 x = f"This is a {{really}} long string that needs to be split without a doubt (i.e. most definitely). In short, this {string} that can't possibly be {{expected}} to fit all together on one line. In {fact} it may even take up three or more lines... like four or five... but probably just four."
 
-long_unmergable_string_with_pragma = (
-    "This is a really long string that can't be merged because it has a likely pragma at the end"  # type: ignore
-    " of it."
-)
-
-long_unmergable_string_with_pragma = (
-    "This is a really long string that can't be merged because it has a likely pragma at the end"  # noqa
-    " of it."
-)
-
-long_unmergable_string_with_pragma = (
-    "This is a really long string that can't be merged because it has a likely pragma at the end"  # pylint: disable=some-pylint-check
-    " of it."
-)
-
 # output
 
 x = "This is a really long string that can't possibly be expected to fit all together on one line. In fact it may even take up three or more lines... like four or five... but probably just three."
@@ -351,7 +336,11 @@ bad_split1 = "But what should happen when code has already been formatted but in
 
 bad_split2 = "But what should happen when code has already " "been formatted but in the wrong way? Like " "with a space at the end instead of the " "beginning. Or what about when it is split too " "soon? In the case of a split that is too " "short, cercis will try to honer the custom " "split."
 
-bad_split3 = "What if we have inline comments on " "each line of a bad split? In that " "case, we should just leave it alone."  # First Comment  # Second Comment  # Third Comment
+bad_split3 = (
+    "What if we have inline comments on "  # First Comment
+    "each line of a bad split? In that "  # Second Comment
+    "case, we should just leave it alone."  # Third Comment
+)
 
 bad_split_func1(
     "But what should happen when code has already "
@@ -555,9 +544,3 @@ def foo():
 
 
 x = f"This is a {{really}} long string that needs to be split without a doubt (i.e. most definitely). In short, this {string} that can't possibly be {{expected}} to fit all together on one line. In {fact} it may even take up three or more lines... like four or five... but probably just four."
-
-long_unmergable_string_with_pragma = "This is a really long string that can't be merged because it has a likely pragma at the end" " of it."  # type: ignore
-
-long_unmergable_string_with_pragma = "This is a really long string that can't be merged because it has a likely pragma at the end" " of it."  # noqa
-
-long_unmergable_string_with_pragma = "This is a really long string that can't be merged because it has a likely pragma at the end" " of it."  # pylint: disable=some-pylint-check

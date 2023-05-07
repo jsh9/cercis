@@ -45,7 +45,8 @@ LeafID = int
 LN = Union[Leaf, Node]
 
 # This regex should contain a single capture group capturing the entire match.
-_PRAGMA_REGEX = re.compile("( *# (?:pylint:|pytype:|noqa:|type: *ignore))")
+_PRAGMA_REGEX = re.compile("( *# (?:pylint|pytype|noqa|type(?=: *ignore)):)")
+
 
 @dataclass
 class Line:

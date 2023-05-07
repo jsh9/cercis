@@ -271,6 +271,8 @@ def test_single_quote(filename: str) -> None:
         ("test_cases__Black_default.py", True),
         ("long_strings_flag_disabled__Cercis_default.py", False),
         ("long_strings_flag_disabled__Black_default.py", True),
+        ("edge_cases.py", False),
+        ("edge_cases.py", True),
     ],
 )
 def test_opt_out_of_wrapping(filename: str, wrap_line: bool) -> None:

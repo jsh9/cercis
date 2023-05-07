@@ -30,6 +30,15 @@ def check_eligibility_to_opt_out_of_line_wrapping(
     if wrap_line_with_long_string:  # comes from top-level config
         return False  # not eligible (always use Black's default behavior)
 
+    if len(line.comments) > 0:
+        # As long as there are any comments, we don't consider this `line`
+        # eligible for opting out, i.e., we fall back to Black's default
+        # behaviors.
+        #
+        # If we don't fall back, there will be conflicts with Black's
+        # experimental features ("--preview").
+        return False
+
     if len(line.leaves) == 0:
         return False
 

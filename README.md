@@ -291,12 +291,14 @@ The code implementation of this option comes from
 
 ### 3.5. Wrapping long lines ending with pragma comments
 
-"Pragma comments", in this context, mean the directives for Python linters usually to tell them to ignore certain errors. Pragma comments that _Cercis_ currently recognizes include:
+"Pragma comments", in this context, mean the directives for Python linters usually to
+tell them to ignore certain errors. Pragma comments that _Cercis_ currently recognizes
+include:
 
-- *noqa*: `# noqa: E501`
-- *type: ignore*: `# type: ignore[no-untyped-def]`
-- *pylint*: `# pylint: disable=protected-access`
-- *pytype*: `# pytype: disable=attribute-error`
+- _noqa_: `# noqa: E501`
+- _type: ignore_: `# type: ignore[no-untyped-def]`
+- _pylint_: `# pylint: disable=protected-access`
+- _pytype_: `# pytype: disable=attribute-error`
 
 <table>
   <tr>
@@ -355,16 +357,15 @@ var_ = some_func(
   </tr>
 </table>
 
-| Option                 |                                                         |
-| ---------------------- | ------------------------------------------------------- |
+| Option                 |                                                     |
+| ---------------------- | --------------------------------------------------- |
 | Name                   | `--wrap-pragma-comments`                            |
-| Abbreviation           | `-wpc`                                                  |
-| Default                | `False`                                                  |
-| Black's style          | `True`                                                 |
-| Command line usage     | `cercis -wpc=True myScript.py`                          |
+| Abbreviation           | `-wpc`                                              |
+| Default                | `False`                                             |
+| Black's style          | `True`                                              |
+| Command line usage     | `cercis -wpc=True myScript.py`                      |
 | `pyproject.toml` usage | `wrap-pragma-comments = true` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--wrap-pragma-comments=False]`              |
-
 
 ## 4. How to configure _Cercis_
 
