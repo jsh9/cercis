@@ -3,11 +3,13 @@
 ## [0.1.3] - 2023-05-07
 
 - Added
+
   - A new configurable option: `--collapse-nested-brackets`
   - A new configurable option: `--wrap-pragma-comments`
   - Some Github workflow actions to make sure CHANGELOG.md is updated
 
 - Changed
+
   - Changed the default quote to single quote
   - Changed the default line length to 79 characters
 
