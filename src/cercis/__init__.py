@@ -1426,7 +1426,7 @@ def assert_equivalent(src: str, dst: str) -> None:
         log = dump_to_file("".join(traceback.format_tb(exc.__traceback__)), dst)
         raise AssertionError(
             f"INTERNAL ERROR: Cercis produced invalid code: {exc}. "
-            "Please report a bug on https://github.com/psf/black/issues.  "
+            "Please report a bug on https://github.com/jsh9/cercis/issues.  "
             f"This invalid output might be helpful: {log}"
         ) from None
 
@@ -1437,7 +1437,8 @@ def assert_equivalent(src: str, dst: str) -> None:
         raise AssertionError(
             "INTERNAL ERROR: Cercis produced code that is not equivalent to the"
             " source.  Please report a bug on "
-            f"https://github.com/psf/black/issues.  This diff might be helpful: {log}"
+            "https://github.com/jsh9/cercis/issues."
+            f" This diff might be helpful: {log}"
         ) from None
 
 
@@ -1455,7 +1456,7 @@ def assert_stable(src: str, dst: str, mode: Mode) -> None:
         )
         raise AssertionError(
             "INTERNAL ERROR: Cercis produced different code on the second pass of the"
-            " formatter.  Please report a bug on https://github.com/psf/black/issues."
+            " formatter. Please report a bug on https://github.com/jsh9/cercis/issues"
             f"  This diff might be helpful: {log}"
         ) from None
 
