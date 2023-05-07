@@ -277,7 +277,6 @@ class BlackTestCase(BlackBaseTestCase):
         tmp_file = Path(cercis.dump_to_file(source))
         mode = replace(DEFAULT_MODE, line_length=88)
         try:
-
             self.assertTrue(ff(tmp_file, write_back=cercis.WriteBack.YES, mode=mode))
             with open(tmp_file, encoding="utf8") as f:
                 actual = f.read()
@@ -304,7 +303,7 @@ class BlackTestCase(BlackBaseTestCase):
                     str(tmp_file),
                     f"--config={EMPTY_CONFIG}",
                     "--line-length=88",
-                ]
+                ],
             )
             self.assertEqual(result.exit_code, 0)
         finally:
@@ -422,7 +421,7 @@ class BlackTestCase(BlackBaseTestCase):
                     str(tmp_file),
                     f"--config={EMPTY_CONFIG}",
                     "--line-length=88",
-                ]
+                ],
             )
             self.assertEqual(result.exit_code, 0)
         finally:
