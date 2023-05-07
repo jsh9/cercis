@@ -14,6 +14,21 @@ a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit_)  
 a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit___)  # pylint:  disable=protected-access
 a_very_long_library_name._private_method(and_a_long_arg_that_no_long_fits_______)  # pylint:  disable=protected-access
 
+a_very_long_library_name._private_method(and_a_long_arg)  # pytype:disable=attribute-error
+a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit_)  # pytype:disable=attribute-error
+a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit___)  # pytype:disable=attribute-error
+a_very_long_library_name._private_method(and_a_long_arg_that_no_long_fits_______)  # pytype:disable=attribute-error
+
+a_very_long_library_name._private_method(and_a_long_arg)  # pytype: disable=attribute-error
+a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit_)  # pytype: disable=attribute-error
+a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit___)  # pytype: disable=attribute-error
+a_very_long_library_name._private_method(and_a_long_arg_that_no_long_fits_______)  # pytype: disable=attribute-error
+
+a_very_long_library_name._private_method(and_a_long_arg)  # pytype:  disable=attribute-error
+a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit_)  # pytype:  disable=attribute-error
+a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit___)  # pytype:  disable=attribute-error
+a_very_long_library_name._private_method(and_a_long_arg_that_no_long_fits_______)  # pytype:  disable=attribute-error
+
 a_very_long_library_name._private_method(and_a_long_arg)  # noqa:E123, W234, ABC456, XYZ2
 a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit_)  # noqa:E123, W234, ABC456, XYZ2
 a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit___)  # noqa:E123, W234, ABC456, XYZ2
@@ -67,6 +82,27 @@ a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit___)
 a_very_long_library_name._private_method(
     and_a_long_arg_that_no_long_fits_______
 )  # pylint:  disable=protected-access
+
+a_very_long_library_name._private_method(and_a_long_arg)  # pytype:disable=attribute-error
+a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit_)  # pytype:disable=attribute-error
+a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit___)  # pytype:disable=attribute-error
+a_very_long_library_name._private_method(
+    and_a_long_arg_that_no_long_fits_______
+)  # pytype:disable=attribute-error
+
+a_very_long_library_name._private_method(and_a_long_arg)  # pytype: disable=attribute-error
+a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit_)  # pytype: disable=attribute-error
+a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit___)  # pytype: disable=attribute-error
+a_very_long_library_name._private_method(
+    and_a_long_arg_that_no_long_fits_______
+)  # pytype: disable=attribute-error
+
+a_very_long_library_name._private_method(and_a_long_arg)  # pytype:  disable=attribute-error
+a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit_)  # pytype:  disable=attribute-error
+a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit___)  # pytype:  disable=attribute-error
+a_very_long_library_name._private_method(
+    and_a_long_arg_that_no_long_fits_______
+)  # pytype:  disable=attribute-error
 
 a_very_long_library_name._private_method(and_a_long_arg)  # noqa:E123, W234, ABC456, XYZ2
 a_very_long_library_name._private_method(and_a_long_arg_that_just_fits_limit_)  # noqa:E123, W234, ABC456, XYZ2
