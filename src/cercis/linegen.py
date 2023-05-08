@@ -994,10 +994,7 @@ def bracket_split_build_line(
     if component is _BracketSplitComponent.head:
         leaves_to_track = get_leaves_inside_matching_brackets(leaves)
 
-    if (
-        mode.closing_bracket_extra_indent
-        and component is _BracketSplitComponent.tail
-    ):
+    if mode.closing_bracket_extra_indent and component is _BracketSplitComponent.tail:
         result.depth += additional_depth
 
     # Populate the line
