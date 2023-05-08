@@ -945,14 +945,14 @@ def bracket_split_build_line(
     expected.
     """
     result = Line(mode=original.mode, depth=original.depth)
+
+    if mode.function_definition_extra_indent and original.is_def:
+        additional_depth = 2
+    else:
+        additional_depth = 1
+
     if component is _BracketSplitComponent.body:
         result.inside_brackets = True
-
-        if mode.function_definition_extra_indent and original.is_def:
-            additional_depth = 2
-        else:
-            additional_depth = 1
-
         result.depth += additional_depth
 
         if leaves:
@@ -993,6 +993,10 @@ def bracket_split_build_line(
     leaves_to_track: Set[LeafID] = set()
     if component is _BracketSplitComponent.head:
         leaves_to_track = get_leaves_inside_matching_brackets(leaves)
+
+    if mode.closing_bracket_extra_indent and component is _BracketSplitComponent.tail:
+        result.depth += additional_depth
+
     # Populate the line
     for leaf in leaves:
         result.append(

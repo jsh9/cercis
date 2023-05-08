@@ -89,9 +89,10 @@ _Cercis_ offers the following configurable options:
 1. [Line length](#31-line-length)
 2. [Single quote vs double quote](#32-single-quote-vs-double-quote)
 3. [Extra indentation at function definition](#33-extra-indentation-at-function-definition)
-4. ["Simple" lines with long strings](#34-simple-lines-with-long-strings)
-5. [Collapse nested brackets](#35-collapse-nested-brackets)
-6. [Wrap pragma comments](#36-wrapping-long-lines-ending-with-pragma-comments)
+4. [Extra indentation at closing brackets](#34-closing-bracket-indentation)
+5. ["Simple" lines with long strings](#35-simple-lines-with-long-strings)
+6. [Collapse nested brackets](#36-collapse-nested-brackets)
+7. [Wrap pragma comments](#37-wrapping-long-lines-ending-with-pragma-comments)
 
 The next section ([How to configure _Cercis_](#4-how-to-configure-cercis))
 contains detailed instructions of how to configure these options.
@@ -184,7 +185,86 @@ You can override this default if necessary.
 | `pyproject.toml` usage | `function-definition-extra-indent = true` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--function-definition-extra-indent=False]`              |
 
-### 3.4. "Simple" lines with long strings
+## 3.4. Closing bracket indentation
+
+This option lets people customize where the closing bracket should be. Note
+that both styles are OK according to
+[PEP8](https://peps.python.org/pep-0008/#indentation).
+
+<table>
+  <tr>
+    <td>
+
+```python
+# --closing-bracket-extra-indent=False
+
+def function(
+        arg1: int,
+        arg2: float,
+        arg3_with_long_name: list,
+) -> None:
+    print('Hello world')
+
+
+result = func2(
+    12345,
+    3.1415926,
+    [1, 2, 3],
+)
+
+
+something = {
+    'a': 1,
+    'b': 2,
+    'c': 3,
+}
+```
+
+  </td>
+
+  <td>
+
+```python
+# --closing-bracket-extra-indent=True
+
+def function(
+        arg1: int,
+        arg2: float,
+        arg3_with_long_name: list,
+        ) -> None:
+    print('Hello world')
+
+
+result = func2(
+    12345,
+    3.1415926,
+    [1, 2, 3],
+    )
+
+
+something = {
+    'a': 1,
+    'b': 2,
+    'c': 3,
+    }
+```
+
+  </td>
+
+  </tr>
+</table>
+
+| Option                 |                                                             |
+| ---------------------- | ----------------------------------------------------------- |
+| Name                   | `--closing-bracket-extra-indent`                            |
+| Abbreviation           | `-cbei`                                                     |
+| Default                | `False`                                                     |
+| Black's default        | `False`                                                     |
+| Command line usage     | `cercis -cbei=True myScript.py`                             |
+| `pyproject.toml` usage | `closing-bracket-extra-indent = true` under `[tool.cercis]` |
+| `pre-commit` usage     | `args: [--closing-bracket-extra-indent=False]`              |
+
+### 3.5. "Simple" lines with long strings
 
 By default, Black wraps lines that exceed length limit. But for very simple
 lines (such as assigning a long string to a variable), line wrapping is not
@@ -251,7 +331,7 @@ var3 = (
 | `pyproject.toml` usage | `wrap-line-with-long-string = true` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--wrap-line-with-long-string=False]`              |
 
-### 3.5. Collapse nested brackets
+### 3.6. Collapse nested brackets
 
 _Cercis_ by default collapses nested brackets to make the code more compact.
 
@@ -327,7 +407,7 @@ value = function(
 The code implementation of this option comes from
 [Pyink](https://github.com/google/pyink), another forked project from Black.
 
-### 3.6. Wrapping long lines ending with pragma comments [^](#3-cerciss-code-style)
+### 3.7. Wrapping long lines ending with pragma comments [^](#3-cerciss-code-style)
 
 "Pragma comments", in this context, mean the directives for Python linters
 usually to tell them to ignore certain errors. Pragma comments that _Cercis_

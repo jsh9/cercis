@@ -39,6 +39,7 @@ from blib2to3.pytree import Leaf, Node
 from cercis.cache import Cache, get_cache_info, read_cache, write_cache
 from cercis.comments import normalize_fmt_off
 from cercis.const import (
+    DEFAULT_CLOSING_BRACKET_EXTRA_INDENT,
     DEFAULT_COLLAPSE_NESTED_BRACKETS,
     DEFAULT_EXCLUDES,
     DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT,
@@ -226,6 +227,17 @@ def validate_regex(
     help=(
         "If True, use 8 spaces as indent in function definition;"
         " otherwise, use 8 (Black's default)."
+    ),
+)
+@click.option(
+    "-cbei",
+    "--closing-bracket-extra-indent",
+    type=bool,
+    show_default=True,
+    default=DEFAULT_CLOSING_BRACKET_EXTRA_INDENT,
+    help=(
+        "If True, add an extra indentation level (4 or 8, depending on"
+        " --function-definition-extra-indent) to the closing bracket."
     ),
 )
 @click.option(
@@ -489,6 +501,7 @@ def main(  # noqa: C901
         code: Optional[str],
         line_length: int,
         function_definition_extra_indent: bool,
+        closing_bracket_extra_indent: bool,
         single_quote: bool,
         wrap_line_with_long_string: bool,
         collapse_nested_brackets: bool,
@@ -616,6 +629,7 @@ def main(  # noqa: C901
         preview=preview,
         python_cell_magics=set(python_cell_magics),
         function_definition_extra_indent=function_definition_extra_indent,
+        closing_bracket_extra_indent=closing_bracket_extra_indent,
         single_quote=single_quote,
         wrap_line_with_long_string=wrap_line_with_long_string,
         collapse_nested_brackets=collapse_nested_brackets,
