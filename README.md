@@ -187,7 +187,9 @@ You can override this default if necessary.
 
 ## 3.4. Closing bracket indentation
 
-This option lets people customize where the closing bracket should be. Note that both styles are OK according to [PEP8](https://peps.python.org/pep-0008/#indentation).
+This option lets people customize where the closing bracket should be. Note
+that both styles are OK according to
+[PEP8](https://peps.python.org/pep-0008/#indentation).
 
 <table>
   <tr>
