@@ -350,7 +350,7 @@ def test_wrap_pragma_comments(filename: str, wrap: bool) -> None:
         [False, True],
     )),
 )
-def test_indent_levels(
+def test_indent_levels__use_spaces(
         closing_bracket_extra_indent: bool,
         indent_level: int,
         fdei: bool,
@@ -364,14 +364,48 @@ def test_indent_levels(
         other_line_continuation_extra_indent=olcei,
         closing_bracket_extra_indent=closing_bracket_extra_indent,
     )
+    parent_folder = "use_spaces"
     folder = (
-        "closing_bracket_extra_indent"
+        f"{parent_folder}/closing_bracket_extra_indent"
         if closing_bracket_extra_indent
-        else "closing_bracket_no_extra_indent"
+        else f"{parent_folder}/closing_bracket_no_extra_indent"
     )
-
     check_file(
         f"configurable_cases/indent_level/{folder}/base_indent_level_is_{indent_level}",
+        f"fdei={fdei}_olcei={olcei}",
+        mode,
+    )
+
+
+@pytest.mark.parametrize(
+    "closing_bracket_extra_indent, fdei, olcei",
+    list(itertools.product(  # each list here corresponds to 1 argument above
+        [False, True],
+        [False, True],
+        [False, True],
+    )),
+)
+def test_indent_levels__use_tabs(
+        closing_bracket_extra_indent: bool,
+        fdei: bool,
+        olcei: bool,
+) -> None:
+    mode = replace(
+        DEFAULT_MODE,
+        line_length=80,
+        use_tabs=True,
+        function_definition_extra_indent=fdei,
+        other_line_continuation_extra_indent=olcei,
+        closing_bracket_extra_indent=closing_bracket_extra_indent,
+    )
+    parent_folder = "use_tabs"
+    folder = (
+        f"{parent_folder}/closing_bracket_extra_indent"
+        if closing_bracket_extra_indent
+        else f"{parent_folder}/closing_bracket_no_extra_indent"
+    )
+    check_file(
+        f"configurable_cases/indent_level/{folder}",
         f"fdei={fdei}_olcei={olcei}",
         mode,
     )
