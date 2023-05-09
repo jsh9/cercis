@@ -19,7 +19,7 @@ from typing import (
 from blib2to3.pgen2 import token
 from blib2to3.pytree import Leaf, Node
 from cercis.brackets import COMMA_PRIORITY, DOT_PRIORITY, BracketTracker
-from cercis.indent import Indent
+from cercis.indent import Indent, IndentCharacters
 from cercis.mode import Mode, Preview
 from cercis.nodes import (
     BRACKETS,
@@ -63,8 +63,11 @@ class Line:
     should_split_rhs: bool = False
     magic_trailing_comma: Optional[Leaf] = None
 
-    def accumulate_indent_spaces(self) -> str:
-        return "".join(_.get_indent_chars(self.mode) for _ in self.depth)
+    def render_indent_chars(self) -> str:
+        return self.indent_characters.render()
+
+    def calc_total_indent_width(self) -> int:
+        return self.indent_characters.calc_total_width()
 
     def append(
             self, leaf: Leaf, preformatted: bool = False, track_bracket: bool = False
@@ -116,6 +119,11 @@ class Line:
                 )
 
         self.append(leaf, preformatted=preformatted)
+
+    @property
+    def indent_characters(self) -> IndentCharacters:
+        """The total (accumulated) indentation characters of this line"""
+        return IndentCharacters(indents=self.depth, mode=self.mode)
 
     @property
     def is_comment(self) -> bool:
@@ -508,7 +516,7 @@ class Line:
         if not self:
             return "\n"
 
-        indent: str = self.accumulate_indent_spaces()
+        indent: str = self.render_indent_chars()
         leaves = iter(self.leaves)
         first = next(leaves)
         res = f"{first.prefix}{indent}{first.value}"
@@ -1015,7 +1023,7 @@ def can_omit_invisible_parens(
 def _can_omit_opening_paren(line: Line, *, first: Leaf, line_length: int) -> bool:
     """See `can_omit_invisible_parens`."""
     remainder = False
-    length = len(line.accumulate_indent_spaces())
+    length: int = line.calc_total_indent_width()
     _index = -1
     for _index, leaf, leaf_length in line.enumerate_with_length():
         if leaf.type in CLOSING_BRACKETS and leaf.opening_bracket is first:
@@ -1039,7 +1047,7 @@ def _can_omit_opening_paren(line: Line, *, first: Leaf, line_length: int) -> boo
 
 def _can_omit_closing_paren(line: Line, *, last: Leaf, line_length: int) -> bool:
     """See `can_omit_invisible_parens`."""
-    length = len(line.accumulate_indent_spaces())
+    length: int = line.calc_total_indent_width()
     seen_other_brackets = False
     for _index, leaf, leaf_length in line.enumerate_with_length():
         length += leaf_length

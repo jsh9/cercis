@@ -430,7 +430,7 @@ class LineGenerator(Visitor[Line]):
             quote_len = 1 if docstring[1] != quote_char else 3
             docstring = docstring[quote_len:-quote_len]
             docstring_started_empty = not docstring
-            indent: str = self.current_line.accumulate_indent_spaces()
+            indent: str = self.current_line.render_indent_chars()
 
             if is_multiline_string(leaf):
                 docstring = fix_docstring(docstring, indent)
@@ -1530,7 +1530,7 @@ def generate_trailers_to_omit(line: Line, line_length: int) -> Iterator[Set[Leaf
     if not line.magic_trailing_comma:
         yield omit
 
-    length = len(line.accumulate_indent_spaces())
+    length: int = line.calc_total_indent_width()
     opening_bracket: Optional[Leaf] = None
     closing_bracket: Optional[Leaf] = None
     inner_brackets: Set[LeafID] = set()
