@@ -16,6 +16,7 @@ from cercis.brackets import (
     max_delimiter_priority_in_atom,
 )
 from cercis.comments import FMT_OFF, generate_comments, list_comments
+from cercis.indent import Indent
 from cercis.lines import (
     Line,
     RHSResult,
@@ -101,7 +102,7 @@ class LineGenerator(Visitor[Line]):
         self.current_line: Line
         self.__post_init__()
 
-    def line(self, indent: int = 0) -> Iterator[Line]:
+    def line(self, indent: Optional[Indent] = None) -> Iterator[Line]:
         """Generate a line.
 
         If the line is empty, only emit if it makes sense.
@@ -110,7 +111,11 @@ class LineGenerator(Visitor[Line]):
         If any lines were generated, set up a new current_line.
         """
         if not self.current_line:
-            self.current_line.depth += indent
+            if indent is Indent.DEDENT:
+                self.current_line.depth = self.current_line.depth[:-1]
+            elif indent is not None:
+                self.current_line.depth += (indent,)
+
             return  # Line is empty, don't emit. Creating a new one unnecessary.
 
         if (
@@ -125,7 +130,15 @@ class LineGenerator(Visitor[Line]):
             return
 
         complete_line = self.current_line
-        self.current_line = Line(mode=self.mode, depth=complete_line.depth + indent)
+
+        if indent is Indent.DEDENT:
+            new_depth = complete_line.depth[:-1]
+        elif indent is not None:
+            new_depth = complete_line.depth + (indent,)
+        else:
+            new_depth = complete_line.depth
+
+        self.current_line = Line(mode=self.mode, depth=new_depth)
         yield complete_line
 
     def visit_default(self, node: LN) -> Iterator[Line]:
@@ -180,7 +193,7 @@ class LineGenerator(Visitor[Line]):
     def visit_INDENT(self, node: Leaf) -> Iterator[Line]:
         """Increase indentation level, maybe yield a line."""
         # In blib2to3 INDENT never holds comments.
-        yield from self.line(+1)
+        yield from self.line(Indent.BLOCK)
         yield from self.visit_default(node)
 
     def visit_DEDENT(self, node: Leaf) -> Iterator[Line]:
@@ -195,7 +208,7 @@ class LineGenerator(Visitor[Line]):
         yield from self.visit_default(node)
 
         # Finally, emit the dedent.
-        yield from self.line(-1)
+        yield from self.line(Indent.DEDENT)
 
     def visit_stmt(
             self, node: Node, keywords: Set[str], parens: Set[str]
@@ -291,9 +304,9 @@ class LineGenerator(Visitor[Line]):
             if self.mode.is_pyi and is_stub_body(node):
                 yield from self.visit_default(node)
             else:
-                yield from self.line(+1)
+                yield from self.line(Indent.BLOCK)
                 yield from self.visit_default(node)
-                yield from self.line(-1)
+                yield from self.line(Indent.DEDENT)
 
         else:
             if (
@@ -417,7 +430,7 @@ class LineGenerator(Visitor[Line]):
             quote_len = 1 if docstring[1] != quote_char else 3
             docstring = docstring[quote_len:-quote_len]
             docstring_started_empty = not docstring
-            indent = " " * 4 * self.current_line.depth
+            indent: str = self.current_line.accumulate_indent_spaces()
 
             if is_multiline_string(leaf):
                 docstring = fix_docstring(docstring, indent)
@@ -946,14 +959,15 @@ def bracket_split_build_line(
     """
     result = Line(mode=original.mode, depth=original.depth)
 
-    if mode.function_definition_extra_indent and original.is_def:
-        additional_depth = 2
-    else:
-        additional_depth = 1
+    additional_indent = (
+        Indent.FUNCTION_DEF_CONTINUATION
+        if original.is_def
+        else Indent.OTHER_LINE_CONTINUATION
+    )
 
     if component is _BracketSplitComponent.body:
         result.inside_brackets = True
-        result.depth += additional_depth
+        result.depth = result.depth + (additional_indent,)
 
         if leaves:
             # Since body is a new indent level, remove spurious leading whitespace.
@@ -995,7 +1009,7 @@ def bracket_split_build_line(
         leaves_to_track = get_leaves_inside_matching_brackets(leaves)
 
     if mode.closing_bracket_extra_indent and component is _BracketSplitComponent.tail:
-        result.depth += additional_depth
+        result.depth = result.depth + (additional_indent,)
 
     # Populate the line
     for leaf in leaves:
@@ -1516,7 +1530,7 @@ def generate_trailers_to_omit(line: Line, line_length: int) -> Iterator[Set[Leaf
     if not line.magic_trailing_comma:
         yield omit
 
-    length = 4 * line.depth
+    length = len(line.accumulate_indent_spaces())
     opening_bracket: Optional[Leaf] = None
     closing_bracket: Optional[Leaf] = None
     inner_brackets: Set[LeafID] = set()

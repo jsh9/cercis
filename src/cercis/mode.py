@@ -18,11 +18,14 @@ else:
     from typing import Final
 
 from cercis.const import (
+    DEFAULT_BASE_INDENT_LEVEL,
     DEFAULT_CLOSING_BRACKET_EXTRA_INDENT,
     DEFAULT_COLLAPSE_NESTED_BRACKETS,
     DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT,
     DEFAULT_LINE_LENGTH,
+    DEFAULT_OTHER_LINE_CONTINUATION_EXTRA_INDENT,
     DEFAULT_SINGLE_QUOTE,
+    DEFAULT_USE_TABS,
     DEFAULT_WRAP_LINE_WITH_LONG_STRING,
     DEFAULT_WRAP_PRAGMA_COMMENTS,
 )
@@ -198,6 +201,9 @@ class Mode:
     wrap_line_with_long_string: bool = DEFAULT_WRAP_LINE_WITH_LONG_STRING
     collapse_nested_brackets: bool = DEFAULT_COLLAPSE_NESTED_BRACKETS
     wrap_pragma_comments: bool = DEFAULT_WRAP_PRAGMA_COMMENTS
+    base_indent_level: int = DEFAULT_BASE_INDENT_LEVEL
+    other_line_continuation_extra_indent: bool = DEFAULT_OTHER_LINE_CONTINUATION_EXTRA_INDENT
+    use_tabs: bool = DEFAULT_USE_TABS
 
     def __post_init__(self) -> None:
         if self.experimental_string_processing:

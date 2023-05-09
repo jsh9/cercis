@@ -39,13 +39,16 @@ from blib2to3.pytree import Leaf, Node
 from cercis.cache import Cache, get_cache_info, read_cache, write_cache
 from cercis.comments import normalize_fmt_off
 from cercis.const import (
+    DEFAULT_BASE_INDENT_LEVEL,
     DEFAULT_CLOSING_BRACKET_EXTRA_INDENT,
     DEFAULT_COLLAPSE_NESTED_BRACKETS,
     DEFAULT_EXCLUDES,
     DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT,
     DEFAULT_INCLUDES,
     DEFAULT_LINE_LENGTH,
+    DEFAULT_OTHER_LINE_CONTINUATION_EXTRA_INDENT,
     DEFAULT_SINGLE_QUOTE,
+    DEFAULT_USE_TABS,
     DEFAULT_WRAP_LINE_WITH_LONG_STRING,
     DEFAULT_WRAP_PRAGMA_COMMENTS,
     STDIN_PLACEHOLDER,
@@ -203,6 +206,17 @@ def validate_regex(
         raise click.BadParameter(f"Not a valid regular expression: {e}") from None
 
 
+def validate_indent_level(
+        ctx: click.Context,
+        param: click.Parameter,
+        value: Optional[int],
+) -> Optional[int]:
+    if not isinstance(value, int) or value <= 0:
+        raise click.BadParameter("Not a positive integer") from None
+
+    return value
+
+
 @click.command(
     context_settings={"help_option_names": ["-h", "--help"]},
     # While Click does set this field automatically using the docstring, mypyc
@@ -219,6 +233,15 @@ def validate_regex(
     show_default=True,
 )
 @click.option(
+    "-bil",
+    "--base-indent-level",
+    type=int,
+    show_default=True,
+    default=DEFAULT_BASE_INDENT_LEVEL,
+    callback=validate_indent_level,
+    help="The base indentation level.",
+)
+@click.option(
     "-fdei",
     "--function-definition-extra-indent",
     type=bool,
@@ -230,6 +253,14 @@ def validate_regex(
     ),
 )
 @click.option(
+    "-olcei",
+    "--other-line-continuation-extra-indent",
+    type=bool,
+    show_default=True,
+    default=DEFAULT_OTHER_LINE_CONTINUATION_EXTRA_INDENT,
+    help="If True, add an extra indentation level when wrapping longer lines.",
+)
+@click.option(
     "-cbei",
     "--closing-bracket-extra-indent",
     type=bool,
@@ -239,6 +270,14 @@ def validate_regex(
         "If True, add an extra indentation level (4 or 8, depending on"
         " --function-definition-extra-indent) to the closing bracket."
     ),
+)
+@click.option(
+    "-tab",
+    "--use-tabs",
+    type=bool,
+    show_default=True,
+    default=DEFAULT_USE_TABS,
+    help="If True, use tabs as indentation, rather than spaces.",
 )
 @click.option(
     "-sq",
@@ -506,6 +545,9 @@ def main(  # noqa: C901
         wrap_line_with_long_string: bool,
         collapse_nested_brackets: bool,
         wrap_pragma_comments: bool,
+        base_indent_level: int,
+        other_line_continuation_extra_indent: bool,
+        use_tabs: bool,
         target_version: List[TargetVersion],
         check: bool,
         diff: bool,
@@ -634,6 +676,9 @@ def main(  # noqa: C901
         wrap_line_with_long_string=wrap_line_with_long_string,
         collapse_nested_brackets=collapse_nested_brackets,
         wrap_pragma_comments=wrap_pragma_comments,
+        base_indent_level=base_indent_level,
+        other_line_continuation_extra_indent=other_line_continuation_extra_indent,
+        use_tabs=use_tabs,
     )
 
     if code is not None:

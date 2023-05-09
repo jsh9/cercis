@@ -338,3 +338,47 @@ def test_nested_brackets(filename: str, collapse_nested_brackets: bool) -> None:
 def test_wrap_pragma_comments(filename: str, wrap: bool) -> None:
     mode = replace(DEFAULT_MODE, wrap_pragma_comments=wrap, line_length=80)
     check_file("configurable_cases/pragma_comments", filename, mode)
+
+
+@pytest.mark.parametrize(
+    "indent_level, fdei, olcei",
+    [
+        (1, False, False),
+        (1, True, False),
+        (1, False, True),
+        (1, True, True),
+        (2, False, False),
+        (2, True, False),
+        (2, False, True),
+        (2, True, True),
+        (3, False, False),
+        (3, True, False),
+        (3, False, True),
+        (3, True, True),
+        (4, False, False),
+        (4, True, False),
+        (4, False, True),
+        (4, True, True),
+        (8, False, False),
+        (8, True, False),
+        (8, False, True),
+        (8, True, True),
+    ],
+)
+def test_indent_levels(
+        indent_level: int,
+        fdei: bool,
+        olcei: bool,
+) -> None:
+    mode = replace(
+        DEFAULT_MODE,
+        line_length=80,
+        base_indent_level=indent_level,
+        function_definition_extra_indent=fdei,
+        other_line_continuation_extra_indent=olcei,
+    )
+    check_file(
+        f"configurable_cases/indent_level/base_indent_level_is_{indent_level}",
+        f"fdei={fdei}_olcei={olcei}",
+        mode,
+    )
