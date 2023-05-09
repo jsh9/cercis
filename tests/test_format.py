@@ -1,3 +1,4 @@
+import itertools
 import re
 from dataclasses import replace
 from typing import Any, Iterator
@@ -341,31 +342,16 @@ def test_wrap_pragma_comments(filename: str, wrap: bool) -> None:
 
 
 @pytest.mark.parametrize(
-    "indent_level, fdei, olcei",
-    [
-        (1, False, False),
-        (1, True, False),
-        (1, False, True),
-        (1, True, True),
-        (2, False, False),
-        (2, True, False),
-        (2, False, True),
-        (2, True, True),
-        (3, False, False),
-        (3, True, False),
-        (3, False, True),
-        (3, True, True),
-        (4, False, False),
-        (4, True, False),
-        (4, False, True),
-        (4, True, True),
-        (8, False, False),
-        (8, True, False),
-        (8, False, True),
-        (8, True, True),
-    ],
+    "closing_bracket_extra_indent, indent_level, fdei, olcei",
+    list(itertools.product(  # each list here corresponds to 1 argument above
+        [False, True],
+        [1, 2, 3, 4, 8],
+        [False, True],
+        [False, True],
+    )),
 )
 def test_indent_levels(
+        closing_bracket_extra_indent: bool,
         indent_level: int,
         fdei: bool,
         olcei: bool,
@@ -376,9 +362,16 @@ def test_indent_levels(
         base_indent_level=indent_level,
         function_definition_extra_indent=fdei,
         other_line_continuation_extra_indent=olcei,
+        closing_bracket_extra_indent=closing_bracket_extra_indent,
     )
+    folder = (
+        "closing_bracket_extra_indent"
+        if closing_bracket_extra_indent
+        else "closing_bracket_no_extra_indent"
+    )
+
     check_file(
-        f"configurable_cases/indent_level/base_indent_level_is_{indent_level}",
+        f"configurable_cases/indent_level/{folder}/base_indent_level_is_{indent_level}",
         f"fdei={fdei}_olcei={olcei}",
         mode,
     )
