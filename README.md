@@ -1,4 +1,4 @@
-# Cercis
+# _Cercis_
 
 [![](https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Red_bud_2009.jpg/320px-Red_bud_2009.jpg)](https://en.wikipedia.org/wiki/Cercis)
 
@@ -12,6 +12,15 @@ early spring.
 This code repository is forked from and directly inspired by
 [Black](https://github.com/psf/black). The original license of Black is
 included in this repository (see [LICENSE_ORIGINAL](./LICENSE_ORIGINAL)).
+
+_Cercis_ inherited Black's very comprehensive test cases, which means we are
+confident that our configurability addition does not introduce any undesirable
+side effects. We also thoroughly tested every configurable options that we
+added.
+
+In particular, via its configurable options, _Cercis_ can completely fall back
+to Black. See [Section 4.5](#45-how-to-fall-back-to-blacks-behavior) below for
+more details.
 
 ## 1. Motivations
 
@@ -537,7 +546,7 @@ means to always use the latest (including unreleased) _Cercis_ features.
 Currently, _Cercis_ does not support a config section in `tox.ini`. Instead,
 you can specify the options in `pyproject.toml`.
 
-### 4.5. How to reproduce Black's behavior
+### 4.5. How to fall back to Black's behavior
 
 If you'd like to reproduce Black's behavior, simply set all the configurable
 options in [Section 3](#3-cerciss-code-style) to Black's default values.
