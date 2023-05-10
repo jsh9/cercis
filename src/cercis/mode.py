@@ -18,7 +18,7 @@ else:
     from typing import Final
 
 from cercis.const import (
-    DEFAULT_BASE_INDENT_LEVEL,
+    DEFAULT_BASE_INDENTATION_SPACES,
     DEFAULT_CLOSING_BRACKET_EXTRA_INDENT,
     DEFAULT_COLLAPSE_NESTED_BRACKETS,
     DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT,
@@ -202,7 +202,7 @@ class Mode:
     wrap_line_with_long_string: bool = DEFAULT_WRAP_LINE_WITH_LONG_STRING
     collapse_nested_brackets: bool = DEFAULT_COLLAPSE_NESTED_BRACKETS
     wrap_pragma_comments: bool = DEFAULT_WRAP_PRAGMA_COMMENTS
-    base_indent_level: int = DEFAULT_BASE_INDENT_LEVEL
+    base_indentation_spaces: int = DEFAULT_BASE_INDENTATION_SPACES
     other_line_continuation_extra_indent: bool = DEFAULT_OTHER_LINE_CONTINUATION_EXTRA_INDENT
     use_tabs: bool = DEFAULT_USE_TABS
     tab_width: int = DEFAULT_TAB_WIDTH

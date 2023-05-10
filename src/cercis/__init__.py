@@ -39,7 +39,7 @@ from blib2to3.pytree import Leaf, Node
 from cercis.cache import Cache, get_cache_info, read_cache, write_cache
 from cercis.comments import normalize_fmt_off
 from cercis.const import (
-    DEFAULT_BASE_INDENT_LEVEL,
+    DEFAULT_BASE_INDENTATION_SPACES,
     DEFAULT_CLOSING_BRACKET_EXTRA_INDENT,
     DEFAULT_COLLAPSE_NESTED_BRACKETS,
     DEFAULT_EXCLUDES,
@@ -256,13 +256,16 @@ def validate_positive_integer(
     ),
 )
 @click.option(
-    "-bil",
-    "--base-indent-level",
+    "-bis",
+    "--base-indentation-spaces",
     type=int,
     show_default=True,
-    default=DEFAULT_BASE_INDENT_LEVEL,
+    default=DEFAULT_BASE_INDENTATION_SPACES,
     callback=validate_positive_integer,
-    help="The base indentation level. It has no effect when --use-tabs is True",
+    help=(
+        "How many spaces to use for each indentation level."
+        " It has no effect when --use-tabs is True."
+    ),
 )
 @click.option(
     "-fdei",
@@ -560,7 +563,7 @@ def main(  # noqa: C901
         wrap_line_with_long_string: bool,
         collapse_nested_brackets: bool,
         wrap_pragma_comments: bool,
-        base_indent_level: int,
+        base_indentation_spaces: int,
         other_line_continuation_extra_indent: bool,
         use_tabs: bool,
         tab_width: int,
@@ -692,7 +695,7 @@ def main(  # noqa: C901
         wrap_line_with_long_string=wrap_line_with_long_string,
         collapse_nested_brackets=collapse_nested_brackets,
         wrap_pragma_comments=wrap_pragma_comments,
-        base_indent_level=base_indent_level,
+        base_indentation_spaces=base_indentation_spaces,
         other_line_continuation_extra_indent=other_line_continuation_extra_indent,
         use_tabs=use_tabs,
         tab_width=tab_width,

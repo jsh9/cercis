@@ -56,7 +56,7 @@ class Indent(Enum):
             spaces_for_one_tab = " " * mode.tab_width
             return ch.replace(TAB, spaces_for_one_tab)
 
-        spaces = SPACE * mode.base_indent_level
+        spaces = SPACE * mode.base_indentation_spaces
         if self == Indent.OTHER_LINE_CONTINUATION:
             return spaces * 2 if mode.other_line_continuation_extra_indent else spaces
 
