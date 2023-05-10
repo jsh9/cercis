@@ -83,17 +83,17 @@ class Indent(Enum):
         return spaces
 
 
-class IndentCharacters:
+class MultipleIndents:
     """
-    A class to hold characters (spaces or tabs) of multiple indentations.
+    A class to hold multiple indentations.
 
     Attributes:
         indents:
             A collection of indents on a particular line of code
         mode:
-            Contains information to determine how to render the indents
-            into actual characters, or how to calculate the length of
-            the indents
+            Global configuration, which contains information to determine
+            how to render the indents into actual characters, or how to
+            calculate the width of the indents
     """
 
     def __init__(self, indents: Tuple[Indent, ...], mode: "Mode") -> None:

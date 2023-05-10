@@ -19,7 +19,7 @@ from typing import (
 from blib2to3.pgen2 import token
 from blib2to3.pytree import Leaf, Node
 from cercis.brackets import COMMA_PRIORITY, DOT_PRIORITY, BracketTracker
-from cercis.indent import Indent, IndentCharacters
+from cercis.indent import Indent, MultipleIndents
 from cercis.mode import Mode, Preview
 from cercis.nodes import (
     BRACKETS,
@@ -64,10 +64,10 @@ class Line:
     magic_trailing_comma: Optional[Leaf] = None
 
     def render_indent_chars(self, for_width_calculation: bool = False) -> str:
-        return self.indent_characters.render(for_width_calculation)
+        return self.all_indents.render(for_width_calculation)
 
     def calc_total_indent_width(self) -> int:
-        return self.indent_characters.calc_total_width()
+        return self.all_indents.calc_total_width()
 
     def append(
             self, leaf: Leaf, preformatted: bool = False, track_bracket: bool = False
@@ -121,9 +121,9 @@ class Line:
         self.append(leaf, preformatted=preformatted)
 
     @property
-    def indent_characters(self) -> IndentCharacters:
-        """The total (accumulated) indentation characters of this line"""
-        return IndentCharacters(indents=self.depth, mode=self.mode)
+    def all_indents(self) -> MultipleIndents:
+        """All the indentations of this line"""
+        return MultipleIndents(indents=self.depth, mode=self.mode)
 
     @property
     def is_comment(self) -> bool:
