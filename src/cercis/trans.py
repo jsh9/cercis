@@ -1895,8 +1895,8 @@ class StringParenWrapper(BaseStringSplitter, CustomSplitMapMixin):
                 char == " " or char in SPLIT_SAFE_CHARS for char in string_value
             ):
                 # And will still violate the line length limit when split...
-                max_string_width: int = (
-                    self.line_length - ((line.calc_total_indent_width() + 1) * 4)
+                max_string_width: int = self.line_length - (
+                    (line.calc_total_indent_width() + 1) * 4
                 )
                 if str_width(string_value) > max_string_width:
                     # And has no associated custom splits...

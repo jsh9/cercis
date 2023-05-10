@@ -203,7 +203,9 @@ class Mode:
     collapse_nested_brackets: bool = DEFAULT_COLLAPSE_NESTED_BRACKETS
     wrap_pragma_comments: bool = DEFAULT_WRAP_PRAGMA_COMMENTS
     base_indentation_spaces: int = DEFAULT_BASE_INDENTATION_SPACES
-    other_line_continuation_extra_indent: bool = DEFAULT_OTHER_LINE_CONTINUATION_EXTRA_INDENT
+    other_line_continuation_extra_indent: bool = (
+        DEFAULT_OTHER_LINE_CONTINUATION_EXTRA_INDENT
+    )
     use_tabs: bool = DEFAULT_USE_TABS
     tab_width: int = DEFAULT_TAB_WIDTH
 

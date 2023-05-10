@@ -343,12 +343,14 @@ def test_wrap_pragma_comments(filename: str, wrap: bool) -> None:
 
 @pytest.mark.parametrize(
     "closing_bracket_extra_indent, base_indent_spaces, fdei, olcei",
-    list(itertools.product(  # each list here corresponds to 1 argument above
-        [False, True],
-        [1, 2, 3, 4, 8],
-        [False, True],
-        [False, True],
-    )),
+    list(
+        itertools.product(  # each list here corresponds to 1 argument above
+            [False, True],
+            [1, 2, 3, 4, 8],
+            [False, True],
+            [False, True],
+        )
+    ),
 )
 def test_indent_levels__use_spaces(
         closing_bracket_extra_indent: bool,
@@ -379,11 +381,13 @@ def test_indent_levels__use_spaces(
 
 @pytest.mark.parametrize(
     "closing_bracket_extra_indent, fdei, olcei",
-    list(itertools.product(  # each list here corresponds to 1 argument above
-        [False, True],
-        [False, True],
-        [False, True],
-    )),
+    list(
+        itertools.product(  # each list here corresponds to 1 argument above
+            [False, True],
+            [False, True],
+            [False, True],
+        )
+    ),
 )
 def test_indent_levels__use_tabs(
         closing_bracket_extra_indent: bool,

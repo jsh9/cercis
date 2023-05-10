@@ -34,6 +34,7 @@ class Indent(Enum):
 
     Pyink is a formatter that forks from Black. It inherits Black's MIT license.
     """
+
     DEDENT = auto()
     BLOCK = auto()
     FUNCTION_DEF_CONTINUATION = auto()
@@ -94,6 +95,7 @@ class IndentCharacters:
             into actual characters, or how to calculate the length of
             the indents
     """
+
     def __init__(self, indents: Tuple[Indent, ...], mode: "Mode") -> None:
         self.indents = indents
         self.mode = mode
@@ -108,10 +110,7 @@ class IndentCharacters:
                 If False, we are rendering this indentation to be included
                 in the result.
         """
-        return "".join(
-            _.render(self.mode, for_width_calculation)
-            for _ in self.indents
-        )
+        return "".join(_.render(self.mode, for_width_calculation) for _ in self.indents)
 
     def calc_total_width(self) -> int:
         """Calculate the width of all the indents. We are not using len()
