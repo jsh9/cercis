@@ -11,9 +11,9 @@ TWO_TABS: str = "\t\t"
 
 class Indent(Enum):
     """
-    A class to hold different indentation types.
+    A class to represent an indentation, which can belong to 1 of 4 types.
 
-    Here is a brief explanation of the 4 types:
+    Here is a brief explanation of these 4 types:
         - Dedent: It's actually the opposite of "indent"; we put it here
                   just because we'd like for all indent/dedent types to
                   be in the same place
@@ -28,17 +28,33 @@ class Indent(Enum):
                 result = my_function(1, 2, 3, 4, 5, ...) becomes too long
                 and we have to wrap this line. The corresponding indentation
                 falls under this type.
+
+    The implementation of this class is inspired by a similar implementation
+    in Pyink -- in particular, here: https://github.com/google/pyink/blob/f93771c02e9a26ce9508c59d69c9337c95797eac/src/pyink/lines.py#L52-L61  # noqa: B950
+
+    Pyink is a formatter that forks from Black. It inherits Black's MIT license.
     """
     DEDENT = auto()
     BLOCK = auto()
     FUNCTION_DEF_CONTINUATION = auto()
     OTHER_LINE_CONTINUATION = auto()
 
-    def get_indent_chars(
+    def render(
             self,
             mode: "Mode",
             for_width_calculation: bool = False,
     ) -> str:
+        """Render this indentation into actual characters.
+
+        Args:
+            mode:
+                The global configuration of Cercis
+            for_width_calculation:
+                If True, we are rendering this indentation to calculate the
+                width of the current line (if width > length limit, wrap line).
+                If False, we are rendering this indentation to be included
+                in the result.
+        """
         if self == Indent.DEDENT:
             raise ValueError("Internal error: this method is invalid for DEDENT")
 
@@ -68,7 +84,7 @@ class Indent(Enum):
 
 class IndentCharacters:
     """
-    A class to hold characters (spaces or tabs).
+    A class to hold characters (spaces or tabs) of multiple indentations.
 
     Attributes:
         indents:
@@ -83,15 +99,23 @@ class IndentCharacters:
         self.mode = mode
 
     def render(self, for_width_calculation: bool = False) -> str:
-        """Render the indents as actual characters"""
+        """Render the indents as actual characters.
+
+        Args:
+            for_width_calculation:
+                If True, we are rendering this indentation to calculate the
+                width of the current line (if width > length limit, wrap line).
+                If False, we are rendering this indentation to be included
+                in the result.
+        """
         return "".join(
-            _.get_indent_chars(self.mode, for_width_calculation)
+            _.render(self.mode, for_width_calculation)
             for _ in self.indents
         )
 
     def calc_total_width(self) -> int:
         """Calculate the width of all the indents. We are not using len()
-        because we can't simply consider a tab ('\t') to have width 1
+        because we can't simply treat a tab ('\t') as width 1
         when rendering."""
         chars_to_render: str = self.render(for_width_calculation=True)
         return len(chars_to_render)
