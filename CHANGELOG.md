@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.1.5] - 2023-05-09
+
+- Added
+  - Configurability to use tabs instead of spaces (two new options:
+    `--use-tabs` and `--tab-width`)
+  - Configurability on base indentation spaces and extra indentation at
+    different line continuation situations
+
 ## [0.1.4] - 2023-05-07
 
 - Added

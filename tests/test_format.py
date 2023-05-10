@@ -1,3 +1,4 @@
+import itertools
 import re
 from dataclasses import replace
 from typing import Any, Iterator
@@ -338,3 +339,99 @@ def test_nested_brackets(filename: str, collapse_nested_brackets: bool) -> None:
 def test_wrap_pragma_comments(filename: str, wrap: bool) -> None:
     mode = replace(DEFAULT_MODE, wrap_pragma_comments=wrap, line_length=80)
     check_file("configurable_cases/pragma_comments", filename, mode)
+
+
+@pytest.mark.parametrize(
+    "closing_bracket_extra_indent, base_indent_spaces, fdei, olcei",
+    list(
+        itertools.product(  # each list here corresponds to 1 argument above
+            [False, True],
+            [1, 2, 3, 4, 8],
+            [False, True],
+            [False, True],
+        )
+    ),
+)
+def test_indent_levels__use_spaces(
+        closing_bracket_extra_indent: bool,
+        base_indent_spaces: int,
+        fdei: bool,
+        olcei: bool,
+) -> None:
+    mode = replace(
+        DEFAULT_MODE,
+        line_length=80,
+        base_indentation_spaces=base_indent_spaces,
+        function_definition_extra_indent=fdei,
+        other_line_continuation_extra_indent=olcei,
+        closing_bracket_extra_indent=closing_bracket_extra_indent,
+    )
+    parent_folder = "configurable_cases/indentation/use_spaces"
+    folder = (
+        f"{parent_folder}/closing_bracket_extra_indent"
+        if closing_bracket_extra_indent
+        else f"{parent_folder}/closing_bracket_no_extra_indent"
+    )
+    check_file(
+        f"{folder}/base_indent_spaces={base_indent_spaces}",
+        f"fdei={fdei}_olcei={olcei}",
+        mode,
+    )
+
+
+@pytest.mark.parametrize(
+    "closing_bracket_extra_indent, fdei, olcei",
+    list(
+        itertools.product(  # each list here corresponds to 1 argument above
+            [False, True],
+            [False, True],
+            [False, True],
+        )
+    ),
+)
+def test_indent_levels__use_tabs(
+        closing_bracket_extra_indent: bool,
+        fdei: bool,
+        olcei: bool,
+) -> None:
+    mode = replace(
+        DEFAULT_MODE,
+        line_length=80,
+        use_tabs=True,
+        function_definition_extra_indent=fdei,
+        other_line_continuation_extra_indent=olcei,
+        closing_bracket_extra_indent=closing_bracket_extra_indent,
+    )
+    parent_folder = "use_tabs"
+    folder = (
+        f"{parent_folder}/closing_bracket_extra_indent"
+        if closing_bracket_extra_indent
+        else f"{parent_folder}/closing_bracket_no_extra_indent"
+    )
+    check_file(
+        f"configurable_cases/indentation/{folder}",
+        f"fdei={fdei}_olcei={olcei}",
+        mode,
+    )
+
+
+@pytest.mark.parametrize(
+    "tab_width",
+    [1, 2, 3, 4, 5, 8],
+)
+def test_line_length_calculation_with_tabs(tab_width: int) -> None:
+    mode = replace(
+        DEFAULT_MODE,
+        line_length=80,
+        use_tabs=True,
+        tab_width=tab_width,
+        function_definition_extra_indent=False,
+        other_line_continuation_extra_indent=False,
+        closing_bracket_extra_indent=False,
+    )
+    filename = f"tab_width_{tab_width}"
+    check_file(
+        "configurable_cases/indentation/use_tabs/line_length_calculation",
+        filename,
+        mode,
+    )

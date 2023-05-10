@@ -1,4 +1,4 @@
-# Cercis
+# _Cercis_
 
 [![](https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Red_bud_2009.jpg/320px-Red_bud_2009.jpg)](https://en.wikipedia.org/wiki/Cercis)
 
@@ -12,6 +12,15 @@ early spring.
 This code repository is forked from and directly inspired by
 [Black](https://github.com/psf/black). The original license of Black is
 included in this repository (see [LICENSE_ORIGINAL](./LICENSE_ORIGINAL)).
+
+_Cercis_ inherited Black's very comprehensive test cases, which means we are
+confident that our configurability addition does not introduce any undesirable
+side effects. We also thoroughly tested every configurable options that we
+added.
+
+In particular, via its configurable options, _Cercis_ can completely fall back
+to Black. See [Section 4.5](#45-how-to-fall-back-to-blacks-behavior) below for
+more details.
 
 ## 1. Motivations
 
@@ -88,11 +97,15 @@ _Cercis_ offers the following configurable options:
 
 1. [Line length](#31-line-length)
 2. [Single quote vs double quote](#32-single-quote-vs-double-quote)
-3. [Extra indentation at function definition](#33-extra-indentation-at-function-definition)
-4. [Extra indentation at closing brackets](#34-closing-bracket-indentation)
-5. ["Simple" lines with long strings](#35-simple-lines-with-long-strings)
-6. [Collapse nested brackets](#36-collapse-nested-brackets)
-7. [Wrap pragma comments](#37-wrapping-long-lines-ending-with-pragma-comments)
+3. [Tabs vs spaces](#33-tabs-vs-spaces)
+4. [Base indentation spaces](#34-base-indentation-spaces)
+5. [Extra indentation at line continuation](#35-extra-indentation-at-line-continuation)
+   1. [At function definition](#351-at-function-definition---function-definition-extra-indent)
+   2. [In other line continuations](#352-in-other-line-continuations---other-line-continuation-extra-indent)
+   3. [At closing brackets](#353-at-closing-brackets---closing-bracket-extra-indent)
+6. ["Simple" lines with long strings](#36-simple-lines-with-long-strings)
+7. [Collapse nested brackets](#37-collapse-nested-brackets)
+8. [Wrap pragma comments](#38-wrapping-long-lines-ending-with-pragma-comments)
 
 The next section ([How to configure _Cercis_](#4-how-to-configure-cercis))
 contains detailed instructions of how to configure these options.
@@ -131,7 +144,74 @@ You can override this default if necessary.
 | `pyproject.toml` usage | `single-quote = false` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--single-quote=False]`               |
 
-### 3.3. Extra indentation at function definition
+### 3.3. Tabs vs spaces
+
+_Cercis_ offers users the ability to use tabs rather than spaces.
+
+There are two associated options:
+
+- `--use-tabs` (bool): whether to use tabs or spaces to format the code
+
+| Option                 |                                          |
+| ---------------------- | ---------------------------------------- |
+| Name                   | `--use-tabs`                             |
+| Abbreviation           | `-tab`                                   |
+| Default                | `False`                                  |
+| Black's default        | `False`                                  |
+| Command line usage     | `cercis -tab=True myScript.py`           |
+| `pyproject.toml` usage | `use-tabs = false` under `[tool.cercis]` |
+| `pre-commit` usage     | `args: [--use-tabs=False]`               |
+
+- `--tab-width` (int): when calculating line length (to determine whether to
+  wrap lines), how wide shall _Cercis_ treat each tab. Only effective when
+  `--use-tabs` is set to `True`.
+
+| Option                 |                                       |
+| ---------------------- | ------------------------------------- |
+| Name                   | `--tab-width`                         |
+| Abbreviation           | `-tw`                                 |
+| Default                | 4                                     |
+| Black's default        | N/A                                   |
+| Command line usage     | `cercis -tab=True -tw=2 myScript.py`  |
+| `pyproject.toml` usage | `tab-width = 2` under `[tool.cercis]` |
+| `pre-commit` usage     | `args: [--tab-width=2]`               |
+
+### 3.4. Base indentation spaces
+
+This option defines the number of spaces that each indentation level adds. This
+option has no effect when `--use-tabs` is set to `True`.
+
+For example, if you set it to 2, contents within a `for` block is indented 2
+spaces:
+
+```python
+for i in (1, 2, 3, 4, 5):
+  print(i)
+```
+
+| Option                 |                                                     |
+| ---------------------- | --------------------------------------------------- |
+| Name                   | `--base-indentation-spaces`                         |
+| Abbreviation           | `-bis`                                              |
+| Default                | 4                                                   |
+| Black's default        | 4                                                   |
+| Command line usage     | `cercis -bis=True -tw=2 myScript.py`                |
+| `pyproject.toml` usage | `base-indentation-spaces = 2` under `[tool.cercis]` |
+| `pre-commit` usage     | `args: [--base-indentation-spaces=2]`               |
+
+### 3.5. Extra indentation at line continuations
+
+There are three associated options:
+
+- `--function-definition-extra-indent`
+- `--other-line-continuation-extra-indent`
+- `--closing-bracket-extra-indent`
+
+They control whether we add an **additional** indentation level in some
+situations. Note that these options can work well with tabs
+(`--use-tabs=True`).
+
+#### 3.5.1. At function definition (`--function-definition-extra-indent`)
 
 <table>
   <tr>
@@ -168,12 +248,16 @@ def some_function(
   </tr>
 </table>
 
-We choose to indent an extra 4 spaces (8 in total) because it adds a clear
-visual separation between the function name and the argument list. Not adding
-extra indentation is also called out as wrong in the the official
-[PEP8 style guide](https://peps.python.org/pep-0008/#indentation).
+We choose to add an extra indentation level when wrapping a function signature
+line. This is because `def␣` happens to be 4 characters, so when the base
+indentation is 4 spaces, it can be difficult to visually distinguish the
+function name and the argument list if we don't add an extra indentation.
 
-You can override this default if necessary.
+If you set `--base-indentation-spaces` to other values than 4, this visual
+separation issue will disappear, and you may not need to turn this option on.
+
+This style is encouraged
+[in PEP8](https://peps.python.org/pep-0008/#indentation).
 
 | Option                 |                                                                 |
 | ---------------------- | --------------------------------------------------------------- |
@@ -185,7 +269,51 @@ You can override this default if necessary.
 | `pyproject.toml` usage | `function-definition-extra-indent = true` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--function-definition-extra-indent=False]`              |
 
-## 3.4. Closing bracket indentation
+#### 3.5.2. In other line continuations (`--other-line-continuation-extra-indent`)
+
+"Other line continuations" are cases other than in function definitions, such
+as:
+
+```python
+var = some_function(
+    arg1_with_long_name,
+    arg2_with_longer_name,
+)
+
+var2 = [
+    'something',
+    'something else',
+    'something more',
+]
+```
+
+So if you set this option (`--other-line-continuation-extra-indent`) to `True`,
+you can add an extra level of indentation in these cases:
+
+```python
+var = some_function(
+        arg1_with_long_name,
+        arg2_with_longer_name,
+)
+
+var2 = [
+        'something',
+        'something else',
+        'something more',
+]
+```
+
+| Option                 |                                                                     |
+| ---------------------- | ------------------------------------------------------------------- |
+| Name                   | `--other-line-continuation-extra-indent`                            |
+| Abbreviation           | `-olcei`                                                            |
+| Default                | `False`                                                             |
+| Black's default        | `False`                                                             |
+| Command line usage     | `cercis -olcei=True myScript.py`                                    |
+| `pyproject.toml` usage | `other-line-continuation-extra-indent = true` under `[tool.cercis]` |
+| `pre-commit` usage     | `args: [----other-line-continuation-extra-indent=False]`            |
+
+#### 3.5.3. At closing brackets (`--closing-bracket-extra-indent`)
 
 This option lets people customize where the closing bracket should be. Note
 that both styles are OK according to
@@ -264,7 +392,7 @@ something = {
 | `pyproject.toml` usage | `closing-bracket-extra-indent = true` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--closing-bracket-extra-indent=False]`              |
 
-### 3.5. "Simple" lines with long strings
+### 3.6. "Simple" lines with long strings
 
 By default, Black wraps lines that exceed length limit. But for very simple
 lines (such as assigning a long string to a variable), line wrapping is not
@@ -331,7 +459,7 @@ var3 = (
 | `pyproject.toml` usage | `wrap-line-with-long-string = true` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--wrap-line-with-long-string=False]`              |
 
-### 3.6. Collapse nested brackets
+### 3.7. Collapse nested brackets
 
 _Cercis_ by default collapses nested brackets to make the code more compact.
 
@@ -407,7 +535,7 @@ value = function(
 The code implementation of this option comes from
 [Pyink](https://github.com/google/pyink), another forked project from Black.
 
-### 3.7. Wrapping long lines ending with pragma comments [^](#3-cerciss-code-style)
+### 3.8. Wrapping long lines ending with pragma comments
 
 "Pragma comments", in this context, mean the directives for Python linters
 usually to tell them to ignore certain errors. Pragma comments that _Cercis_
@@ -537,7 +665,21 @@ means to always use the latest (including unreleased) _Cercis_ features.
 Currently, _Cercis_ does not support a config section in `tox.ini`. Instead,
 you can specify the options in `pyproject.toml`.
 
-### 4.5. How to reproduce Black's behavior
+### 4.5. How to fall back to Black's behavior
 
-If you'd like to reproduce Black's behavior, simply set all the configurable
-options in [Section 3](#3-cerciss-code-style) to Black's default values.
+Here are the configuration options to fall back to Black's behavior. Put them
+in `pyproject.toml`:
+
+```toml
+[tool.cercis]
+line-length = 88
+single-quote = false
+use-tabs = false
+base-indentation-spaces = 4
+function-definition-extra-indent = false
+other-line-continuation-extra-indent = false
+closing-bracket-extra-indent = false
+wrap-line-with-long-string = true
+collapse-nested-brackets = false
+wrap-pragma-comments = true
+```

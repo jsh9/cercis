@@ -19,6 +19,7 @@ from typing import (
 from blib2to3.pgen2 import token
 from blib2to3.pytree import Leaf, Node
 from cercis.brackets import COMMA_PRIORITY, DOT_PRIORITY, BracketTracker
+from cercis.indent import Indent, MultipleIndents
 from cercis.mode import Mode, Preview
 from cercis.nodes import (
     BRACKETS,
@@ -53,7 +54,7 @@ class Line:
     """Holds leaves and comments. Can be printed with `str(line)`."""
 
     mode: Mode
-    depth: int = 0
+    depth: Tuple[Indent, ...] = field(default_factory=tuple)
     leaves: List[Leaf] = field(default_factory=list)
     # keys ordered like `leaves`
     comments: Dict[LeafID, List[Leaf]] = field(default_factory=dict)
@@ -61,6 +62,12 @@ class Line:
     inside_brackets: bool = False
     should_split_rhs: bool = False
     magic_trailing_comma: Optional[Leaf] = None
+
+    def render_indent_chars(self, for_width_calculation: bool = False) -> str:
+        return self.all_indents.render(for_width_calculation)
+
+    def calc_total_indent_width(self) -> int:
+        return self.all_indents.calc_total_width()
 
     def append(
             self, leaf: Leaf, preformatted: bool = False, track_bracket: bool = False
@@ -112,6 +119,11 @@ class Line:
                 )
 
         self.append(leaf, preformatted=preformatted)
+
+    @property
+    def all_indents(self) -> MultipleIndents:
+        """All the indentations of this line"""
+        return MultipleIndents(indents=self.depth, mode=self.mode)
 
     @property
     def is_comment(self) -> bool:
@@ -499,12 +511,18 @@ class Line:
             magic_trailing_comma=self.magic_trailing_comma,
         )
 
+    def render_as_str_for_width_calculation(self) -> str:
+        return self._str_inner(for_width_calculation=True)
+
     def __str__(self) -> str:
         """Render the line."""
+        return self._str_inner(for_width_calculation=False)
+
+    def _str_inner(self, for_width_calculation: bool = False) -> str:
         if not self:
             return "\n"
 
-        indent = "    " * self.depth
+        indent: str = self.render_indent_chars(for_width_calculation)
         leaves = iter(self.leaves)
         first = next(leaves)
         res = f"{first.prefix}{indent}{first.value}"
@@ -611,7 +629,7 @@ class EmptyLineTracker:
 
     def _maybe_empty_lines(self, current_line: Line) -> Tuple[int, int]:
         max_allowed = 1
-        if current_line.depth == 0:
+        if len(current_line.depth) == 0:
             max_allowed = 1 if self.mode.is_pyi else 2
         if current_line.leaves:
             # Consume the first leaf's extra newlines.
@@ -622,7 +640,7 @@ class EmptyLineTracker:
         else:
             before = 0
         depth = current_line.depth
-        while self.previous_defs and self.previous_defs[-1].depth >= depth:
+        while self.previous_defs and len(self.previous_defs[-1].depth) >= len(depth):
             if self.mode.is_pyi:
                 assert self.previous_line is not None
                 if depth and not current_line.is_def and self.previous_line.is_def:
@@ -669,7 +687,7 @@ class EmptyLineTracker:
             and self.previous_line.is_import
             and not current_line.is_import
             and not current_line.is_fmt_pass_converted(first_leaf_matches=is_import)
-            and depth == self.previous_line.depth
+            and len(depth) == len(self.previous_line.depth)
         ):
             return (before or 1), 0
 
@@ -700,7 +718,7 @@ class EmptyLineTracker:
 
             return 0, 0
 
-        if self.previous_line.depth < current_line.depth and (
+        if len(self.previous_line.depth) < len(current_line.depth) and (
             self.previous_line.is_class or self.previous_line.is_def
         ):
             return 0, 0
@@ -708,7 +726,7 @@ class EmptyLineTracker:
         comment_to_add_newlines: Optional[LinesBlock] = None
         if (
             self.previous_line.is_comment
-            and self.previous_line.depth == current_line.depth
+            and len(self.previous_line.depth) == len(current_line.depth)
             and before == 0
         ):
             slc = self.semantic_leading_comment
@@ -725,9 +743,9 @@ class EmptyLineTracker:
 
         if self.mode.is_pyi:
             if current_line.is_class or self.previous_line.is_class:
-                if self.previous_line.depth < current_line.depth:
+                if len(self.previous_line.depth) < len(current_line.depth):
                     newlines = 0
-                elif self.previous_line.depth > current_line.depth:
+                elif len(self.previous_line.depth) > len(current_line.depth):
                     newlines = 1
                 elif current_line.is_stub_class and self.previous_line.is_stub_class:
                     # No blank line between classes with an empty body
@@ -745,7 +763,7 @@ class EmptyLineTracker:
                     # Blank line between a block of functions (maybe with preceding
                     # decorators) and a block of non-functions
                     newlines = 1
-            elif self.previous_line.depth > current_line.depth:
+            elif len(self.previous_line.depth) > len(current_line.depth):
                 newlines = 1
             else:
                 newlines = 0
@@ -803,6 +821,11 @@ def is_line_short_enough(  # noqa: C901
     """
     if not line_str:
         line_str = line_to_string(line)
+
+    if mode.use_tabs:
+        # Override previous calculation of `line_str`, because we need
+        # to treat the width of '\t' as more than 1 character
+        line_str = line.render_as_str_for_width_calculation().strip("\n")
 
     width = str_width if mode.preview else len
     if mode.wrap_pragma_comments:  # Black's default
@@ -1011,7 +1034,7 @@ def can_omit_invisible_parens(
 def _can_omit_opening_paren(line: Line, *, first: Leaf, line_length: int) -> bool:
     """See `can_omit_invisible_parens`."""
     remainder = False
-    length = 4 * line.depth
+    length: int = line.calc_total_indent_width()
     _index = -1
     for _index, leaf, leaf_length in line.enumerate_with_length():
         if leaf.type in CLOSING_BRACKETS and leaf.opening_bracket is first:
@@ -1035,7 +1058,7 @@ def _can_omit_opening_paren(line: Line, *, first: Leaf, line_length: int) -> boo
 
 def _can_omit_closing_paren(line: Line, *, last: Leaf, line_length: int) -> bool:
     """See `can_omit_invisible_parens`."""
-    length = 4 * line.depth
+    length: int = line.calc_total_indent_width()
     seen_other_brackets = False
     for _index, leaf, leaf_length in line.enumerate_with_length():
         length += leaf_length
