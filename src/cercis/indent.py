@@ -108,7 +108,7 @@ class MultipleIndents:
                 If True, we are rendering this indentation to calculate the
                 width of the current line (if width > length limit, wrap line).
                 If False, we are rendering this indentation to be included
-                in the result.
+                in the formatting output.
         """
         return "".join(_.render(self.mode, for_width_calculation) for _ in self.indents)
 
