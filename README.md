@@ -667,5 +667,19 @@ you can specify the options in `pyproject.toml`.
 
 ### 4.5. How to fall back to Black's behavior
 
-If you'd like to reproduce Black's behavior, simply set all the configurable
-options in [Section 3](#3-cerciss-code-style) to Black's default values.
+Here are the configuration options to fall back to Black's behavior. Put them
+in `pyproject.toml`:
+
+```toml
+[tool.cercis]
+line-length = 88
+single-quote = false
+use-tabs = false
+base-indentation-spaces = 4
+function-definition-extra-indent = false
+other-line-continuation-extra-indent = false
+closing-bracket-extra-indent = false
+wrap-line-with-long-string = true
+collapse-nested-brackets = false
+wrap-pragma-comments = true
+```
