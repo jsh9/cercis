@@ -409,3 +409,25 @@ def test_indent_levels__use_tabs(
         f"fdei={fdei}_olcei={olcei}",
         mode,
     )
+
+
+@pytest.mark.parametrize(
+    "tab_width",
+    [1, 2, 3, 4, 5, 8],
+)
+def test_line_length_calculation_with_tabs(tab_width: int) -> None:
+    mode = replace(
+        DEFAULT_MODE,
+        line_length=80,
+        use_tabs=True,
+        tab_width=tab_width,
+        function_definition_extra_indent=False,
+        other_line_continuation_extra_indent=False,
+        closing_bracket_extra_indent=False,
+    )
+    filename = f"tab_width_{tab_width}"
+    check_file(
+        "configurable_cases/indent_level/use_tabs/line_length_calculation",
+        filename,
+        mode,
+    )

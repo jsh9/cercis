@@ -34,18 +34,27 @@ class Indent(Enum):
     FUNCTION_DEF_CONTINUATION = auto()
     OTHER_LINE_CONTINUATION = auto()
 
-    def get_indent_chars(self, mode: "Mode") -> str:
+    def get_indent_chars(
+            self,
+            mode: "Mode",
+            for_width_calculation: bool = False,
+    ) -> str:
         if self == Indent.DEDENT:
             raise ValueError("Internal error: this method is invalid for DEDENT")
 
         if mode.use_tabs:
             if self == Indent.OTHER_LINE_CONTINUATION:
-                return TWO_TABS if mode.other_line_continuation_extra_indent else TAB
+                ch = TWO_TABS if mode.other_line_continuation_extra_indent else TAB
+            elif self == Indent.FUNCTION_DEF_CONTINUATION:
+                ch = TWO_TABS if mode.function_definition_extra_indent else TAB
+            else:
+                ch = TAB
 
-            if self == Indent.FUNCTION_DEF_CONTINUATION:
-                return TWO_TABS if mode.function_definition_extra_indent else TAB
+            if not for_width_calculation:
+                return ch
 
-            return TAB
+            spaces_for_one_tab = " " * mode.tab_width
+            return ch.replace(TAB, spaces_for_one_tab)
 
         spaces = SPACE * mode.base_indent_level
         if self == Indent.OTHER_LINE_CONTINUATION:
@@ -73,15 +82,16 @@ class IndentCharacters:
         self.indents = indents
         self.mode = mode
 
-    def render(self) -> str:
+    def render(self, for_width_calculation: bool = False) -> str:
         """Render the indents as actual characters"""
-        return "".join(_.get_indent_chars(self.mode) for _ in self.indents)
+        return "".join(
+            _.get_indent_chars(self.mode, for_width_calculation)
+            for _ in self.indents
+        )
 
     def calc_total_width(self) -> int:
         """Calculate the width of all the indents. We are not using len()
         because we can't simply consider a tab ('\t') to have width 1
         when rendering."""
-        TAB_DISPLAYING_WIDTH = 4
-        spaces_for_tab = " " * TAB_DISPLAYING_WIDTH
-        chars_to_render: str = self.render().replace(TAB, spaces_for_tab)
+        chars_to_render: str = self.render(for_width_calculation=True)
         return len(chars_to_render)

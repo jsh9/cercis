@@ -48,6 +48,7 @@ from cercis.const import (
     DEFAULT_LINE_LENGTH,
     DEFAULT_OTHER_LINE_CONTINUATION_EXTRA_INDENT,
     DEFAULT_SINGLE_QUOTE,
+    DEFAULT_TAB_WIDTH,
     DEFAULT_USE_TABS,
     DEFAULT_WRAP_LINE_WITH_LONG_STRING,
     DEFAULT_WRAP_PRAGMA_COMMENTS,
@@ -206,7 +207,7 @@ def validate_regex(
         raise click.BadParameter(f"Not a valid regular expression: {e}") from None
 
 
-def validate_indent_level(
+def validate_positive_integer(
         ctx: click.Context,
         param: click.Parameter,
         value: Optional[int],
@@ -233,13 +234,35 @@ def validate_indent_level(
     show_default=True,
 )
 @click.option(
+    "-tab",
+    "--use-tabs",
+    type=bool,
+    show_default=True,
+    default=DEFAULT_USE_TABS,
+    help="If True, use tabs as indentation, rather than spaces.",
+)
+@click.option(
+    "-tw",
+    "--tab-width",
+    type=int,
+    show_default=True,
+    default=DEFAULT_TAB_WIDTH,
+    callback=validate_positive_integer,
+    help=(
+        "The tab width to assume when calculating line length."
+        " This option is only effective when --use-tabs is set to True."
+        " Use a value that matches your editor's tab size setting for"
+        " consistent behaviors."
+    ),
+)
+@click.option(
     "-bil",
     "--base-indent-level",
     type=int,
     show_default=True,
     default=DEFAULT_BASE_INDENT_LEVEL,
-    callback=validate_indent_level,
-    help="The base indentation level.",
+    callback=validate_positive_integer,
+    help="The base indentation level. It has no effect when --use-tabs is True",
 )
 @click.option(
     "-fdei",
@@ -270,14 +293,6 @@ def validate_indent_level(
         "If True, add an extra indentation level (4 or 8, depending on"
         " --function-definition-extra-indent) to the closing bracket."
     ),
-)
-@click.option(
-    "-tab",
-    "--use-tabs",
-    type=bool,
-    show_default=True,
-    default=DEFAULT_USE_TABS,
-    help="If True, use tabs as indentation, rather than spaces.",
 )
 @click.option(
     "-sq",
@@ -548,6 +563,7 @@ def main(  # noqa: C901
         base_indent_level: int,
         other_line_continuation_extra_indent: bool,
         use_tabs: bool,
+        tab_width: int,
         target_version: List[TargetVersion],
         check: bool,
         diff: bool,
@@ -679,6 +695,7 @@ def main(  # noqa: C901
         base_indent_level=base_indent_level,
         other_line_continuation_extra_indent=other_line_continuation_extra_indent,
         use_tabs=use_tabs,
+        tab_width=tab_width,
     )
 
     if code is not None:

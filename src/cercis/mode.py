@@ -25,6 +25,7 @@ from cercis.const import (
     DEFAULT_LINE_LENGTH,
     DEFAULT_OTHER_LINE_CONTINUATION_EXTRA_INDENT,
     DEFAULT_SINGLE_QUOTE,
+    DEFAULT_TAB_WIDTH,
     DEFAULT_USE_TABS,
     DEFAULT_WRAP_LINE_WITH_LONG_STRING,
     DEFAULT_WRAP_PRAGMA_COMMENTS,
@@ -204,6 +205,7 @@ class Mode:
     base_indent_level: int = DEFAULT_BASE_INDENT_LEVEL
     other_line_continuation_extra_indent: bool = DEFAULT_OTHER_LINE_CONTINUATION_EXTRA_INDENT
     use_tabs: bool = DEFAULT_USE_TABS
+    tab_width: int = DEFAULT_TAB_WIDTH
 
     def __post_init__(self) -> None:
         if self.experimental_string_processing:

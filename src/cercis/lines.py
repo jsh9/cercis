@@ -63,8 +63,8 @@ class Line:
     should_split_rhs: bool = False
     magic_trailing_comma: Optional[Leaf] = None
 
-    def render_indent_chars(self) -> str:
-        return self.indent_characters.render()
+    def render_indent_chars(self, for_width_calculation: bool = False) -> str:
+        return self.indent_characters.render(for_width_calculation)
 
     def calc_total_indent_width(self) -> int:
         return self.indent_characters.calc_total_width()
@@ -511,12 +511,18 @@ class Line:
             magic_trailing_comma=self.magic_trailing_comma,
         )
 
+    def render_as_str_for_width_calculation(self) -> str:
+        return self._str_inner(for_width_calculation=True)
+
     def __str__(self) -> str:
         """Render the line."""
+        return self._str_inner(for_width_calculation=False)
+
+    def _str_inner(self, for_width_calculation: bool = False) -> str:
         if not self:
             return "\n"
 
-        indent: str = self.render_indent_chars()
+        indent: str = self.render_indent_chars(for_width_calculation)
         leaves = iter(self.leaves)
         first = next(leaves)
         res = f"{first.prefix}{indent}{first.value}"
@@ -815,6 +821,11 @@ def is_line_short_enough(  # noqa: C901
     """
     if not line_str:
         line_str = line_to_string(line)
+
+    if mode.use_tabs:
+        # Override previous calculation of `line_str`, because we need
+        # to treat the width of '\t' as more than 1 character
+        line_str = line.render_as_str_for_width_calculation().strip("\n")
 
     width = str_width if mode.preview else len
     if mode.wrap_pragma_comments:  # Black's default
