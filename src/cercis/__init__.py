@@ -222,7 +222,7 @@ def validate_positive_integer(
     context_settings={"help_option_names": ["-h", "--help"]},
     # While Click does set this field automatically using the docstring, mypyc
     # (annoyingly) strips 'em so we need to set it here too.
-    help="The uncompromising code formatter.",
+    help="Cercis, a more configurable Python code formatter.",
 )
 @click.option("-c", "--code", type=str, help="Format the code passed in as a string.")
 @click.option(
@@ -592,7 +592,6 @@ def main(  # noqa: C901
         src: Tuple[str, ...],
         config: Optional[str],
 ) -> None:
-    """The uncompromising code formatter."""
     ctx.ensure_object(dict)
 
     if src and code is not None:
