@@ -333,7 +333,9 @@ def test_nested_brackets(filename: str, collapse_nested_brackets: bool) -> None:
     "filename, wrap",
     [
         ("Cercis_default.py", False),
+        ("Cercis_default_2.py", False),
         ("Black_default.py", True),
+        ("Black_default_2.py", True),
     ],
 )
 def test_wrap_pragma_comments(filename: str, wrap: bool) -> None:
