@@ -636,7 +636,7 @@ repos:
     rev: 0.1.0
     hooks:
       - id: cercis
-        args: [--function-definition-extra-indent=False, --ling-length=79]
+        args: [--function-definition-extra-indent=False, --line-length=79]
   - repo: https://github.com/jsh9/cercis
     rev: 0.1.0
     hooks:
