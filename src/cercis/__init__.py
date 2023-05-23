@@ -45,6 +45,7 @@ from cercis.const import (
     DEFAULT_EXCLUDES,
     DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT,
     DEFAULT_INCLUDES,
+    DEFAULT_KEEP_BLANK_LINES_IN_BRACKETS,
     DEFAULT_LINE_LENGTH,
     DEFAULT_OTHER_LINE_CONTINUATION_EXTRA_INDENT,
     DEFAULT_SINGLE_QUOTE,
@@ -355,6 +356,17 @@ def validate_positive_integer(
     ),
 )
 @click.option(
+    "-kblib",
+    "--keep-blank-lines-in-brackets",
+    type=bool,
+    show_default=True,
+    default=DEFAULT_KEEP_BLANK_LINES_IN_BRACKETS,
+    help=(
+        "Preserve single blank lines inside brackets (tuples, lists, "
+        "dictionaries, function arguments, etc.)."
+    ),
+)
+@click.option(
     "-t",
     "--target-version",
     type=click.Choice([v.name.lower() for v in TargetVersion]),
@@ -578,6 +590,7 @@ def main(  # noqa: C901
         collapse_nested_brackets: bool,
         wrap_comments: bool,
         wrap_pragma_comments: bool,
+        keep_blank_lines_in_brackets: bool,
         base_indentation_spaces: int,
         other_line_continuation_extra_indent: bool,
         use_tabs: bool,
@@ -710,6 +723,7 @@ def main(  # noqa: C901
         collapse_nested_brackets=collapse_nested_brackets,
         wrap_comments=wrap_comments,
         wrap_pragma_comments=wrap_pragma_comments,
+        keep_blank_lines_in_brackets=keep_blank_lines_in_brackets,
         base_indentation_spaces=base_indentation_spaces,
         other_line_continuation_extra_indent=other_line_continuation_extra_indent,
         use_tabs=use_tabs,

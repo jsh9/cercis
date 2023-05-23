@@ -81,7 +81,11 @@ class Line:
 
         Inline comments are put aside.
         """
-        has_value = leaf.type in BRACKETS or bool(leaf.value.strip())
+        has_value = (
+            leaf.type in BRACKETS
+            or leaf.type == STANDALONE_COMMENT
+            or bool(leaf.value.strip())
+        )
         if not has_value:
             return
 
@@ -552,6 +556,8 @@ class Line:
             res += str(leaf)
         for comment in itertools.chain.from_iterable(self.comments.values()):
             res += str(comment)
+        if res == indent:
+            res = ""
 
         return res + "\n"
 

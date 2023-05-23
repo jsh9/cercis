@@ -7,6 +7,11 @@ from enum import Enum, auto
 from functools import partial, wraps
 from typing import Collection, Iterator, List, Optional, Set, Union, cast
 
+if sys.version_info >= (3, 8):
+    from typing import Final
+else:
+    from typing_extensions import Final
+
 from blib2to3.pgen2 import token
 from blib2to3.pytree import Leaf, Node
 from cercis.brackets import (
@@ -78,6 +83,8 @@ from cercis.trans import (
 from cercis.utils_line_wrapping import check_eligibility_to_opt_out_of_line_wrapping
 from cercis.utils_linegen import perform_collapse_nested_brackets
 
+COMMENTS: Final = {token.COMMENT, STANDALONE_COMMENT}
+
 # types
 LeafID = int
 LN = Union[Leaf, Node]
@@ -145,10 +152,32 @@ class LineGenerator(Visitor[Line]):
         """Default `visit_*()` implementation. Recurses to children of `node`."""
         if isinstance(node, Leaf):
             any_open_brackets = self.current_line.bracket_tracker.any_open_brackets()
+
+            append_blank_lines = (
+                any_open_brackets and self.mode.keep_blank_lines_in_brackets
+            )
+
+            if len(self.current_line.leaves) > 0:
+                last_leaf: Optional[Leaf] = self.current_line.leaves[-1]
+            else:
+                last_leaf = None
+
             for comment in generate_comments(node):
+                if (
+                    append_blank_lines
+                    and last_leaf
+                    and last_leaf.type not in OPENING_BRACKETS
+                ):
+                    newlines = comment.prefix.count("\n")
+                    if last_leaf and last_leaf.type in COMMENTS:
+                        newlines += 1
+                    if newlines > 1:
+                        self.current_line.append(Leaf(STANDALONE_COMMENT, ""))
+
                 if any_open_brackets:
                     # any comment within brackets is subject to splitting
                     self.current_line.append(comment)
+                    last_leaf = comment
                 elif comment.type == token.COMMENT:
                     # regular trailing comment
                     self.current_line.append(comment)
@@ -160,6 +189,15 @@ class LineGenerator(Visitor[Line]):
 
                     self.current_line.append(comment)
                     yield from self.line()
+
+            if (
+                append_blank_lines
+                and last_leaf
+                and last_leaf.type not in OPENING_BRACKETS
+                and node.type not in CLOSING_BRACKETS
+                and node.prefix.split("#")[-1].count("\n") > 1
+            ):
+                self.current_line.append(Leaf(STANDALONE_COMMENT, ""))
 
             normalize_prefix(node, inside_brackets=any_open_brackets)
             if self.mode.string_normalization and node.type == token.STRING:

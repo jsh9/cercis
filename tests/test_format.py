@@ -51,6 +51,7 @@ def test_simple_format(filename: str) -> None:
         single_quote=single_quote,
         wrap_comments=True,
         wrap_pragma_comments=True,
+        keep_blank_lines_in_brackets=False,
         line_length=88,
     )
     check_file("simple_cases", filename, mode)
@@ -469,6 +470,22 @@ def test_line_length_calculation_with_tabs(tab_width: int) -> None:
     filename = f"tab_width_{tab_width}"
     check_file(
         "configurable_cases/indentation/use_tabs/line_length_calculation",
+        filename,
+        mode,
+    )
+
+
+@pytest.mark.parametrize(
+    "filename, kblib",
+    [("true.py", True), ("false.py", False)],
+)
+def test_keep_blank_lines_in_brackets(filename: str, kblib: bool) -> None:
+    mode = replace(
+        DEFAULT_MODE,
+        keep_blank_lines_in_brackets=kblib,
+    )
+    check_file(
+        "configurable_cases/keep_blank_lines_in_brackets",
         filename,
         mode,
     )
