@@ -29,6 +29,7 @@ from cercis.const import (
     DEFAULT_USE_TABS,
     DEFAULT_WRAP_LINE_WITH_LONG_STRING,
     DEFAULT_WRAP_PRAGMA_COMMENTS,
+    DEFAULT_WRAP_ALL_COMMENTS,
 )
 
 
@@ -203,6 +204,7 @@ class Mode:
     wrap_line_with_long_string: bool = DEFAULT_WRAP_LINE_WITH_LONG_STRING
     collapse_nested_brackets: bool = DEFAULT_COLLAPSE_NESTED_BRACKETS
     wrap_pragma_comments: bool = DEFAULT_WRAP_PRAGMA_COMMENTS
+    wrap_all_comments: bool = DEFAULT_WRAP_ALL_COMMENTS
     base_indentation_spaces: int = DEFAULT_BASE_INDENTATION_SPACES
     other_line_continuation_extra_indent: bool = (
         DEFAULT_OTHER_LINE_CONTINUATION_EXTRA_INDENT

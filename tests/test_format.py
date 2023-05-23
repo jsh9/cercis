@@ -344,6 +344,29 @@ def test_wrap_pragma_comments(filename: str, wrap: bool) -> None:
 
 
 @pytest.mark.parametrize(
+    "filename, wrap_all_comments, wrap_pragma_comments",
+    [
+        ("case_False_False.py", False, False),
+        ("case_True_False.py", True, False),
+        ("case_True_True.py", True, True),
+        ("case_False_True.py", False, True),
+    ],
+)
+def test_wrap_comments(
+        filename: str,
+        wrap_all_comments: bool,
+        wrap_pragma_comments: bool,
+) -> None:
+    mode = replace(
+        DEFAULT_MODE,
+        wrap_all_comments=wrap_all_comments,
+        wrap_pragma_comments=wrap_pragma_comments,
+        line_length=80,
+    )
+    check_file("configurable_cases/line_with_comments", filename, mode)
+
+
+@pytest.mark.parametrize(
     "closing_bracket_extra_indent, base_indent_spaces, fdei, olcei",
     list(
         itertools.product(  # each list here corresponds to 1 argument above

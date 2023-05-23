@@ -52,6 +52,7 @@ from cercis.const import (
     DEFAULT_USE_TABS,
     DEFAULT_WRAP_LINE_WITH_LONG_STRING,
     DEFAULT_WRAP_PRAGMA_COMMENTS,
+    DEFAULT_WRAP_ALL_COMMENTS,
     STDIN_PLACEHOLDER,
 )
 from cercis.files import (
@@ -329,6 +330,19 @@ def validate_positive_integer(
     ),
 )
 @click.option(
+    "-wrc",
+    "--wrap-all-comments",
+    type=bool,
+    show_default=True,
+    default=DEFAULT_WRAP_ALL_COMMENTS,
+    help=(
+        "If False, do not wrap long lines if the line exceeds length limit"
+        " only because of trailing comments. Black's"
+        " default behavior is 'True'. Note that this option is a superset"
+        " of --wrap-pragma-comments."
+    ),
+)
+@click.option(
     "-wpc",
     "--wrap-pragma-comments",
     type=bool,
@@ -562,6 +576,7 @@ def main(  # noqa: C901
         single_quote: bool,
         wrap_line_with_long_string: bool,
         collapse_nested_brackets: bool,
+        wrap_all_comments: bool,
         wrap_pragma_comments: bool,
         base_indentation_spaces: int,
         other_line_continuation_extra_indent: bool,
@@ -693,6 +708,7 @@ def main(  # noqa: C901
         single_quote=single_quote,
         wrap_line_with_long_string=wrap_line_with_long_string,
         collapse_nested_brackets=collapse_nested_brackets,
+        wrap_all_comments=wrap_all_comments,
         wrap_pragma_comments=wrap_pragma_comments,
         base_indentation_spaces=base_indentation_spaces,
         other_line_continuation_extra_indent=other_line_continuation_extra_indent,
