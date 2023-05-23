@@ -1,12 +1,17 @@
 # Change Log
 
+## Unreleased
+
+- Added
+  - A new option `--wrap-comments` to not wrap any comments (not just pragma comments)
+
 ## [0.1.5] - 2023-05-09
 
 - Added
-  - Configurability to use tabs instead of spaces (two new options:
-    `--use-tabs` and `--tab-width`)
-  - Configurability on base indentation spaces and extra indentation at
-    different line continuation situations
+  - Configurability to use tabs instead of spaces (two new options: `--use-tabs` and
+    `--tab-width`)
+  - Configurability on base indentation spaces and extra indentation at different line
+    continuation situations
 
 ## [0.1.4] - 2023-05-07
 
@@ -32,8 +37,7 @@
 ## [0.1.2] - 2023-05-04
 
 - Added
-  - Merged 2 changes from psf/black:main
-    ([#5](https://github.com/jsh9/cercis/pull/5))
+  - Merged 2 changes from psf/black:main ([#5](https://github.com/jsh9/cercis/pull/5))
   - Added option to not wrap "simple" lines with long strings
     ([#6](https://github.com/jsh9/cercis/pull/6))
 - Full changelog
@@ -42,8 +46,7 @@
 ## [0.1.1] - 2023-05-03
 
 - Added
-  - A configurable option: `single-quote`, for formatting code into single
-    quotes
+  - A configurable option: `single-quote`, for formatting code into single quotes
 - Full changelog
   - https://github.com/jsh9/cercis/compare/0.1.0...0.1.1
 
@@ -52,10 +55,10 @@
 - This is the initial version that branches away from Black (commit:
   [e712e4](https://github.com/psf/black/commit/e712e48e06420d9240ce95c81acfcf6f11d14c83))
 - Changed
-  - The default indentation within a function definition (when line wrap
-    happens) is now 8 spaces. (Black's default is 4, which is
+  - The default indentation within a function definition (when line wrap happens) is now
+    8 spaces. (Black's default is 4, which is
     [not PEP8-compatible](https://github.com/psf/black/issues/1127))
   - Updated README, because `cercis` now branches away from Black
 - Added
-  - A configurable option (`function-definition-extra-indent`) is added instead
-    of enforcing 8 spaces for everyone
+  - A configurable option (`function-definition-extra-indent`) is added instead of
+    enforcing 8 spaces for everyone
