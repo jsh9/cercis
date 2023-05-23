@@ -1,5 +1,10 @@
 # Change Log
 
+## Unreleased
+
+- Added
+  - A new option `--wrap-comments` to not wrap any comments (not just pragma comments)
+
 ## [0.1.5] - 2023-05-09
 
 - Added
