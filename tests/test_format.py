@@ -49,7 +49,7 @@ def test_simple_format(filename: str) -> None:
         wrap_line_with_long_string=True,
         collapse_nested_brackets=False,
         single_quote=single_quote,
-        wrap_all_comments=True,
+        wrap_comments=True,
         wrap_pragma_comments=True,
         line_length=88,
     )
@@ -62,7 +62,7 @@ def test_preview_format(filename: str) -> None:
         preview=True,
         wrap_line_with_long_string=True,
         collapse_nested_brackets=False,
-        wrap_all_comments=True,
+        wrap_comments=True,
         wrap_pragma_comments=True,
         line_length=88,
     )
@@ -292,7 +292,7 @@ def test_single_quote(filename: str) -> None:
         single_quote=True,
         wrap_line_with_long_string=True,
         collapse_nested_brackets=False,
-        wrap_all_comments=True,
+        wrap_comments=True,
         wrap_pragma_comments=True,
         line_length=88,
     )
@@ -314,7 +314,7 @@ def test_opt_out_of_wrapping(filename: str, wrap_line: bool) -> None:
     mode = replace(
         DEFAULT_MODE,
         wrap_line_with_long_string=wrap_line,
-        wrap_all_comments=True,
+        wrap_comments=True,
     )
     _override_single_quote_for_cleaner_future_rebase(mode)
     _use_line_length_of_88_for_cleaner_future_rebase(mode)
@@ -348,7 +348,7 @@ def test_nested_brackets(filename: str, collapse_nested_brackets: bool) -> None:
 def test_wrap_pragma_comments(filename: str, wrap: bool) -> None:
     mode = replace(
         DEFAULT_MODE,
-        wrap_all_comments=True,
+        wrap_comments=True,
         wrap_pragma_comments=wrap,
         line_length=80,
     )
@@ -356,7 +356,7 @@ def test_wrap_pragma_comments(filename: str, wrap: bool) -> None:
 
 
 @pytest.mark.parametrize(
-    "filename, wrap_all_comments, wrap_pragma_comments",
+    "filename, wrap_comments, wrap_pragma_comments",
     [
         ("case_False_False.py", False, False),
         ("case_True_False.py", True, False),
@@ -366,12 +366,12 @@ def test_wrap_pragma_comments(filename: str, wrap: bool) -> None:
 )
 def test_wrap_comments(
         filename: str,
-        wrap_all_comments: bool,
+        wrap_comments: bool,
         wrap_pragma_comments: bool,
 ) -> None:
     mode = replace(
         DEFAULT_MODE,
-        wrap_all_comments=wrap_all_comments,
+        wrap_comments=wrap_comments,
         wrap_pragma_comments=wrap_pragma_comments,
         line_length=80,
     )

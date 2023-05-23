@@ -361,7 +361,7 @@ class Line:
 
         # We need to put this `if` before the other, because `--wrap-comments`
         # has higher priority than `--wrap-pragma-comments`
-        if not self.mode.wrap_all_comments:
+        if not self.mode.wrap_comments:
             return len(comment_str)
 
         if not self.mode.wrap_pragma_comments:
@@ -852,7 +852,7 @@ def is_line_short_enough(  # noqa: C901
         line_str = line.render_as_str_for_width_calculation().strip("\n")
 
     width = str_width if mode.preview else len
-    if mode.wrap_pragma_comments and mode.wrap_all_comments:  # Black's default
+    if mode.wrap_pragma_comments and mode.wrap_comments:  # Black's default
         effective_length = width(line_str)
     else:  # Cercis's default
         effective_length = width(line_str) - line.calc_comment_length()
