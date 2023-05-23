@@ -4,6 +4,9 @@
 
 - Added
   - A new option `--wrap-comments` to not wrap any comments (not just pragma comments)
+- Changed
+  - Improved the CLI output text colors because the current colors are confusing or not
+    quite legible
 
 ## [0.1.5] - 2023-05-09
 

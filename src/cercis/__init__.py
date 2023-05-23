@@ -775,7 +775,12 @@ def main(  # noqa: C901
     if verbose or not quiet:
         if code is None and (verbose or report.change_count or report.failure_count):
             out()
-        out(error_msg if report.return_code else "All done! ✨ 🍰 ✨")
+
+        if report.return_code:
+            out(error_msg, fg="red")
+        else:
+            out("🎉 All done! 🎉", fg="green")
+
         if code is None:
             click.echo(str(report), err=True)
     ctx.exit(report.return_code)
