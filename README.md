@@ -99,7 +99,7 @@ _Cercis_ offers the following configurable options:
    3. [At closing brackets](#353-at-closing-brackets---closing-bracket-extra-indent)
 6. ["Simple" lines with long strings](#36-simple-lines-with-long-strings)
 7. [Collapse nested brackets](#37-collapse-nested-brackets)
-8. [Wrap pragma comments](#38-wrapping-long-lines-ending-with-pragma-comments)
+8. [Wrap lines ending with comments](#38-wrapping-long-lines-ending-with-comments)
 
 The next section ([How to configure _Cercis_](#4-how-to-configure-cercis)) contains
 detailed instructions of how to configure these options.
@@ -522,7 +522,13 @@ value = function(
 The code implementation of this option comes from
 [Pyink](https://github.com/google/pyink), another forked project from Black.
 
-### 3.8. Wrapping long lines ending with pragma comments
+### 3.8. Wrapping long lines ending with comments
+
+Sometimes we have lines that exceed the length limit only because of the in-line
+comment. If we do not want to wrap those lines, we can use two options provided here:
+
+- `--wrap-comments`
+- `--wrap-pragma-comments`
 
 "Pragma comments", in this context, mean the directives for Python linters usually to
 tell them to ignore certain errors. Pragma comments that _Cercis_ currently recognizes
@@ -533,62 +539,15 @@ include:
 - _pylint_: `# pylint: disable=protected-access`
 - _pytype_: `# pytype: disable=attribute-error`
 
-<table>
-  <tr>
-    <td>
-
-```python
-# Cercis's default style
-# (Suppose line length limit is 30)
-
-# This line has 30 characters
-var = some_func(some_long_arg)  # noqa:F501
-
-# This line has 31 characters
-var_ = some_func(
-    some_long_arg
-)  # type: ignore
-
-# Cercis doesn't wraps a line if its main
-# content (without the comment) does not
-# exceed the line length limit.
-
-
-
-
-
-```
-
-  </td>
-
-  <td>
-
-```python
-# Black's style (not configurable)
-# (Suppose line length limit is 30)
-
-# Black doesn't wrap lines, no matter
-# how long, if the line has
-# a "# type: ignore..." comment.
-# (This line has 31 characters.)
-var_ = some_func(some_long_arg)  # type: ignore
-
-# Black does not recognize "# type:ignore",
-# even though mypy recognizes it.
-var_ = some_func(
-    some_long_arg
-)  # type:ignore
-
-# Black only recognizes "# type: ignore"
-var_ = some_func(
-    some_long_arg
-)  # noqa:F501
-```
-
-  </td>
-
-  </tr>
-</table>
+| Option                 |                                              |
+| ---------------------- | -------------------------------------------- |
+| Name                   | `--wrap-comments`                            |
+| Abbreviation           | `-wc`                                        |
+| Default                | `False`                                      |
+| Black's style          | `True`                                       |
+| Command line usage     | `cercis -wc=True myScript.py`                |
+| `pyproject.toml` usage | `wrap-comments = true` under `[tool.cercis]` |
+| `pre-commit` usage     | `args: [--wrap-comments=False]`              |
 
 | Option                 |                                                     |
 | ---------------------- | --------------------------------------------------- |
@@ -599,6 +558,19 @@ var_ = some_func(
 | Command line usage     | `cercis -wpc=True myScript.py`                      |
 | `pyproject.toml` usage | `wrap-pragma-comments = true` under `[tool.cercis]` |
 | `pre-commit` usage     | `args: [--wrap-pragma-comments=False]`              |
+
+And below is a 2x2 matrix to explain how these two options work together:
+
+|              | `-wc=True`                          | `-wc=False`             |
+| ------------ | ----------------------------------- | ----------------------- |
+| `-wpc=True`  | All comments wrapped w.n.           | No comments are wrapped |
+| `-wpc=False` | p.c. not wrapped; o.c. wrapped w.n. | No comments are wrapped |
+
+Note:
+
+- "w.n." means "when necessary"
+- "p.c." means "pragma comments"
+- "o.c." means "other comments"
 
 ## 4. How to configure _Cercis_
 
@@ -668,5 +640,6 @@ other-line-continuation-extra-indent = false
 closing-bracket-extra-indent = false
 wrap-line-with-long-string = true
 collapse-nested-brackets = false
+wrap-comments = true
 wrap-pragma-comments = true
 ```
