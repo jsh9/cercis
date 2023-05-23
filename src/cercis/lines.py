@@ -329,9 +329,9 @@ class Line:
 
         return False
 
-    def trailing_pragma_comment_length(self) -> int:
+    def calc_comment_length(self) -> int:
         """
-        This method comes from the wonderful implementation in Pyink:
+        This method is adapted from the wonderful implementation in Pyink:
         https://github.com/google/pyink/blob/f93771c02e9a26ce9508c59d69c9337c95797eac/src/pyink/lines.py#L316-L328
 
         Pyink is another fork from Black, and inherits Black's MIT license.
@@ -341,13 +341,35 @@ class Line:
 
         last_leaf = self.leaves[-1]
         length = 0
-        for comment in self.comments.get(id(last_leaf), []):
-            # str(comment) contains the whitespace preceding the `#`
-            comment_str = str(comment)
+
+        if id(last_leaf) in self.comments:
+            # In many cases, the ID of the last leaf is the same as one of
+            # the comments.
+            for comment in self.comments.get(id(last_leaf), []):
+                length += self._calc_comment_length_inner(comment)
+        elif len(self.leaves) >= 2 and id(self.leaves[-2]) in self.comments:
+            # In other cases (such as `some_var = some_value  # some comment`),
+            # it's the 2nd to the last leaf that has the same ID as one
+            # of the comments.
+            for comment in self.comments.get(id(self.leaves[-2]), []):
+                length += self._calc_comment_length_inner(comment)
+
+        return length
+
+    def _calc_comment_length_inner(self, comment: Leaf) -> int:
+        comment_str = str(comment)  # contains the whitespace preceding the `#`
+
+        # We need to put this `if` before the other, because `--wrap-comments`
+        # has higher priority than `--wrap-pragma-comments`
+        if not self.mode.wrap_comments:
+            return len(comment_str)
+
+        if not self.mode.wrap_pragma_comments:
             parts = _PRAGMA_REGEX.split(comment_str, maxsplit=1)
             if len(parts) == 3:
-                length += len(parts[1]) + len(parts[2])
-        return length
+                return len(parts[1]) + len(parts[2])
+
+        return 0
 
     def contains_multiline_strings(self) -> bool:
         return any(is_multiline_string(leaf) for leaf in self.leaves)
@@ -830,10 +852,10 @@ def is_line_short_enough(  # noqa: C901
         line_str = line.render_as_str_for_width_calculation().strip("\n")
 
     width = str_width if mode.preview else len
-    if mode.wrap_pragma_comments:  # Black's default
+    if mode.wrap_pragma_comments and mode.wrap_comments:  # Black's default
         effective_length = width(line_str)
     else:  # Cercis's default
-        effective_length = width(line_str) - line.trailing_pragma_comment_length()
+        effective_length = width(line_str) - line.calc_comment_length()
 
     if Preview.multiline_string_handling not in mode:
         return (
