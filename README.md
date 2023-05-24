@@ -100,6 +100,7 @@ _Cercis_ offers the following configurable options:
 6. ["Simple" lines with long strings](#36-simple-lines-with-long-strings)
 7. [Collapse nested brackets](#37-collapse-nested-brackets)
 8. [Wrap lines ending with comments](#38-wrapping-long-lines-ending-with-comments)
+9. [Keep blank lines in brackets](#39-keep-blank-lines-in-brackets)
 
 The next section ([How to configure _Cercis_](#4-how-to-configure-cercis)) contains
 detailed instructions of how to configure these options.
@@ -571,6 +572,73 @@ Note:
 - "w.n." means "when necessary"
 - "p.c." means "pragma comments"
 - "o.c." means "other comments"
+
+### 3.9. Keep blank lines in brackets
+
+This option allows us to keep the blank lines that we intentionally add into the
+contents of brackets.
+
+<table>
+  <tr>
+    <td>
+
+Cercis's default style:
+
+```python
+my_list = [
+    # Group 1
+    1,
+    2,
+
+    # Group 2
+    3,
+    4,
+
+    # Group 3
+    5,
+    6,
+]
+```
+
+  </td>
+
+  <td>
+
+Black's default style (not configurable):
+
+```python
+my_list = [
+    # Group 1
+    1,
+    2,
+    # Group 2
+    3,
+    4,
+    # Group 3
+    5,
+    6,
+]
+
+
+```
+
+  </td>
+
+  </tr>
+</table>
+
+| Option                 |                                                             |
+| ---------------------- | ----------------------------------------------------------- |
+| Name                   | `--keep-blank-lines-in-brackets`                            |
+| Abbreviation           | `-kblib`                                                    |
+| Default                | `True`                                                      |
+| Black's style          | `False`                                                     |
+| Command line usage     | `cercis -kblib=True myScript.py`                            |
+| `pyproject.toml` usage | `keep-blank-lines-in-brackets = true` under `[tool.cercis]` |
+| `pre-commit` usage     | `args: [--keep-blank-lines-in-bracketss=False]`             |
+
+(Note: if `--keep-blank-lines-in-brackets` is `True`, multiple consecutive blank lines
+are compressed into one blank line after formatting.)
 
 ## 4. How to configure _Cercis_
 

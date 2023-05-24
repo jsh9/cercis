@@ -4,6 +4,7 @@
 
 - Added
   - A new option `--wrap-comments` to not wrap any comments (not just pragma comments)
+  - A new option `--keep-blank-lines-in-brackets`
 - Changed
   - Improved the CLI output text colors because the current colors are confusing or not
     quite legible
