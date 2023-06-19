@@ -208,8 +208,8 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_piping_diff(self) -> None:
         diff_header = re.compile(
-            r"(STDIN|STDOUT)\t\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d\d\d\d\d\d "
-            r"\+\d\d\d\d"
+            r"(STDIN|STDOUT)\t\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d\d\d\d\d\d"
+            r"\+\d\d:\d\d"
         )
         source, _ = read_data("simple_cases", "expression.py")
         expected, _ = read_data("simple_cases", "expression.diff")
@@ -272,6 +272,15 @@ class BlackTestCase(BlackBaseTestCase):
         versions = cercis.detect_target_versions(root)
         self.assertIn(cercis.TargetVersion.PY38, versions)
 
+    def test_pep_695_version_detection(self) -> None:
+        for file in ("type_aliases", "type_params"):
+            source, _ = read_data("py_312", file)
+            root = black.lib2to3_parse(source)
+            features = black.get_features_used(root)
+            self.assertIn(black.Feature.TYPE_PARAMS, features)
+            versions = black.detect_target_versions(root)
+            self.assertIn(black.TargetVersion.PY312, versions)
+
     def test_expression_ff(self) -> None:
         source, expected = read_data("simple_cases", "expression.py")
         tmp_file = Path(cercis.dump_to_file(source))
@@ -293,7 +302,7 @@ class BlackTestCase(BlackBaseTestCase):
         tmp_file = Path(cercis.dump_to_file(source))
         diff_header = re.compile(
             rf"{re.escape(str(tmp_file))}\t\d\d\d\d-\d\d-\d\d "
-            r"\d\d:\d\d:\d\d\.\d\d\d\d\d\d \+\d\d\d\d"
+            r"\d\d:\d\d:\d\d\.\d\d\d\d\d\d\+\d\d:\d\d"
         )
         try:
             result = BlackRunner().invoke(
@@ -410,7 +419,7 @@ class BlackTestCase(BlackBaseTestCase):
         tmp_file = Path(cercis.dump_to_file(source))
         diff_header = re.compile(
             rf"{re.escape(str(tmp_file))}\t\d\d\d\d-\d\d-\d\d "
-            r"\d\d:\d\d:\d\d\.\d\d\d\d\d\d \+\d\d\d\d"
+            r"\d\d:\d\d:\d\d\.\d\d\d\d\d\d\+\d\d:\d\d"
         )
         try:
             result = BlackRunner().invoke(
@@ -1564,14 +1573,25 @@ class BlackTestCase(BlackBaseTestCase):
         for version, expected in [
             ("3.6", [TargetVersion.PY36]),
             ("3.11.0rc1", [TargetVersion.PY311]),
-            (">=3.10", [TargetVersion.PY310, TargetVersion.PY311]),
-            (">=3.10.6", [TargetVersion.PY310, TargetVersion.PY311]),
+            (">=3.10", [TargetVersion.PY310, TargetVersion.PY311, TargetVersion.PY312]),
+            (
+                ">=3.10.6",
+                [TargetVersion.PY310, TargetVersion.PY311, TargetVersion.PY312],
+            ),
             ("<3.6", [TargetVersion.PY33, TargetVersion.PY34, TargetVersion.PY35]),
             (">3.7,<3.10", [TargetVersion.PY38, TargetVersion.PY39]),
-            (">3.7,!=3.8,!=3.9", [TargetVersion.PY310, TargetVersion.PY311]),
+            (
+                ">3.7,!=3.8,!=3.9",
+                [TargetVersion.PY310, TargetVersion.PY311, TargetVersion.PY312],
+            ),
             (
                 "> 3.9.4, != 3.10.3",
-                [TargetVersion.PY39, TargetVersion.PY310, TargetVersion.PY311],
+                [
+                    TargetVersion.PY39,
+                    TargetVersion.PY310,
+                    TargetVersion.PY311,
+                    TargetVersion.PY312,
+                ],
             ),
             (
                 "!=3.3,!=3.4",
@@ -1583,6 +1603,7 @@ class BlackTestCase(BlackBaseTestCase):
                     TargetVersion.PY39,
                     TargetVersion.PY310,
                     TargetVersion.PY311,
+                    TargetVersion.PY312,
                 ],
             ),
             (
@@ -1597,6 +1618,7 @@ class BlackTestCase(BlackBaseTestCase):
                     TargetVersion.PY39,
                     TargetVersion.PY310,
                     TargetVersion.PY311,
+                    TargetVersion.PY312,
                 ],
             ),
             ("==3.8.*", [TargetVersion.PY38]),
@@ -1759,7 +1781,7 @@ class BlackTestCase(BlackBaseTestCase):
         tmp_file = Path(cercis.dump_to_file(source, ensure_final_newline=False))
         diff_header = re.compile(
             rf"{re.escape(str(tmp_file))}\t\d\d\d\d-\d\d-\d\d "
-            r"\d\d:\d\d:\d\d\.\d\d\d\d\d\d \+\d\d\d\d"
+            r"\d\d:\d\d:\d\d\.\d\d\d\d\d\d\+\d\d:\d\d"
         )
         try:
             result = BlackRunner().invoke(cercis.main, ["--diff", str(tmp_file)])
