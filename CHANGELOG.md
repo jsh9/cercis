@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.1.7] - 2023-06-19
+
+- Changed
+  - Pulled in the latest changes from psf/black (code diff:
+    https://github.com/jsh9/cercis/pull/27)
+
 ## [0.1.6] - 2023-05-23
 
 - Added
