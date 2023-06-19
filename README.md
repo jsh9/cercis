@@ -48,6 +48,9 @@ See [Section 4.5](#45-how-to-fall-back-to-blacks-behavior) below for more detail
   - [4.3. In your project's `.pre-commit-config.yaml` file](#43-in-your-projects-pre-commit-configyaml-file)
   - [4.4. Specify options in `tox.ini`](#44-specify-options-in-toxini)
   - [4.5. How to fall back to Black's behavior](#45-how-to-fall-back-to-blacks-behavior)
+- [5. Maintainer resources](#5-maintainer-resources)
+  - [5.1. How to rebase on top of _Black_?](#51-how-to-rebase-on-top-of-black)
+  - [5.2. Change logs](#52-change-logs)
 
 <!--TOC-->
 
@@ -728,3 +731,19 @@ collapse-nested-brackets = false
 wrap-comments = true
 wrap-pragma-comments = true
 ```
+
+## 5. Maintainer resources
+
+Here are some resources and notes for maintainers of _Cercis_:
+
+### 5.1. How to rebase on top of _Black_?
+
+Please refer to the file [HOW_TO_REBASE.md](./HOW_TO_REBASE.md).
+
+### 5.2. Change logs
+
+There are 2 files in this repo: [CHANGELOG.md](./CHANGELOG.md) and
+[CHANGES.md](./CHANGES.md).
+
+The former tracks the changes of _Cercis_ (_Black_ does not have this file). The latter
+tracks the changes on _Black_ (it exists in the _Black_ repo as well).
