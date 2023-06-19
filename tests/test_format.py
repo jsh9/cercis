@@ -176,7 +176,9 @@ def test_python_311(filename: str) -> None:
 @pytest.mark.parametrize("filename", all_data_cases("py_312"))
 def test_python_312(filename: str) -> None:
     source, expected = read_data("py_312", filename)
-    mode = black.Mode(target_versions={black.TargetVersion.PY312})
+    mode = cercis.Mode(target_versions={cercis.TargetVersion.PY312})
+    _override_single_quote_for_cleaner_future_rebase(mode)
+    mode.function_definition_extra_indent = False
     assert_format(source, expected, mode, minimum_version=(3, 12))
 
 

@@ -275,11 +275,11 @@ class BlackTestCase(BlackBaseTestCase):
     def test_pep_695_version_detection(self) -> None:
         for file in ("type_aliases", "type_params"):
             source, _ = read_data("py_312", file)
-            root = black.lib2to3_parse(source)
-            features = black.get_features_used(root)
-            self.assertIn(black.Feature.TYPE_PARAMS, features)
-            versions = black.detect_target_versions(root)
-            self.assertIn(black.TargetVersion.PY312, versions)
+            root = cercis.lib2to3_parse(source)
+            features = cercis.get_features_used(root)
+            self.assertIn(cercis.Feature.TYPE_PARAMS, features)
+            versions = cercis.detect_target_versions(root)
+            self.assertIn(cercis.TargetVersion.PY312, versions)
 
     def test_expression_ff(self) -> None:
         source, expected = read_data("simple_cases", "expression.py")
