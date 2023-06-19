@@ -498,3 +498,12 @@ def test_keep_blank_lines_in_brackets(filename: str, kblib: bool) -> None:
         filename,
         mode,
     )
+
+
+def test_playground() -> None:
+    mode = replace(
+        DEFAULT_MODE,
+        line_length=79,
+    )
+    filename = "playground/playground.py"
+    check_file(f"configurable_cases", filename=filename, mode=mode)
