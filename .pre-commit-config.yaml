@@ -44,3 +44,9 @@ repos:
     hooks:
       - id: end-of-file-fixer
       - id: trailing-whitespace
+
+  - repo: https://github.com/frnmst/md-toc
+    rev: 8.1.9
+    hooks:
+      - id: md-toc
+        args: [-p, '--skip-lines', '1', 'github', '-l', '4']

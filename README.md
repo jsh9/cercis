@@ -19,6 +19,38 @@ also thoroughly tested every configurable options that we added.
 In particular, via its configurable options, _Cercis_ can completely fall back to Black.
 See [Section 4.5](#45-how-to-fall-back-to-blacks-behavior) below for more details.
 
+**Table of Contents**
+
+<!--TOC-->
+
+- [1. Motivations](#1-motivations)
+- [2. Installation and usage](#2-installation-and-usage)
+  - [2.1. Installation](#21-installation)
+  - [2.2. Usage](#22-usage)
+    - [2.2.1. Command line usage](#221-command-line-usage)
+    - [2.2.2. As pre-commit hook](#222-as-pre-commit-hook)
+- [3. _Cercis_'s code style](#3-cerciss-code-style)
+  - [3.1. Line length](#31-line-length)
+  - [3.2. Single quote vs double quote](#32-single-quote-vs-double-quote)
+  - [3.3. Tabs vs spaces](#33-tabs-vs-spaces)
+  - [3.4. Base indentation spaces](#34-base-indentation-spaces)
+  - [3.5. Extra indentation at line continuations](#35-extra-indentation-at-line-continuations)
+    - [3.5.1. At function definition (`--function-definition-extra-indent`)](#351-at-function-definition---function-definition-extra-indent)
+    - [3.5.2. In other line continuations (`--other-line-continuation-extra-indent`)](#352-in-other-line-continuations---other-line-continuation-extra-indent)
+    - [3.5.3. At closing brackets (`--closing-bracket-extra-indent`)](#353-at-closing-brackets---closing-bracket-extra-indent)
+  - [3.6. "Simple" lines with long strings](#36-simple-lines-with-long-strings)
+  - [3.7. Collapse nested brackets](#37-collapse-nested-brackets)
+  - [3.8. Wrapping long lines ending with comments](#38-wrapping-long-lines-ending-with-comments)
+  - [3.9. Keep blank lines in brackets](#39-keep-blank-lines-in-brackets)
+- [4. How to configure _Cercis_](#4-how-to-configure-cercis)
+  - [4.1. Dynamically in the command line](#41-dynamically-in-the-command-line)
+  - [4.2. In your project's `pyproject.toml` file](#42-in-your-projects-pyprojecttoml-file)
+  - [4.3. In your project's `.pre-commit-config.yaml` file](#43-in-your-projects-pre-commit-configyaml-file)
+  - [4.4. Specify options in `tox.ini`](#44-specify-options-in-toxini)
+  - [4.5. How to fall back to Black's behavior](#45-how-to-fall-back-to-blacks-behavior)
+
+<!--TOC-->
+
 ## 1. Motivations
 
 While we like the idea of auto-formatting and code readability, we take issue with some
@@ -86,21 +118,6 @@ _Cercis_'s code style is largely consistent with the
 
 The main difference is that _Cercis_ provides several configurable options that Black
 doesn't. Configurability is our main motivation behind creating _Cercis_.
-
-_Cercis_ offers the following configurable options:
-
-1. [Line length](#31-line-length)
-2. [Single quote vs double quote](#32-single-quote-vs-double-quote)
-3. [Tabs vs spaces](#33-tabs-vs-spaces)
-4. [Base indentation spaces](#34-base-indentation-spaces)
-5. [Extra indentation at line continuation](#35-extra-indentation-at-line-continuation)
-   1. [At function definition](#351-at-function-definition---function-definition-extra-indent)
-   2. [In other line continuations](#352-in-other-line-continuations---other-line-continuation-extra-indent)
-   3. [At closing brackets](#353-at-closing-brackets---closing-bracket-extra-indent)
-6. ["Simple" lines with long strings](#36-simple-lines-with-long-strings)
-7. [Collapse nested brackets](#37-collapse-nested-brackets)
-8. [Wrap lines ending with comments](#38-wrapping-long-lines-ending-with-comments)
-9. [Keep blank lines in brackets](#39-keep-blank-lines-in-brackets)
 
 The next section ([How to configure _Cercis_](#4-how-to-configure-cercis)) contains
 detailed instructions of how to configure these options.
