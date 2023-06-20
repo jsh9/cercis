@@ -55,7 +55,7 @@ def _eligible_for_fixing(tokens: List[Token]) -> bool:
         return _is_right_paren(tokens[0]) and _is_newline(tokens[1])
 
     for token in tokens[:-2]:
-        if token.name != 'UNIMPORTANT_WS':
+        if token.name != "UNIMPORTANT_WS":
             return False
 
     return _is_right_paren(tokens[-2]) and _is_newline(tokens[-1])
@@ -74,16 +74,16 @@ def _fix_tokens(
 
             if _is_comma(prev_line_tokens[-2]):
                 paren = Token(
-                    name='OP',
-                    src=')',
+                    name="OP",
+                    src=")",
                     line=prev_line,
                     utf8_byte_offset=last_2_col_offset,
                 )
                 new_tokens = prev_line_tokens[:-2] + [paren] + [newline]
             else:
                 paren = Token(
-                    name='OP',
-                    src=')',
+                    name="OP",
+                    src=")",
                     line=prev_line,
                     utf8_byte_offset=last_2_col_offset + 1,
                 )
@@ -116,12 +116,12 @@ def _rearrange_tokens(tokens_lookup: Dict[int, List[Token]]) -> List[Token]:
 
 
 def _is_right_paren(token: Token) -> bool:
-    return token.name == 'OP' and token.src == ')'  # type: ignore[no-any-return]
+    return token.name == "OP" and token.src == ")"  # type: ignore[no-any-return]
 
 
 def _is_newline(token: Token) -> bool:
-    return token.name == 'NEWLINE' and token.src == '\n'  # type: ignore[no-any-return]
+    return token.name == "NEWLINE" and token.src == "\n"  # type: ignore[no-any-return]
 
 
 def _is_comma(token: Token) -> bool:
-    return token.name == 'OP' and token.src == ','  # type: ignore[no-any-return]
+    return token.name == "OP" and token.src == ","  # type: ignore[no-any-return]

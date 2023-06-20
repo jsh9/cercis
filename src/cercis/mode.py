@@ -223,7 +223,9 @@ class Mode:
     preview: bool = False
     function_definition_extra_indent: bool = DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT
     closing_bracket_extra_indent: bool = DEFAULT_CLOSING_BRACKET_EXTRA_INDENT
-    collapse_closing_paren_in_function_call: bool = DEFAULT_COLLAPSE_CLOSING_PAREN_IN_FUNCTION_CALL  # noqa: B950
+    collapse_closing_paren_in_function_call: bool = (
+        DEFAULT_COLLAPSE_CLOSING_PAREN_IN_FUNCTION_CALL  # noqa: B950
+    )
     single_quote: bool = DEFAULT_SINGLE_QUOTE
     wrap_line_with_long_string: bool = DEFAULT_WRAP_LINE_WITH_LONG_STRING
     collapse_nested_brackets: bool = DEFAULT_COLLAPSE_NESTED_BRACKETS
