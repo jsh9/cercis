@@ -506,7 +506,7 @@ def test_collapse_closing_paren_in_function_call() -> None:
         line_length=30,
         collapse_closing_paren_in_function_call=True,
     )
-    filename = "closing_bracket_not_on_own_line/cases.py"
+    filename = "closing_paren_in_func_call/cases.py"
     check_file("configurable_cases", filename=filename, mode=mode)
 
 
