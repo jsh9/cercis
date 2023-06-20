@@ -500,6 +500,16 @@ def test_keep_blank_lines_in_brackets(filename: str, kblib: bool) -> None:
     )
 
 
+def test_collapse_closing_paren_in_function_call() -> None:
+    mode = replace(
+        DEFAULT_MODE,
+        line_length=30,
+        collapse_closing_paren_in_function_call=True,
+    )
+    filename = "closing_bracket_not_on_own_line/cases.py"
+    check_file("configurable_cases", filename=filename, mode=mode)
+
+
 def test_playground() -> None:
     mode = replace(
         DEFAULT_MODE,

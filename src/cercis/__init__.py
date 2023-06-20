@@ -41,6 +41,7 @@ from cercis.comments import normalize_fmt_off
 from cercis.const import (
     DEFAULT_BASE_INDENTATION_SPACES,
     DEFAULT_CLOSING_BRACKET_EXTRA_INDENT,
+    DEFAULT_COLLAPSE_CLOSING_PAREN_IN_FUNCTION_CALL,
     DEFAULT_COLLAPSE_NESTED_BRACKETS,
     DEFAULT_EXCLUDES,
     DEFAULT_FUNCTION_DEFINITION_EXTRA_INDENT,
@@ -85,6 +86,7 @@ from cercis.mode import (
     TargetVersion,
     supports_feature,
 )
+from cercis.more_formatting.more_formatting import format_more
 from cercis.nodes import (
     STARS,
     is_number_token,
@@ -297,6 +299,17 @@ def validate_positive_integer(
     help=(
         "If True, add an extra indentation level (4 or 8, depending on"
         " --function-definition-extra-indent) to the closing bracket."
+    ),
+)
+@click.option(
+    "-ccpifc",
+    "--collapse-closing-paren-in-function-call",
+    type=bool,
+    show_default=True,
+    default=DEFAULT_COLLAPSE_CLOSING_PAREN_IN_FUNCTION_CALL,
+    help=(
+        "If True, move the standalone closing parenthesis to the previous line,"
+        " instead of having it on a line by itself."
     ),
 )
 @click.option(
@@ -585,6 +598,7 @@ def main(  # noqa: C901
         line_length: int,
         function_definition_extra_indent: bool,
         closing_bracket_extra_indent: bool,
+        collapse_closing_paren_in_function_call: bool,
         single_quote: bool,
         wrap_line_with_long_string: bool,
         collapse_nested_brackets: bool,
@@ -718,6 +732,7 @@ def main(  # noqa: C901
         python_cell_magics=set(python_cell_magics),
         function_definition_extra_indent=function_definition_extra_indent,
         closing_bracket_extra_indent=closing_bracket_extra_indent,
+        collapse_closing_paren_in_function_call=collapse_closing_paren_in_function_call,
         single_quote=single_quote,
         wrap_line_with_long_string=wrap_line_with_long_string,
         collapse_nested_brackets=collapse_nested_brackets,
@@ -1308,7 +1323,11 @@ def _format_str_once(src_contents: str, *, mode: Mode) -> str:
         if "\n" in normalized_content:
             return newline
         return ""
-    return "".join(dst_contents)
+
+    formatted: str = "".join(dst_contents)
+
+    formatted = format_more(formatted, mode)
+    return formatted
 
 
 def decode_bytes(src: bytes) -> Tuple[FileContent, Encoding, NewLine]:
