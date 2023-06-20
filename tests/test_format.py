@@ -516,4 +516,4 @@ def test_playground() -> None:
         line_length=79,
     )
     filename = "playground/playground.py"
-    check_file(f"configurable_cases", filename=filename, mode=mode)
+    check_file("configurable_cases", filename=filename, mode=mode)
