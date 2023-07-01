@@ -139,7 +139,9 @@ def read_pyproject_toml(
     otherwise.
     """
     if not value:
-        value = find_pyproject_toml(ctx.params.get("src", ()))
+        value = find_pyproject_toml(
+            ctx.params.get("src", ()), ctx.params.get("stdin_filename", None)
+        )
         if value is None:
             return None
 
@@ -517,6 +519,7 @@ def validate_positive_integer(
 @click.option(
     "--stdin-filename",
     type=str,
+    is_eager=True,
     help=(
         "The name of the file when passing it through stdin. Useful to make "
         "sure Cercis will respect --force-exclude option on some "
@@ -528,7 +531,10 @@ def validate_positive_integer(
     "--workers",
     type=click.IntRange(min=1),
     default=None,
-    help="Number of parallel workers [default: number of CPUs in the system]",
+    help=(
+        "Number of parallel workers [default: CERCIS_NUM_WORKERS environment variable "
+        "or number of CPUs in the system]"
+    ),
 )
 @click.option(
     "-q",
@@ -643,26 +649,6 @@ def main(  # noqa: C901
                 f"Identified `{root}` as project root containing a {method}.",
                 fg="blue",
             )
-
-            normalized = [
-                (
-                    (source, source)
-                    if source == "-"
-                    else (normalize_path_maybe_ignore(Path(source), root), source)
-                )
-                for source in src
-            ]
-            srcs_string = ", ".join(
-                [
-                    (
-                        f'"{_norm}"'
-                        if _norm
-                        else f'\033[31m"{source} (skipping - invalid)"\033[34m'
-                    )
-                    for _norm, source in normalized
-                ]
-            )
-            out(f"Sources to be formatted: {srcs_string}", fg="blue")
 
         if config:
             config_source = ctx.get_parameter_source("config")
@@ -831,9 +817,15 @@ def get_sources(
             is_stdin = False
 
         if is_stdin or p.is_file():
-            normalized_path = normalize_path_maybe_ignore(p, ctx.obj["root"], report)
+            normalized_path: Optional[str] = normalize_path_maybe_ignore(
+                p, ctx.obj["root"], report
+            )
             if normalized_path is None:
+                if verbose:
+                    out(f'Skipping invalid source: "{normalized_path}"', fg="red")
                 continue
+            if verbose:
+                out(f'Found input source: "{normalized_path}"', fg="blue")
 
             normalized_path = "/" + normalized_path
             # Hard-exclude any files that matches the `--force-exclude` regex.
@@ -856,6 +848,9 @@ def get_sources(
             sources.add(p)
         elif p.is_dir():
             p = root / normalize_path_maybe_ignore(p, ctx.obj["root"], report)
+            if verbose:
+                out(f'Found input source directory: "{p}"', fg="blue")
+
             if using_default_exclude:
                 gitignore = {
                     root: root_gitignore,
@@ -876,9 +871,12 @@ def get_sources(
                 )
             )
         elif s == "-":
+            if verbose:
+                out("Found input source stdin", fg="blue")
             sources.add(p)
         else:
             err(f"invalid path: {s}")
+
     return sources
 
 

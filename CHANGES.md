@@ -12,6 +12,8 @@
 
 - Fix a bug where an illegal trailing comma was added to return type annotations using
   PEP 604 unions (#3735)
+- Fix a bug where multi-line open parenthesis magic comment like `type: ignore` were not
+  correctly parsed (#3740)
 
 ### Preview style
 
@@ -25,11 +27,17 @@
 
 <!-- Changes to how Black can be configured -->
 
+- The `--workers` argument to Black can now be specified via the `BLACK_NUM_WORKERS`
+  environment variable (#3743)
 - `.pytest_cache`, `.ruff_cache` and `.vscode` are now excluded by default (#3691)
+- Fix black not honouring `pyproject.toml` settings when running `--stdin-filename` and
+  the `pyproject.toml` found isn't in the current working directory (#3719)
 
 ### Packaging
 
 <!-- Changes to how Black is packaged, such as dependency requirements -->
+
+- Upgrade mypyc from 0.991 to 1.3 (#3697)
 
 ### Parser
 
@@ -41,11 +49,14 @@
 
 <!-- Changes that improve Black's performance. -->
 
+- Avoid importing `IPython` in a case where we wouldn't need it (#3748)
+
 ### Output
 
 <!-- Changes to Black's terminal output and error messages -->
 
 - Use aware UTC datetimes internally, avoids deprecation warning on Python 3.12 (#3728)
+- Change verbose logging to exactly mirror _Black_'s logic for source discovery (#3749)
 
 ### _Blackd_
 
@@ -64,6 +75,9 @@
 
 <!-- Major changes to documentation and policies. Small docs changes
      don't need a changelog entry. -->
+
+- Updated the _classes_ and _exceptions_ documentation in Developer reference to match
+  the latest ccode base. (#3755)
 
 ## 23.3.0
 
