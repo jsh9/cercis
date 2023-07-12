@@ -103,7 +103,7 @@ def download_and_extract(package: str, version: Optional[str], directory: Path) 
 
 
 def get_package(
-    package: str, version: Optional[str], directory: Path
+        package: str, version: Optional[str], directory: Path
 ) -> Optional[Path]:
     try:
         return download_and_extract(package, version, directory)
@@ -117,9 +117,9 @@ DEFAULT_SLICE = slice(None)  # for flake8
 
 
 def download_and_extract_top_packages(
-    directory: Path,
-    workers: int = 8,
-    limit: slice = DEFAULT_SLICE,
+        directory: Path,
+        workers: int = 8,
+        limit: slice = DEFAULT_SLICE,
 ) -> Generator[Path, None, None]:
     with ThreadPoolExecutor(max_workers=workers) as executor:
         bound_downloader = partial(get_package, version=None, directory=directory)
@@ -139,7 +139,7 @@ def git_add_and_commit(msg: str, repo: Path) -> None:
 
 
 def git_switch_branch(
-    branch: str, repo: Path, new: bool = False, from_branch: Optional[str] = None
+        branch: str, repo: Path, new: bool = False, from_branch: Optional[str] = None
 ) -> None:
     args = ["git", "checkout"]
     if new:
@@ -196,11 +196,11 @@ def black_runner(version: str, black_repo: Path) -> Path:
 
 
 def format_repo_with_version(
-    repo: Path,
-    from_branch: Optional[str],
-    black_repo: Path,
-    black_version: BlackVersion,
-    input_directory: Path,
+        repo: Path,
+        from_branch: Optional[str],
+        black_repo: Path,
+        black_version: BlackVersion,
+        input_directory: Path,
 ) -> str:
     current_branch = f"cercis-{black_version.version}"
     git_switch_branch(black_version.version, repo=black_repo)
@@ -253,7 +253,9 @@ def main() -> None:
         "-t", "--top-packages", help="Top n PyPI packages to download.", type=int
     )
 
-    parser.add_argument("-b", "--cercis-repo", help="Black's Git repository.", type=Path)
+    parser.add_argument(
+        "-b", "--cercis-repo", help="Black's Git repository.", type=Path
+    )
     parser.add_argument(
         "-v",
         "--version",

@@ -165,7 +165,7 @@ def config(event: Literal["push", "pull_request"]) -> None:
 @click.argument("target-sha")
 @click.argument("pr-num", type=int)
 def comment_body(
-    baseline: Path, target: Path, baseline_sha: str, target_sha: str, pr_num: int
+        baseline: Path, target: Path, baseline_sha: str, target_sha: str, pr_num: int
 ) -> None:
     # fmt: off
     cmd = [

@@ -121,7 +121,7 @@ def lib2to3_unparse(node: Node) -> str:
 
 
 def parse_single_version(
-    src: str, version: Tuple[int, int], *, type_comments: bool
+        src: str, version: Tuple[int, int], *, type_comments: bool
 ) -> ast.AST:
     filename = "<unknown>"
     return ast.parse(

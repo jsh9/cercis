@@ -39,7 +39,7 @@ from blib2to3.pgen2.tokenize import TokenError
     ),
 )
 def test_idempotent_any_syntatically_valid_python(
-    src_contents: str, mode: cercis.FileMode
+        src_contents: str, mode: cercis.FileMode
 ) -> None:
     # Before starting, let's confirm that the input string is valid Python:
     compile(src_contents, "<string>", "exec")  # else the bug is in hypothesmith
