@@ -29,7 +29,7 @@ PY36_VERSIONS = {
     TargetVersion.PY39,
 }
 
-DEFAULT_MODE = cercis.Mode()
+DEFAULT_MODE = replace(cercis.Mode(), line_length=88)
 ff = partial(cercis.format_file_in_place, mode=DEFAULT_MODE, fast=True)
 fs = partial(cercis.format_str, mode=DEFAULT_MODE)
 
