@@ -226,7 +226,6 @@ def parse_python_variant_header(value: str) -> Tuple[bool, Set[cercis.TargetVers
 def patched_main() -> None:
     maybe_install_uvloop()
     freeze_support()
-    cercis.patch_click()
     main()
 
 

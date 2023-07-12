@@ -149,8 +149,7 @@ class BlackTestCase(BlackBaseTestCase):
         tmp_file = Path(cercis.dump_to_file())
         try:
             self.assertFalse(ff(tmp_file, write_back=cercis.WriteBack.YES))
-            with open(tmp_file, encoding="utf8") as f:
-                actual = f.read()
+            actual = tmp_file.read_text(encoding="utf-8")
         finally:
             os.unlink(tmp_file)
         self.assertFormatEqual(expected, actual)
@@ -178,7 +177,7 @@ class BlackTestCase(BlackBaseTestCase):
                     ff(tmp_file, mode=mode, write_back=cercis.WriteBack.YES)
                 )
                 with open(tmp_file, "rb") as f:
-                    actual = f.read().decode("utf8")
+                    actual = f.read().decode("utf-8")
             finally:
                 os.unlink(tmp_file)
             self.assertFormatEqual(expected, actual)
@@ -199,7 +198,7 @@ class BlackTestCase(BlackBaseTestCase):
                 f"--config={EMPTY_CONFIG}",
                 "--single-quote=False",
             ],
-            input=BytesIO(source.encode("utf8")),
+            input=BytesIO(source.encode("utf-8")),
         )
         self.assertEqual(result.exit_code, 0)
         self.assertFormatEqual(expected, result.output)
@@ -222,7 +221,7 @@ class BlackTestCase(BlackBaseTestCase):
             f"--config={EMPTY_CONFIG}",
         ]
         result = BlackRunner().invoke(
-            cercis.main, args, input=BytesIO(source.encode("utf8"))
+            cercis.main, args, input=BytesIO(source.encode("utf-8"))
         )
         self.assertEqual(result.exit_code, 0)
         actual = diff_header.sub(DETERMINISTIC_HEADER, result.output)
@@ -240,7 +239,7 @@ class BlackTestCase(BlackBaseTestCase):
             f"--config={EMPTY_CONFIG}",
         ]
         result = BlackRunner().invoke(
-            cercis.main, args, input=BytesIO(source.encode("utf8"))
+            cercis.main, args, input=BytesIO(source.encode("utf-8"))
         )
         actual = result.output
         # Again, the contents are checked in a different test, so only look for colors.
@@ -287,9 +286,8 @@ class BlackTestCase(BlackBaseTestCase):
         tmp_file = Path(cercis.dump_to_file(source))
         mode = replace(DEFAULT_MODE, line_length=88)
         try:
-            self.assertTrue(ff(tmp_file, write_back=cercis.WriteBack.YES, mode=mode))
-            with open(tmp_file, encoding="utf8") as f:
-                actual = f.read()
+            self.assertTrue(ff(tmp_file, write_back=cercis.WriteBack.YES))
+            actual = tmp_file.read_text(encoding="utf-8")
         finally:
             os.unlink(tmp_file)
         self.assertFormatEqual(expected, actual)
@@ -398,8 +396,7 @@ class BlackTestCase(BlackBaseTestCase):
             cercis.main, [str(tmp_file), "-x", f"--config={EMPTY_CONFIG}"]
         )
         self.assertEqual(result.exit_code, 0)
-        with open(tmp_file, encoding="utf8") as f:
-            actual = f.read()
+        actual = tmp_file.read_text(encoding="utf-8")
         self.assertFormatEqual(source, actual)
 
     def test_skip_source_first_line_when_mixing_newlines(self) -> None:
@@ -526,6 +523,8 @@ class BlackTestCase(BlackBaseTestCase):
             "pathlib.Path.cwd", return_value=working_directory
         ), patch("pathlib.Path.is_dir", side_effect=mock_n_calls([True])):
             ctx = FakeContext()
+            # Note that the root folder (project_root) isn't the folder
+            # named "root" (aka working_directory)
             ctx.obj["root"] = project_root
             report = MagicMock(verbose=True)
             cercis.get_sources(
@@ -545,7 +544,7 @@ class BlackTestCase(BlackBaseTestCase):
             for _, mock_args, _ in report.path_ignored.mock_calls
         ), "A symbolic link was reported."
         report.path_ignored.assert_called_once_with(
-            Path("child", "b.py"), "matches a .gitignore file content"
+            Path("root", "child", "b.py"), "matches a .gitignore file content"
         )
 
     def test_report_verbose(self) -> None:
@@ -1102,7 +1101,7 @@ class BlackTestCase(BlackBaseTestCase):
                 (workspace / "one.py").resolve(),
                 (workspace / "two.py").resolve(),
             ]:
-                f.write_text('print("hello")\n')
+                f.write_text('print("hello")\n', encoding="utf-8")
             self.invokeBlack([str(workspace)])
 
     @event_loop()
@@ -1144,11 +1143,9 @@ class BlackTestCase(BlackBaseTestCase):
         contents, expected = read_data("miscellaneous", "force_pyi")
         with cache_dir() as workspace:
             path = (workspace / "file.py").resolve()
-            with open(path, "w") as fh:
-                fh.write(contents)
+            path.write_text(contents, encoding="utf-8")
             self.invokeBlack([str(path), "--pyi"])
-            with open(path, "r") as fh:
-                actual = fh.read()
+            actual = path.read_text(encoding="utf-8")
             # verify cache with --pyi is separate
             pyi_cache = cercis.read_cache(pyi_mode)
             self.assertIn(str(path), pyi_cache)
@@ -1169,12 +1166,10 @@ class BlackTestCase(BlackBaseTestCase):
                 (workspace / "file2.py").resolve(),
             ]
             for path in paths:
-                with open(path, "w") as fh:
-                    fh.write(contents)
+                path.write_text(contents, encoding="utf-8")
             self.invokeBlack([str(p) for p in paths] + ["--pyi"])
             for path in paths:
-                with open(path, "r") as fh:
-                    actual = fh.read()
+                actual = path.read_text(encoding="utf-8")
                 self.assertEqual(actual, expected)
             # verify cache with --pyi is separate
             pyi_cache = cercis.read_cache(pyi_mode)
@@ -1186,7 +1181,7 @@ class BlackTestCase(BlackBaseTestCase):
     def test_pipe_force_pyi(self) -> None:
         source, expected = read_data("miscellaneous", "force_pyi")
         result = CliRunner().invoke(
-            cercis.main, ["-", "-q", "--pyi"], input=BytesIO(source.encode("utf8"))
+            cercis.main, ["-", "-q", "--pyi"], input=BytesIO(source.encode("utf-8"))
         )
         self.assertEqual(result.exit_code, 0)
         actual = result.output
@@ -1198,11 +1193,9 @@ class BlackTestCase(BlackBaseTestCase):
         source, expected = read_data("miscellaneous", "force_py36")
         with cache_dir() as workspace:
             path = (workspace / "file.py").resolve()
-            with open(path, "w") as fh:
-                fh.write(source)
+            path.write_text(source, encoding="utf-8")
             self.invokeBlack([str(path), *PY36_ARGS])
-            with open(path, "r") as fh:
-                actual = fh.read()
+            actual = path.read_text(encoding="utf-8")
             # verify cache with --target-version is separate
             py36_cache = cercis.read_cache(py36_mode)
             self.assertIn(str(path), py36_cache)
@@ -1221,12 +1214,10 @@ class BlackTestCase(BlackBaseTestCase):
                 (workspace / "file2.py").resolve(),
             ]
             for path in paths:
-                with open(path, "w") as fh:
-                    fh.write(source)
+                path.write_text(source, encoding="utf-8")
             self.invokeBlack([str(p) for p in paths] + PY36_ARGS)
             for path in paths:
-                with open(path, "r") as fh:
-                    actual = fh.read()
+                actual = path.read_text(encoding="utf-8")
                 self.assertEqual(actual, expected)
             # verify cache with --target-version is separate
             pyi_cache = cercis.read_cache(py36_mode)
@@ -1240,7 +1231,7 @@ class BlackTestCase(BlackBaseTestCase):
         result = CliRunner().invoke(
             cercis.main,
             ["-", "-q", "--target-version=py36"],
-            input=BytesIO(source.encode("utf8")),
+            input=BytesIO(source.encode("utf-8")),
         )
         self.assertEqual(result.exit_code, 0)
         actual = result.output
@@ -1474,11 +1465,11 @@ class BlackTestCase(BlackBaseTestCase):
             contents = nl.join(["def f(  ):", "    pass"])
             runner = BlackRunner()
             result = runner.invoke(
-                cercis.main, ["-", "--fast"], input=BytesIO(contents.encode("utf8"))
+                cercis.main, ["-", "--fast"], input=BytesIO(contents.encode("utf-8"))
             )
             self.assertEqual(result.exit_code, 0)
             output = result.stdout_bytes
-            self.assertIn(nl.encode("utf8"), output)
+            self.assertIn(nl.encode("utf-8"), output)
             if nl == "\n":
                 self.assertNotIn(b"\r\n", output)
 
@@ -1496,30 +1487,6 @@ class BlackTestCase(BlackBaseTestCase):
     def test_assert_equivalent_different_asts(self) -> None:
         with self.assertRaises(AssertionError):
             cercis.assert_equivalent("{}", "None")
-
-    def test_shhh_click(self) -> None:
-        try:
-            from click import _unicodefun  # type: ignore
-        except ImportError:
-            self.skipTest("Incompatible Click version")
-
-        if not hasattr(_unicodefun, "_verify_python_env"):
-            self.skipTest("Incompatible Click version")
-
-        # First, let's see if Click is crashing with a preferred ASCII charset.
-        with patch("locale.getpreferredencoding") as gpe:
-            gpe.return_value = "ASCII"
-            with self.assertRaises(RuntimeError):
-                _unicodefun._verify_python_env()
-        # Now, let's silence Click...
-        cercis.patch_click()
-        # ...and confirm it's silent.
-        with patch("locale.getpreferredencoding") as gpe:
-            gpe.return_value = "ASCII"
-            try:
-                _unicodefun._verify_python_env()
-            except RuntimeError as re:
-                self.fail(f"`patch_click()` failed, exception still raised: {re}")
 
     def test_root_logger_not_used_directly(self) -> None:
         def fail(*args: Any, **kwargs: Any) -> None:
@@ -1662,8 +1629,8 @@ class BlackTestCase(BlackBaseTestCase):
             src_pyproject = src_dir / "pyproject.toml"
             src_pyproject.touch()
 
-            test_toml_file = THIS_DIR / "test.toml"
-            src_pyproject.write_text(test_toml_file.read_text())
+            test_toml_content = (THIS_DIR / "test.toml").read_text(encoding="utf-8")
+            src_pyproject.write_text(test_toml_content, encoding="utf-8")
 
             src_python = src_dir / "foo.py"
             src_python.touch()
@@ -2016,10 +1983,10 @@ class TestCaching:
         mode = DEFAULT_MODE
         with cache_dir() as workspace:
             cache_file = get_cache_file(mode)
-            cache_file.write_text("this is not a pickle")
+            cache_file.write_text("this is not a pickle", encoding="utf-8")
             assert cercis.read_cache(mode) == {}
             src = (workspace / "test.py").resolve()
-            src.write_text("print('hello')")
+            src.write_text("print('hello')", encoding="utf-8")
             invokeBlack([str(src)])
             cache = cercis.read_cache(mode)
             assert str(src) in cache
@@ -2028,10 +1995,10 @@ class TestCaching:
         mode = DEFAULT_MODE
         with cache_dir() as workspace:
             src = (workspace / "test.py").resolve()
-            src.write_text("print('hello')")
+            src.write_text("print('hello')", encoding="utf-8")
             cercis.write_cache({}, [src], mode)
             invokeBlack([str(src)])
-            assert src.read_text() == "print('hello')"
+            assert src.read_text(encoding="utf-8") == "print('hello')"
 
     @event_loop()
     def test_cache_multiple_files(self) -> None:
@@ -2040,17 +2007,13 @@ class TestCaching:
             "concurrent.futures.ProcessPoolExecutor", new=ThreadPoolExecutor
         ):
             one = (workspace / "one.py").resolve()
-            with one.open("w") as fobj:
-                fobj.write("print('hello')")
+            one.write_text("print('hello')", encoding="utf-8")
             two = (workspace / "two.py").resolve()
-            with two.open("w") as fobj:
-                fobj.write("print('hello')")
+            two.write_text("print('hello')", encoding="utf-8")
             cercis.write_cache({}, [one], mode)
-            invokeBlack([str(workspace), "--single-quote=False"])
-            with one.open("r") as fobj:
-                assert fobj.read() == "print('hello')"
-            with two.open("r") as fobj:
-                assert fobj.read() == 'print("hello")\n'
+            invokeBlack([str(workspace)])
+            assert one.read_text(encoding="utf-8") == "print('hello')"
+            assert two.read_text(encoding="utf-8") == 'print("hello")\n'
             cache = cercis.read_cache(mode)
             assert str(one) in cache
             assert str(two) in cache
@@ -2060,8 +2023,7 @@ class TestCaching:
         mode = DEFAULT_MODE
         with cache_dir() as workspace:
             src = (workspace / "test.py").resolve()
-            with src.open("w") as fobj:
-                fobj.write("print('hello')")
+            src.write_text("print('hello')", encoding="utf-8")
             with patch("cercis.read_cache") as read_cache, patch(
                 "cercis.write_cache"
             ) as write_cache:
@@ -2080,8 +2042,7 @@ class TestCaching:
         with cache_dir() as workspace:
             for tag in range(0, 4):
                 src = (workspace / f"test{tag}.py").resolve()
-                with src.open("w") as fobj:
-                    fobj.write("print('hello')")
+                src.write_text("print('hello')", encoding="utf-8")
             with patch(
                 "cercis.concurrency.Manager", wraps=multiprocessing.Manager
             ) as mgr:
@@ -2151,11 +2112,9 @@ class TestCaching:
             "concurrent.futures.ProcessPoolExecutor", new=ThreadPoolExecutor
         ):
             failing = (workspace / "failing.py").resolve()
-            with failing.open("w") as fobj:
-                fobj.write("not actually python")
+            failing.write_text("not actually python", encoding="utf-8")
             clean = (workspace / "clean.py").resolve()
-            with clean.open("w") as fobj:
-                fobj.write('print("hello")\n')
+            clean.write_text('print("hello")\n', encoding="utf-8")
             invokeBlack([str(workspace)], exit_code=123)
             cache = cercis.read_cache(mode)
             assert str(failing) not in cache

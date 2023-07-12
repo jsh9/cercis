@@ -77,7 +77,7 @@ def test_trailing_semicolon_noop() -> None:
     [
         pytest.param(JUPYTER_MODE, id="default mode"),
         pytest.param(
-            replace(JUPYTER_MODE, python_cell_magics={"cust1", "cust1"}),
+            replace(JUPYTER_MODE, python_cell_magics={"cust1", "cust2"}),
             id="custom cell magics mode",
         ),
     ],
@@ -100,7 +100,7 @@ def test_cell_magic_noop() -> None:
     [
         pytest.param(JUPYTER_MODE, id="default mode"),
         pytest.param(
-            replace(JUPYTER_MODE, python_cell_magics={"cust1", "cust1"}),
+            replace(JUPYTER_MODE, python_cell_magics={"cust1", "cust2"}),
             id="custom cell magics mode",
         ),
     ],
@@ -183,7 +183,7 @@ def test_cell_magic_with_magic() -> None:
             id="No change when cell magic not registered",
         ),
         pytest.param(
-            replace(JUPYTER_MODE, python_cell_magics={"cust1", "cust1"}),
+            replace(JUPYTER_MODE, python_cell_magics={"cust1", "cust2"}),
             "%%custom_python_magic -n1 -n2\nx=2",
             pytest.raises(NothingChanged),
             id="No change when other cell magics registered",
@@ -445,8 +445,7 @@ def test_cache_isnt_written_if_no_jupyter_deps_single(
     jupyter_dependencies_are_installed.cache_clear()
     nb = get_case_path("jupyter", "notebook_trailing_newline.ipynb")
     tmp_nb = tmp_path / "notebook.ipynb"
-    with open(nb) as src, open(tmp_nb, "w") as dst:
-        dst.write(src.read())
+    tmp_nb.write_bytes(nb.read_bytes())
     monkeypatch.setattr(
         "cercis.jupyter_dependencies_are_installed", lambda verbose, quiet: False
     )
@@ -471,8 +470,7 @@ def test_cache_isnt_written_if_no_jupyter_deps_dir(
     jupyter_dependencies_are_installed.cache_clear()
     nb = get_case_path("jupyter", "notebook_trailing_newline.ipynb")
     tmp_nb = tmp_path / "notebook.ipynb"
-    with open(nb) as src, open(tmp_nb, "w") as dst:
-        dst.write(src.read())
+    tmp_nb.write_bytes(nb.read_bytes())
     monkeypatch.setattr(
         "cercis.files.jupyter_dependencies_are_installed", lambda verbose, quiet: False
     )
@@ -489,8 +487,7 @@ def test_cache_isnt_written_if_no_jupyter_deps_dir(
 def test_ipynb_flag(tmp_path: pathlib.Path) -> None:
     nb = get_case_path("jupyter", "notebook_trailing_newline.ipynb")
     tmp_nb = tmp_path / "notebook.a_file_extension_which_is_definitely_not_ipynb"
-    with open(nb) as src, open(tmp_nb, "w") as dst:
-        dst.write(src.read())
+    tmp_nb.write_bytes(nb.read_bytes())
     result = runner.invoke(
         main,
         [

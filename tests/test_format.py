@@ -53,6 +53,7 @@ def test_simple_format(filename: str) -> None:
         wrap_pragma_comments=True,
         keep_blank_lines_in_brackets=False,
         line_length=88,
+        is_pyi=filename.endswith("_pyi"),
     )
     check_file("simple_cases", filename, mode)
 
