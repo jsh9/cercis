@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.0] - 2023-07-12
+
+- Changed
+  - Rebased `Cercis` to be head to head with `Black` [version 23.7.0](https://github.com/psf/black/releases/tag/23.7.0)
+- Diff
+  - https://github.com/jsh9/cercis/compare/0.1.7...0.2.0
+
 ## [0.1.7] - 2023-06-19
 
 - Changed
