@@ -24,13 +24,12 @@ from typing import (
     Union,
 )
 
-from cercis.indent import Indent
-
 from mypy_extensions import trait
 
 from blib2to3.pgen2 import token
 from blib2to3.pytree import Leaf, Node
 from cercis.comments import contains_pragma_comment
+from cercis.indent import Indent
 from cercis.lines import Line, append_leaves
 from cercis.mode import Feature, Mode
 from cercis.nodes import (
