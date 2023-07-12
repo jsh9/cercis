@@ -2011,7 +2011,7 @@ class TestCaching:
             two = (workspace / "two.py").resolve()
             two.write_text("print('hello')", encoding="utf-8")
             cercis.write_cache({}, [one], mode)
-            invokeBlack([str(workspace)])
+            invokeBlack([str(workspace), "--single-quote=False"])
             assert one.read_text(encoding="utf-8") == "print('hello')"
             assert two.read_text(encoding="utf-8") == 'print("hello")\n'
             cache = cercis.read_cache(mode)
