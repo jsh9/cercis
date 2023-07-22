@@ -4,7 +4,6 @@ the latest version of Black. This saves us from forgetting to update that
 during the release process.
 """
 
-import os
 import sys
 
 import commonmark
@@ -40,9 +39,6 @@ def main(changes: str, the_basics: str) -> None:
 if __name__ == "__main__":
     with open("CHANGES.md", encoding="utf-8") as fd:
         changes = fd.read()
-    with open(
-        os.path.join("docs", "usage_and_configuration", "the_basics.md"),
-        encoding="utf-8",
-    ) as fd:
-        the_basics = fd.read()
+
+    the_basics = ''
     main(changes, the_basics)
