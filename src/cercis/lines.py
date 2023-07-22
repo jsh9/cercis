@@ -55,7 +55,7 @@ class Line:
     """Holds leaves and comments. Can be printed with `str(line)`."""
 
     mode: Mode = field(repr=False)
-    depth: int = 0
+    depth: Tuple[Indent, ...] = field(default_factory=tuple)
     leaves: List[Leaf] = field(default_factory=list)
     # keys ordered like `leaves`
     comments: Dict[LeafID, List[Leaf]] = field(default_factory=dict)
