@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.2.1] - 2023-07-23
+
+- Changed
+  - Rebased `Cercis` to be head to head with `Black`
+- Fixed
+  - Fixed a pytest regression where Python warnings are treated as errors
+    (https://github.com/jsh9/cercis/commit/1229b9dd18f861423e26f8de3f4b5e714d72bd9c)
+- Diff
+  - https://github.com/jsh9/cercis/compare/0.2.0...0.2.1
+
 ## [0.2.0] - 2023-07-12
 
 - Changed
