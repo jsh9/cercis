@@ -187,7 +187,7 @@ class Driver:
         return self.parse_stream_raw(stream, debug)
 
     def parse_file(
-        self, filename: Path, encoding: Optional[str] = None, debug: bool = False
+            self, filename: Path, encoding: Optional[str] = None, debug: bool = False
     ) -> NL:
         """Parse a file and return the syntax tree."""
         with open(filename, encoding=encoding) as stream:
@@ -240,11 +240,11 @@ def _generate_pickle_name(gt: Path, cache_dir: Optional[Path] = None) -> str:
 
 
 def load_grammar(
-    gt: str = "Grammar.txt",
-    gp: Optional[str] = None,
-    save: bool = True,
-    force: bool = False,
-    logger: Optional[Logger] = None,
+        gt: str = "Grammar.txt",
+        gp: Optional[str] = None,
+        save: bool = True,
+        force: bool = False,
+        logger: Optional[Logger] = None,
 ) -> Grammar:
     """Load the grammar (maybe from a pickle)."""
     if logger is None:
@@ -274,7 +274,7 @@ def _newer(a: str, b: str) -> bool:
 
 
 def load_packaged_grammar(
-    package: str, grammar_source: str, cache_dir: Optional[Path] = None
+        package: str, grammar_source: str, cache_dir: Optional[Path] = None
 ) -> grammar.Grammar:
     """Normally, loads a pickled grammar by doing
         pkgutil.get_data(package, pickled_grammar)

@@ -40,5 +40,5 @@ if __name__ == "__main__":
     with open("CHANGES.md", encoding="utf-8") as fd:
         changes = fd.read()
 
-    the_basics = ''
+    the_basics = ""
     main(changes, the_basics)

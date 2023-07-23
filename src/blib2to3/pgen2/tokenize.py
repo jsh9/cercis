@@ -201,7 +201,7 @@ Coord = Tuple[int, int]
 
 
 def printtoken(
-    type: int, token: str, srow_col: Coord, erow_col: Coord, line: str
+        type: int, token: str, srow_col: Coord, erow_col: Coord, line: str
 ) -> None:  # for testing
     (srow, scol) = srow_col
     (erow, ecol) = erow_col
@@ -419,7 +419,7 @@ def untokenize(iterable: Iterable[TokenInfo]) -> str:
 
 
 def generate_tokens(
-    readline: Callable[[], str], grammar: Optional[Grammar] = None
+        readline: Callable[[], str], grammar: Optional[Grammar] = None
 ) -> Iterator[GoodTokenInfo]:
     """
     The generate_tokens() generator requires one argument, readline, which
@@ -568,9 +568,7 @@ def generate_tokens(
                 spos, epos, pos = (lnum, start), (lnum, end), end
                 token, initial = line[start:end], line[start]
 
-                if initial in numchars or (
-                    initial == "." and token != "."
-                ):  # ordinary number
+                if initial in numchars or (initial == "." and token != "."):  # ordinary number
                     yield (NUMBER, token, spos, epos, line)
                 elif initial in "\r\n":
                     newline = NEWLINE

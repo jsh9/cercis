@@ -50,7 +50,7 @@ DUMMY_NODE = (-1, None, None, None)
 
 
 def stack_copy(
-    stack: List[Tuple[DFAS, int, RawNode]]
+        stack: List[Tuple[DFAS, int, RawNode]]
 ) -> List[Tuple[DFAS, int, RawNode]]:
     """Nodeless stack copy."""
     return [(dfa, label, DUMMY_NODE) for dfa, label, _ in stack]
@@ -114,7 +114,7 @@ class Recorder:
                 func(*args)
 
     def determine_route(
-        self, value: Optional[str] = None, force: bool = False
+            self, value: Optional[str] = None, force: bool = False
     ) -> Optional[int]:
         alive_ilabels = self.ilabels
         if len(alive_ilabels) == 0:
@@ -132,7 +132,7 @@ class ParseError(Exception):
     """Exception to signal the parser is stuck."""
 
     def __init__(
-        self, msg: str, type: Optional[int], value: Optional[str], context: Context
+            self, msg: str, type: Optional[int], value: Optional[str], context: Context
     ) -> None:
         Exception.__init__(
             self, f"{msg}: type={type!r}, value={value!r}, context={context!r}"

@@ -243,12 +243,12 @@ class Node(Base):
     used_names: Optional[Set[str]]
 
     def __init__(
-        self,
-        type: int,
-        children: List[NL],
-        context: Optional[Any] = None,
-        prefix: Optional[str] = None,
-        fixers_applied: Optional[List[Any]] = None,
+            self,
+            type: int,
+            children: List[NL],
+            context: Optional[Any] = None,
+            prefix: Optional[str] = None,
+            fixers_applied: Optional[List[Any]] = None,
     ) -> None:
         """
         Initializer.
@@ -395,14 +395,14 @@ class Leaf(Base):
     fmt_pass_converted_first_leaf: Optional["Leaf"] = None
 
     def __init__(
-        self,
-        type: int,
-        value: str,
-        context: Optional[Context] = None,
-        prefix: Optional[str] = None,
-        fixers_applied: List[Any] = [],
-        opening_bracket: Optional["Leaf"] = None,
-        fmt_pass_converted_first_leaf: Optional["Leaf"] = None,
+            self,
+            type: int,
+            value: str,
+            context: Optional[Context] = None,
+            prefix: Optional[str] = None,
+            fixers_applied: List[Any] = [],
+            opening_bracket: Optional["Leaf"] = None,
+            fmt_pass_converted_first_leaf: Optional["Leaf"] = None,
     ) -> None:
         """
         Initializer.
@@ -596,10 +596,10 @@ class BasePattern:
 
 class LeafPattern(BasePattern):
     def __init__(
-        self,
-        type: Optional[int] = None,
-        content: Optional[str] = None,
-        name: Optional[str] = None,
+            self,
+            type: Optional[int] = None,
+            content: Optional[str] = None,
+            name: Optional[str] = None,
     ) -> None:
         """
         Initializer.  Takes optional type, content, and name.
@@ -646,10 +646,10 @@ class NodePattern(BasePattern):
     wildcards: bool = False
 
     def __init__(
-        self,
-        type: Optional[int] = None,
-        content: Optional[Iterable[str]] = None,
-        name: Optional[str] = None,
+            self,
+            type: Optional[int] = None,
+            content: Optional[Iterable[str]] = None,
+            name: Optional[str] = None,
     ) -> None:
         """
         Initializer.  Takes optional type, content, and name.
@@ -727,11 +727,11 @@ class WildcardPattern(BasePattern):
     max: int
 
     def __init__(
-        self,
-        content: Optional[str] = None,
-        min: int = 0,
-        max: int = HUGE,
-        name: Optional[str] = None,
+            self,
+            content: Optional[str] = None,
+            min: int = 0,
+            max: int = HUGE,
+            name: Optional[str] = None,
     ) -> None:
         """
         Initializer.
@@ -760,9 +760,7 @@ class WildcardPattern(BasePattern):
             f = lambda s: tuple(s)
             wrapped_content = tuple(map(f, content))  # Protect against alterations
             # Check sanity of alternatives
-            assert len(wrapped_content), repr(
-                wrapped_content
-            )  # Can't have zero alternatives
+            assert len(wrapped_content), repr(wrapped_content)  # Can't have zero alternatives
             for alt in wrapped_content:
                 assert len(alt), repr(alt)  # Can have empty alternatives
         self.content = wrapped_content
@@ -954,7 +952,7 @@ class NegatedPattern(BasePattern):
 
 
 def generate_matches(
-    patterns: List[BasePattern], nodes: List[NL]
+        patterns: List[BasePattern], nodes: List[NL]
 ) -> Iterator[Tuple[int, _Results]]:
     """
     Generator yielding matches for a sequence of patterns and nodes.
