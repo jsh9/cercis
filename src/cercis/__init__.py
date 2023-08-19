@@ -36,7 +36,7 @@ from pathspec.patterns.gitwildmatch import GitWildMatchPatternError
 from _cercis_version import version as __version__
 from blib2to3.pgen2 import token
 from blib2to3.pytree import Leaf, Node
-from cercis.cache import Cache, get_cache_info, read_cache, write_cache
+from cercis.cache import Cache
 from cercis.comments import normalize_fmt_off
 from cercis.const import (
     DEFAULT_BASE_INDENTATION_SPACES,
@@ -958,12 +958,9 @@ def reformat_one(
             if format_stdin_to_stdout(fast=fast, write_back=write_back, mode=mode):
                 changed = Changed.YES
         else:
-            cache: Cache = {}
+            cache = Cache.read(mode)
             if write_back not in (WriteBack.DIFF, WriteBack.COLOR_DIFF):
-                cache = read_cache(mode)
-                res_src = src.resolve()
-                res_src_s = str(res_src)
-                if res_src_s in cache and cache[res_src_s] == get_cache_info(res_src):
+                if not cache.is_changed(src):
                     changed = Changed.CACHED
             if changed is not Changed.CACHED and format_file_in_place(
                 src, fast=fast, write_back=write_back, mode=mode
@@ -972,7 +969,7 @@ def reformat_one(
             if (write_back is WriteBack.YES and changed is not Changed.CACHED) or (
                 write_back is WriteBack.CHECK and changed is Changed.NO
             ):
-                write_cache(cache, [src], mode)
+                cache.write([src])
         report.done(src, changed)
     except Exception as exc:
         if report.verbose:

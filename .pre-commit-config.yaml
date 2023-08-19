@@ -19,7 +19,7 @@ repos:
         exclude: ^src/blib2to3/
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.4.1
+    rev: v1.5.0
     hooks:
       - id: mypy
         exclude: ^docs/conf.py
@@ -49,3 +49,6 @@ repos:
     hooks:
       - id: md-toc
         args: [-p, '--skip-lines', '1', 'github', '-l', '4']
+
+ci:
+  autoupdate_schedule: quarterly
