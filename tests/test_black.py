@@ -2015,7 +2015,7 @@ class TestCaching:
             cache.write([one])
             invokeBlack([str(workspace)])
             assert one.read_text(encoding="utf-8") == "print('hello')"
-            assert two.read_text(encoding="utf-8") == 'print("hello")\n'
+            assert two.read_text(encoding="utf-8") == "print('hello')\n"
             cache = cercis.Cache.read(mode)
             assert not cache.is_changed(one)
             assert not cache.is_changed(two)
