@@ -2523,16 +2523,16 @@ class TestDeFactoAPI:
 
     def test_format_str(self) -> None:
         # format_str and Mode should keep working
-        assert (
-            cercis.format_str("print('hello')", mode=cercis.Mode())
-            == 'print("hello")\n',
+        formatted: str = cercis.format_str(
+            "print('hello')", mode=cercis.Mode(single_quote=False)
         )
+        assert formatted == 'print("hello")\n'
 
         # you can pass line length
-        assert (
-            cercis.format_str("print('hello')", mode=cercis.Mode(line_length=42))
-            == 'print("hello")\n'
+        formatted_2: str = cercis.format_str(
+            "print('hello')", mode=cercis.Mode(line_length=42, single_quote=False)
         )
+        assert formatted_2 == 'print("hello")\n'
 
         # invalid input raises InvalidInput
         with pytest.raises(cercis.InvalidInput):
