@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.2.2] - 2023-09-13
+
+- Changed
+  - Rebased `Cercis` to be head to head with `Black`
+- Diff
+  - https://github.com/jsh9/cercis/compare/0.2.1...0.2.2
+
 ## [0.2.1] - 2023-07-23
 
 - Changed
