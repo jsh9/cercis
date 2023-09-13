@@ -2524,9 +2524,8 @@ class TestDeFactoAPI:
     def test_format_str(self) -> None:
         # format_str and Mode should keep working
         assert (
-            cercis.format_str(
-                "print('hello')", mode=cercis.Mode()
-            ) == 'print("hello")\n',
+            cercis.format_str("print('hello')", mode=cercis.Mode())
+            == 'print("hello")\n',
         )
 
         # you can pass line length
@@ -2543,7 +2542,8 @@ class TestDeFactoAPI:
         # You probably should be using format_str() instead, but let's keep
         # this one around since people do use it
         assert (
-            cercis.format_file_contents("x=1", fast=True, mode=cercis.Mode()) == "x = 1\n"
+            cercis.format_file_contents("x=1", fast=True, mode=cercis.Mode())
+            == "x = 1\n"
         )
 
         with pytest.raises(cercis.NothingChanged):
