@@ -90,7 +90,7 @@ def test_preview_context_managers_targeting_py39() -> None:
 @pytest.mark.parametrize("filename", all_data_cases("preview_py_310"))
 def test_preview_python_310(filename: str) -> None:
     source, expected = read_data("preview_py_310", filename)
-    mode = black.Mode(target_versions={black.TargetVersion.PY310}, preview=True)
+    mode = cercis.Mode(target_versions={cercis.TargetVersion.PY310}, preview=True)
     assert_format(source, expected, mode, minimum_version=(3, 10))
 
 
@@ -248,7 +248,7 @@ def test_stub() -> None:
 
 
 def test_nested_stub() -> None:
-    mode = replace(DEFAULT_MODE, is_pyi=True, preview=True)
+    mode = replace(DEFAULT_MODE, is_pyi=True, preview=True, single_quote=False)
     source, expected = read_data("miscellaneous", "nested_stub.pyi")
     assert_format(source, expected, mode)
 
