@@ -77,14 +77,9 @@ from cercis.handle_ipynb_magics import (
 )
 from cercis.linegen import LN, LineGenerator, transform_line
 from cercis.lines import EmptyLineTracker, LinesBlock
-from cercis.mode import (
-    FUTURE_FLAG_TO_FEATURE,
-    VERSION_TO_FEATURES,
-    Feature,
-    Mode,
-    TargetVersion,
-    supports_feature,
-)
+from cercis.mode import FUTURE_FLAG_TO_FEATURE, VERSION_TO_FEATURES, Feature
+from cercis.mode import Mode as Mode  # re-exported
+from cercis.mode import TargetVersion, supports_feature
 from cercis.nodes import (
     STARS,
     is_number_token,
