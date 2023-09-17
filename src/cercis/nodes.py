@@ -12,13 +12,11 @@ else:
 
 from mypy_extensions import mypyc_attr
 
-from cercis.cache import CACHE_DIR
-from cercis.mode import Mode, Preview
-from cercis.strings import has_triple_quotes
 from blib2to3 import pygram
 from blib2to3.pgen2 import token
 from blib2to3.pytree import NL, Leaf, Node, type_repr
 from cercis.cache import CACHE_DIR
+from cercis.mode import Mode, Preview
 from cercis.strings import has_triple_quotes
 
 pygram.initialize(CACHE_DIR)
