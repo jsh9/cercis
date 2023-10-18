@@ -31,7 +31,7 @@ else:
 
 
 @pytest.mark.blackd
-class BlackDTestCase(AioHTTPTestCase):  # type: ignore[misc]
+class BlackDTestCase(AioHTTPTestCase):
     def test_blackd_main(self) -> None:
         with patch("blackd.web.run_app"):
             result = CliRunner().invoke(blackd.main, [])
@@ -104,7 +104,7 @@ class BlackDTestCase(AioHTTPTestCase):  # type: ignore[misc]
 
     @unittest_run_loop
     async def test_blackd_pyi(self) -> None:
-        source, expected = read_data("miscellaneous", "stub.pyi")
+        source, expected = read_data("cases", "stub.py")
         response = await self.client.post(
             "/", data=source, headers={blackd.PYTHON_VARIANT_HEADER: "pyi"}
         )

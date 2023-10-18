@@ -15,11 +15,12 @@ You can do this by running:
     pip install -U wcwidth
 
 """
+
 import sys
 from os.path import basename, dirname, join
 from typing import Iterable, Tuple
 
-import wcwidth
+import wcwidth  # type: ignore[import]
 
 
 def make_width_table() -> Iterable[Tuple[int, int, int]]:

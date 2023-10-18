@@ -64,7 +64,7 @@ _Cercis_ aims at providing some configurability beyond Black's limited offering.
 
 ### 2.1. Installation
 
-_Cercis_ can be installed by running `pip install cercis`. It requires Python 3.7+ to
+_Cercis_ can be installed by running `pip install cercis`. It requires Python 3.8+ to
 run. If you want to format Jupyter Notebooks, install with
 `pip install "cercis[jupyter]"`.
 
