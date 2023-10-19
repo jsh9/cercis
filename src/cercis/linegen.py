@@ -596,9 +596,9 @@ class LineGenerator(Visitor[Line]):
 
 
 def _hugging_power_ops_line_to_string(
-    line: Line,
-    features: Collection[Feature],
-    mode: Mode,
+        line: Line,
+        features: Collection[Feature],
+        mode: Mode,
 ) -> Optional[str]:
     try:
         return line_to_string(next(hug_power_op(line, features, mode)))

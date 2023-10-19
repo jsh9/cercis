@@ -15,14 +15,6 @@ from tests.util import (
 )
 
 
-def _override_single_quote_for_cleaner_future_rebase(mode: cercis.Mode) -> None:
-    mode.single_quote = False
-
-
-def _use_line_length_of_88_for_cleaner_future_rebase(mode: cercis.Mode) -> None:
-    mode.line_length = 88
-
-
 @pytest.fixture(autouse=True)
 def patch_dump_to_file(request: Any) -> Iterator[None]:
     with patch("cercis.dump_to_file", dump_to_stderr):
@@ -51,6 +43,18 @@ def check_file(subdir: str, filename: str, *, data: bool = True) -> None:
 @pytest.mark.parametrize("filename", all_data_cases("cases"))
 def test_simple_format(filename: str) -> None:
     check_file("cases", filename)
+
+
+@pytest.mark.filterwarnings("ignore:invalid escape sequence.*:DeprecationWarning")
+@pytest.mark.parametrize("filename", all_data_cases("cases_2"))
+def test_simple_format_2(filename: str) -> None:
+    check_file("cases_2", filename)
+
+
+@pytest.mark.filterwarnings("ignore:invalid escape sequence.*:DeprecationWarning")
+@pytest.mark.parametrize("filename", all_data_cases("cases_3"))
+def test_simple_format_3(filename: str) -> None:
+    check_file("cases_3", filename)
 
 
 # =============== #

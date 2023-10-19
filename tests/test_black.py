@@ -212,8 +212,8 @@ class BlackTestCase(BlackBaseTestCase):
             r"(STDIN|STDOUT)\t\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d\d\d\d\d\d"
             r"\+\d\d:\d\d"
         )
-        source, _ = read_data("cases", "expression.py")
-        expected, _ = read_data("cases", "expression.diff")
+        source, _ = read_data("cases_3", "expression.py")
+        expected, _ = read_data("cases_3", "expression.diff")
         args = [
             "-",
             "--fast",
@@ -230,7 +230,7 @@ class BlackTestCase(BlackBaseTestCase):
         self.assertEqual(expected, actual)
 
     def test_piping_diff_with_color(self) -> None:
-        source, _ = read_data("cases", "expression.py")
+        source, _ = read_data("cases_3", "expression.py")
         args = [
             "-",
             "--fast",
@@ -275,7 +275,7 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_pep_695_version_detection(self) -> None:
         for file in ("type_aliases", "type_params"):
-            source, _ = read_data("cases", file)
+            source, _ = read_data("cases_2", file)
             root = cercis.lib2to3_parse(source)
             features = cercis.get_features_used(root)
             self.assertIn(cercis.Feature.TYPE_PARAMS, features)
@@ -283,7 +283,7 @@ class BlackTestCase(BlackBaseTestCase):
             self.assertIn(cercis.TargetVersion.PY312, versions)
 
     def test_expression_ff(self) -> None:
-        source, expected = read_data("cases", "expression.py")
+        source, expected = read_data("cases_3", "expression.py")
         tmp_file = Path(cercis.dump_to_file(source))
         mode = replace(DEFAULT_MODE, line_length=88)
         try:
@@ -297,8 +297,8 @@ class BlackTestCase(BlackBaseTestCase):
             cercis.assert_stable(source, actual, mode)
 
     def test_expression_diff(self) -> None:
-        source, _ = read_data("cases", "expression.py")
-        expected, _ = read_data("cases", "expression.diff")
+        source, _ = read_data("cases_3", "expression.py")
+        expected, _ = read_data("cases_3", "expression.diff")
         tmp_file = Path(cercis.dump_to_file(source))
         diff_header = re.compile(
             rf"{re.escape(str(tmp_file))}\t\d\d\d\d-\d\d-\d\d "
@@ -329,8 +329,8 @@ class BlackTestCase(BlackBaseTestCase):
             self.assertEqual(expected, actual, msg)
 
     def test_expression_diff_with_color(self) -> None:
-        source, _ = read_data("cases", "expression.py")
-        expected, _ = read_data("cases", "expression.diff")
+        source, _ = read_data("cases_3", "expression.py")
+        expected, _ = read_data("cases_3", "expression.diff")
         tmp_file = Path(cercis.dump_to_file(source))
         try:
             result = BlackRunner().invoke(
@@ -411,7 +411,7 @@ class BlackTestCase(BlackBaseTestCase):
             self.assertEqual(test_file.read_bytes(), expected)
 
     def test_skip_magic_trailing_comma(self) -> None:
-        source, _ = read_data("cases", "expression")
+        source, _ = read_data("cases_3", "expression")
         expected, _ = read_data(
             "miscellaneous", "expression_skip_magic_trailing_comma.diff"
         )
@@ -909,7 +909,7 @@ class BlackTestCase(BlackBaseTestCase):
         self.assertEqual(cercis.get_features_used(node), expected_features)
         node = cercis.lib2to3_parse(expected)
         self.assertEqual(cercis.get_features_used(node), expected_features)
-        source, expected = read_data("cases", "expression")
+        source, expected = read_data("cases_3", "expression")
         node = cercis.lib2to3_parse(source)
         self.assertEqual(cercis.get_features_used(node), set())
         node = cercis.lib2to3_parse(expected)
@@ -1100,7 +1100,7 @@ class BlackTestCase(BlackBaseTestCase):
         def err(msg: str, **kwargs: Any) -> None:
             err_lines.append(msg)
 
-        with patch("black.output._out", out), patch("black.output._err", err):
+        with patch("cercis.output._out", out), patch("cercis.output._err", err):
             with self.assertRaises(AssertionError):
                 self.assertFormatEqual("j = [1, 2, 3]\n", "j = [1, 2, 3,]\n")
 
@@ -1131,7 +1131,7 @@ class BlackTestCase(BlackBaseTestCase):
             self.invokeBlack([str(src1), "--diff", "--check", sq, ll], exit_code=1)
             # Files which will not be reformatted.
             src2 = get_case_path("cases", "composition")
-            self.invokeBlack([str(src2), "--diff", "--check"])
+            self.invokeBlack([str(src2), "--diff", "--check", sq, ll])
             # Multi file command.
             self.invokeBlack(
                 [str(src1), str(src2), "--diff", "--check", sq, ll],

@@ -43,7 +43,7 @@ fs = partial(cercis.format_str, mode=DEFAULT_MODE)
 
 @dataclass
 class TestCaseArgs:
-    mode: black.Mode = field(default_factory=black.Mode)
+    mode: cercis.Mode = field(default_factory=cercis.Mode)
     fast: bool = False
     minimum_version: Optional[Tuple[int, int]] = None
 
@@ -193,7 +193,7 @@ def get_case_path(
 
 
 def read_data_with_mode(
-    subdir_name: str, name: str, data: bool = True
+        subdir_name: str, name: str, data: bool = True
 ) -> Tuple[TestCaseArgs, str, str]:
     """read_data_with_mode('test_name') -> Mode(), 'input', 'output'"""
     return read_data_from_file(get_case_path(subdir_name, name, data))
@@ -280,6 +280,26 @@ def read_data_from_file(file_name: Path) -> Tuple[TestCaseArgs, str, str]:
     if _input and not _output:
         # If there's no output marker, treat the entire file as already pre-formatted.
         _output = _input[:]
+
+    mode.mode.single_quote = False
+    mode.mode.line_length = 88
+    mode.mode.use_tabs = False
+    mode.mode.base_indentation_spaces = 4
+    mode.mode.other_line_continuation_extra_indent = False
+    mode.mode.closing_bracket_extra_indent = False
+    mode.mode.wrap_line_with_long_string = True
+    mode.mode.collapse_nested_brackets = False
+    mode.mode.wrap_comments = True
+    mode.mode.wrap_pragma_comments = True
+    mode.mode.keep_blank_lines_in_brackets = False
+
+    if "/cases/" in file_name.as_posix():
+        mode.mode.function_definition_extra_indent = True
+    elif "/cases_2/" in file_name.as_posix():
+        mode.mode.function_definition_extra_indent = False
+    elif "/cases_3/" in file_name.as_posix():
+        mode.mode.single_quote = True
+
     return mode, "".join(_input).strip() + "\n", "".join(_output).strip() + "\n"
 
 
