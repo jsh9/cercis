@@ -1172,11 +1172,11 @@ def check_stability_and_equivalence(
 
 
 def format_file_contents(
-    src_contents: str,
-    *,
-    fast: bool,
-    mode: Mode,
-    lines: Collection[Tuple[int, int]] = (),
+        src_contents: str,
+        *,
+        fast: bool,
+        mode: Mode,
+        lines: Collection[Tuple[int, int]] = (),
 ) -> FileContent:
     """Reformat contents of a file and return new contents.
 
@@ -1307,7 +1307,7 @@ def format_ipynb_string(src_contents: str, *, fast: bool, mode: Mode) -> FileCon
 
 
 def format_str(
-    src_contents: str, *, mode: Mode, lines: Collection[Tuple[int, int]] = ()
+        src_contents: str, *, mode: Mode, lines: Collection[Tuple[int, int]] = ()
 ) -> str:
     """Reformat a string and return new contents.
 
@@ -1350,7 +1350,7 @@ def format_str(
 
 
 def _format_str_once(
-    src_contents: str, *, mode: Mode, lines: Collection[Tuple[int, int]] = ()
+        src_contents: str, *, mode: Mode, lines: Collection[Tuple[int, int]] = ()
 ) -> str:
     src_node = lib2to3_parse(src_contents.lstrip(), mode.target_versions)
     dst_blocks: List[LinesBlock] = []
@@ -1648,7 +1648,7 @@ def assert_equivalent(src: str, dst: str) -> None:
 
 
 def assert_stable(
-    src: str, dst: str, mode: Mode, *, lines: Collection[Tuple[int, int]] = ()
+        src: str, dst: str, mode: Mode, *, lines: Collection[Tuple[int, int]] = ()
 ) -> None:
     """Raise AssertionError if `dst` reformats differently the second time."""
     # We shouldn't call format_str() here, because that formats the string

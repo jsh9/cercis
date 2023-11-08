@@ -26,8 +26,8 @@ class Foo:
     @add_logging
     @memoize.memoize(max_items=2)
     def plus_one(
-        self,
-        number: int,
+            self,
+            number: int,
     ) -> int:
         return number + 1
 

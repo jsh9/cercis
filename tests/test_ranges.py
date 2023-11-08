@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 import pytest
 
-from black.ranges import adjusted_lines
+from cercis.ranges import adjusted_lines
 
 
 @pytest.mark.parametrize(

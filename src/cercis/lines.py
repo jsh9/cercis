@@ -1,6 +1,7 @@
 import itertools
 import math
 from dataclasses import dataclass, field
+import re
 from typing import (
     Callable,
     Dict,

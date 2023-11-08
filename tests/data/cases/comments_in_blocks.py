@@ -71,7 +71,7 @@ def convert(collection):
 
 
 def get_subtree_proof_nodes(
-    chunk_index_groups: Sequence[Tuple[int, ...], ...],
+        chunk_index_groups: Sequence[Tuple[int, ...], ...],
 ) -> Tuple[int, ...]:
     subtree_node_paths = (
         # We take a candidate element from each group and shift it to

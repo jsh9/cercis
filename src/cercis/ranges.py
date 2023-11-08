@@ -4,7 +4,7 @@ import difflib
 from dataclasses import dataclass
 from typing import Collection, Iterator, List, Sequence, Set, Tuple, Union
 
-from black.nodes import (
+from cercis.nodes import (
     LN,
     STANDALONE_COMMENT,
     Leaf,

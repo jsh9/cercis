@@ -1980,7 +1980,7 @@ class BlackTestCase(BlackBaseTestCase):
                 print  ( "OK" )
             """)
         args = ["--line-ranges=1-1", "--code", code]
-        result = CliRunner().invoke(black.main, args)
+        result = CliRunner().invoke(cercis.main, args)
 
         expected = textwrap.dedent("""\
             if a == b:
@@ -1995,7 +1995,7 @@ class BlackTestCase(BlackBaseTestCase):
             """)
         runner = BlackRunner()
         result = runner.invoke(
-            black.main, ["--line-ranges=1-1", "-"], input=BytesIO(code.encode("utf-8"))
+            cercis.main, ["--line-ranges=1-1", "-"], input=BytesIO(code.encode("utf-8"))
         )
 
         expected = textwrap.dedent("""\
@@ -2015,7 +2015,7 @@ class BlackTestCase(BlackBaseTestCase):
                 encoding="utf-8",
             )
             args = ["--line-ranges=1-1", str(test_file)]
-            result = CliRunner().invoke(black.main, args)
+            result = CliRunner().invoke(cercis.main, args)
             assert not result.exit_code
 
             formatted = test_file.read_text(encoding="utf-8")
@@ -2032,7 +2032,7 @@ class BlackTestCase(BlackBaseTestCase):
             test2_file = Path(workspace) / "test2.py"
             test2_file.write_text("", encoding="utf-8")
             args = ["--line-ranges=1-1", str(test1_file), str(test2_file)]
-            result = CliRunner().invoke(black.main, args)
+            result = CliRunner().invoke(cercis.main, args)
             assert result.exit_code == 1
             assert "Cannot use --line-ranges to format multiple files" in result.output
 
@@ -2041,14 +2041,14 @@ class BlackTestCase(BlackBaseTestCase):
             test_file = Path(workspace) / "test.ipynb"
             test_file.write_text("{}", encoding="utf-8")
             args = ["--line-ranges=1-1", "--ipynb", str(test_file)]
-            result = CliRunner().invoke(black.main, args)
+            result = CliRunner().invoke(cercis.main, args)
             assert "Cannot use --line-ranges with ipynb files" in result.output
             assert result.exit_code == 1
 
     def test_line_ranges_in_pyproject_toml(self) -> None:
         config = THIS_DIR / "data" / "invalid_line_ranges.toml"
         result = BlackRunner().invoke(
-            black.main, ["--code", "print()", "--config", str(config)]
+            cercis.main, ["--code", "print()", "--config", str(config)]
         )
         assert result.exit_code == 2
         assert result.stderr_bytes is not None
@@ -2667,7 +2667,7 @@ class TestFileCollection:
             stdin_filename=stdin_filename,
         )
 
-    @patch("black.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
+    @patch("cercis.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
     def test_get_sources_with_stdin_filename_and_force_exclude_and_symlink(
         self,
     ) -> None:
