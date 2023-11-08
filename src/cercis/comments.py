@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Final, Iterator, List, Optional, Union
 
+from blib2to3.pgen2 import token
+from blib2to3.pytree import Leaf, Node
 from cercis.mode import Mode, Preview
 from cercis.nodes import (
     CLOSING_BRACKETS,
@@ -13,8 +15,6 @@ from cercis.nodes import (
     preceding_leaf,
     syms,
 )
-from blib2to3.pgen2 import token
-from blib2to3.pytree import Leaf, Node
 
 # types
 LN = Union[Leaf, Node]

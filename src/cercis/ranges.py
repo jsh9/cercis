@@ -4,6 +4,7 @@ import difflib
 from dataclasses import dataclass
 from typing import Collection, Iterator, List, Sequence, Set, Tuple, Union
 
+from blib2to3.pgen2.token import ASYNC, NEWLINE
 from cercis.nodes import (
     LN,
     STANDALONE_COMMENT,
@@ -15,7 +16,6 @@ from cercis.nodes import (
     last_leaf,
     syms,
 )
-from blib2to3.pgen2.token import ASYNC, NEWLINE
 
 
 def parse_line_ranges(line_ranges: Sequence[str]) -> List[Tuple[int, int]]:
