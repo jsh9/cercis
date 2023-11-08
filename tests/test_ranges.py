@@ -83,7 +83,7 @@ pass
     ],
 )
 def test_removals(
-    lines: List[Tuple[int, int]], adjusted: List[Tuple[int, int]]
+        lines: List[Tuple[int, int]], adjusted: List[Tuple[int, int]]
 ) -> None:
     original_source = """\
 1. first line
@@ -118,7 +118,7 @@ def test_removals(
     ],
 )
 def test_additions(
-    lines: List[Tuple[int, int]], adjusted: List[Tuple[int, int]]
+        lines: List[Tuple[int, int]], adjusted: List[Tuple[int, int]]
 ) -> None:
     original_source = """\
 1. first line

@@ -214,7 +214,7 @@ def convert_one_fmt_off_pair(node: Node, mode: Mode) -> bool:
 
 
 def generate_ignored_nodes(
-    leaf: Leaf, comment: ProtoComment, mode: Mode
+        leaf: Leaf, comment: ProtoComment, mode: Mode
 ) -> Iterator[LN]:
     """Starting from the container of `leaf`, generate all leaves until `# fmt: on`.
 

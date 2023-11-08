@@ -2669,7 +2669,7 @@ class TestFileCollection:
 
     @patch("cercis.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
     def test_get_sources_with_stdin_filename_and_force_exclude_and_symlink(
-        self,
+            self,
     ) -> None:
         # Force exclude should exclude a symlink based on the symlink, not its target
         path = THIS_DIR / "data" / "include_exclude_tests"

@@ -46,9 +46,9 @@ def is_valid_line_range(lines: Tuple[int, int]) -> bool:
 
 
 def adjusted_lines(
-    lines: Collection[Tuple[int, int]],
-    original_source: str,
-    modified_source: str,
+        lines: Collection[Tuple[int, int]],
+        original_source: str,
+        modified_source: str,
 ) -> List[Tuple[int, int]]:
     """Returns the adjusted line ranges based on edits from the original code.
 
@@ -400,8 +400,8 @@ class _LinesMapping:
 
 
 def _calculate_lines_mappings(
-    original_source: str,
-    modified_source: str,
+        original_source: str,
+        modified_source: str,
 ) -> Sequence[_LinesMapping]:
     """Returns a sequence of _LinesMapping by diffing the sources.
 
@@ -479,9 +479,9 @@ def _calculate_lines_mappings(
 
 
 def _find_lines_mapping_index(
-    original_line: int,
-    lines_mappings: Sequence[_LinesMapping],
-    start_index: int,
+        original_line: int,
+        lines_mappings: Sequence[_LinesMapping],
+        start_index: int,
 ) -> int:
     """Returns the original index of the lines mappings for the original line."""
     index = start_index

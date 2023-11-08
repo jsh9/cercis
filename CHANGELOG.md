@@ -7,7 +7,6 @@
 - Diff
   - https://github.com/jsh9/cercis/compare/0.2.4...0.2.5
 
-
 ## [0.2.4] - 2023-10-23
 
 - Changed
