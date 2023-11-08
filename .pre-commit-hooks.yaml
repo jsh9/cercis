@@ -2,6 +2,7 @@
   name: cercis
   description: "Cercis: a more configurable Python code formatter"
   entry: cercis
+  stages: [pre-commit, pre-merge-commit, pre-push, manual]
   language: python
   minimum_pre_commit_version: 2.9.2
   require_serial: true
@@ -11,6 +12,7 @@
   description:
     "Cercis: a more configurable Python code formatter (with Jupyter Notebook support)"
   entry: cercis
+  stages: [pre-commit, pre-merge-commit, pre-push, manual]
   language: python
   minimum_pre_commit_version: 2.9.2
   require_serial: true

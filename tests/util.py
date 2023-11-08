@@ -9,13 +9,14 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
 from functools import partial
 from pathlib import Path
-from typing import Any, Iterator, List, Optional, Tuple
+from typing import Any, Collection, Iterator, List, Optional, Tuple
 
 import cercis
 from cercis.const import DEFAULT_LINE_LENGTH
 from cercis.debug import DebugVisitor
 from cercis.mode import TargetVersion
 from cercis.output import diff, err, out
+from cercis.ranges import parse_line_ranges
 
 from . import conftest
 
@@ -46,6 +47,7 @@ class TestCaseArgs:
     mode: cercis.Mode = field(default_factory=cercis.Mode)
     fast: bool = False
     minimum_version: Optional[Tuple[int, int]] = None
+    lines: Collection[Tuple[int, int]] = ()
 
 
 def _assert_format_equal(expected: str, actual: str) -> None:
@@ -95,6 +97,7 @@ def assert_format(
         *,
         fast: bool = False,
         minimum_version: Optional[Tuple[int, int]] = None,
+        lines: Collection[Tuple[int, int]] = (),
 ) -> None:
     """Convenience function to check that Black formats as expected.
 
@@ -103,7 +106,7 @@ def assert_format(
     separate from TargetVerson Mode configuration.
     """
     _assert_format_inner(
-        source, expected, mode, fast=fast, minimum_version=minimum_version
+        source, expected, mode, fast=fast, minimum_version=minimum_version, lines=lines
     )
 
     # For both preview and non-preview tests, ensure that Black doesn't crash on
@@ -115,6 +118,7 @@ def assert_format(
             replace(mode, preview=not mode.preview),
             fast=fast,
             minimum_version=minimum_version,
+            lines=lines,
         )
     except Exception as e:
         text = "non-preview" if mode.preview else "preview"
@@ -132,6 +136,7 @@ def assert_format(
             replace(mode, preview=False, line_length=1),
             fast=fast,
             minimum_version=minimum_version,
+            lines=lines,
         )
     except Exception as e:
         raise FormatFailure(
@@ -146,8 +151,9 @@ def _assert_format_inner(
         *,
         fast: bool = False,
         minimum_version: Optional[Tuple[int, int]] = None,
+        lines: Collection[Tuple[int, int]] = (),
 ) -> None:
-    actual = cercis.format_str(source, mode=mode)
+    actual = cercis.format_str(source, mode=mode, lines=lines)
     if expected is not None:
         _assert_format_equal(expected, actual)
     # It's not useful to run safety checks if we're expecting no changes anyway. The
@@ -159,7 +165,7 @@ def _assert_format_inner(
         # when checking modern code on older versions.
         if minimum_version is None or sys.version_info >= minimum_version:
             cercis.assert_equivalent(source, actual)
-        cercis.assert_stable(source, actual, mode=mode)
+        cercis.assert_stable(source, actual, mode=mode, lines=lines)
 
 
 def dump_to_stderr(*output: str) -> str:
@@ -242,6 +248,7 @@ def get_flags_parser() -> argparse.ArgumentParser:
             " version works correctly."
         ),
     )
+    parser.add_argument("--line-ranges", action="append")
     return parser
 
 
@@ -257,7 +264,13 @@ def parse_mode(flags_line: str) -> TestCaseArgs:
         magic_trailing_comma=not args.skip_magic_trailing_comma,
         preview=args.preview,
     )
-    return TestCaseArgs(mode=mode, fast=args.fast, minimum_version=args.minimum_version)
+    if args.line_ranges:
+        lines = parse_line_ranges(args.line_ranges)
+    else:
+        lines = []
+    return TestCaseArgs(
+        mode=mode, fast=args.fast, minimum_version=args.minimum_version, lines=lines
+    )
 
 
 def read_data_from_file(file_name: Path) -> Tuple[TestCaseArgs, str, str]:
@@ -270,6 +283,12 @@ def read_data_from_file(file_name: Path) -> Tuple[TestCaseArgs, str, str]:
     for line in lines:
         if not _input and line.startswith("# flags: "):
             mode = parse_mode(line[len("# flags: ") :])
+            if mode.lines:
+                # Retain the `# flags: ` line when using --line-ranges=. This requires
+                # the `# output` section to also include this line, but retaining the
+                # line is important to make the line ranges match what you see in the
+                # test file.
+                result.append(line)
             continue
         line = line.replace(EMPTY_LINE, "")
         if line.rstrip() == "# output":
