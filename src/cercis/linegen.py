@@ -1388,6 +1388,24 @@ def standalone_comment_split(
         yield current_line
 
 
+def normalize_prefix(leaf: Leaf, *, inside_brackets: bool) -> None:
+    """Leave existing extra newlines if not `inside_brackets`. Remove everything
+    else.
+
+    Note: don't use backslashes for formatting or you'll lose your voting rights.
+    """
+    if not inside_brackets:
+        spl = leaf.prefix.split("#")
+        if "\\" not in spl[0]:
+            nl_count = spl[-1].count("\n")
+            if len(spl) > 1:
+                nl_count -= 1
+            leaf.prefix = "\n" * nl_count
+            return
+
+    leaf.prefix = ""
+
+
 def normalize_invisible_parens(  # noqa: C901
         node: Node,
         parens_after: Set[str],
