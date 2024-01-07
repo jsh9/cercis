@@ -58,9 +58,9 @@ class Cache:
 
     @classmethod
     def read(cls, mode: Mode) -> Self:
-        """Read the cache if it exists and is well formed.
+        """Read the cache if it exists and is well-formed.
 
-        If it is not well formed, the call to write later should
+        If it is not well-formed, the call to write later should
         resolve the issue.
         """
         cache_file = get_cache_file(mode)
@@ -101,7 +101,7 @@ class Cache:
         st = res_src.stat()
         if st.st_size != old.st_size:
             return True
-        if int(st.st_mtime) != int(old.st_mtime):
+        if st.st_mtime != old.st_mtime:
             new_hash = Cache.hash_digest(res_src)
             if new_hash != old.hash:
                 return True
@@ -124,9 +124,9 @@ class Cache:
 
     def write(self, sources: Iterable[Path]) -> None:
         """Update the cache file data and write a new cache file."""
-        self.file_data.update(**{
-            str(src.resolve()): Cache.get_file_data(src) for src in sources
-        })
+        self.file_data.update(
+            **{str(src.resolve()): Cache.get_file_data(src) for src in sources}
+        )
         try:
             CACHE_DIR.mkdir(parents=True, exist_ok=True)
             with tempfile.NamedTemporaryFile(

@@ -389,26 +389,26 @@ def validate_positive_integer(
     callback=target_version_option_callback,
     multiple=True,
     help=(
-        "Python versions that should be supported by Cercis's output. By default,"
-        " Cercis will try to infer this from the project metadata in pyproject.toml."
-        " If this does not yield conclusive results, Cercis will use per-file"
-        " auto-detection."
+        "Python versions that should be supported by Cercis's output. You should"
+        " include all versions that your code supports. By default, Cercis will infer"
+        " target versions from the project metadata in pyproject.toml. If this does"
+        " not yield conclusive results, Cercis will use per-file auto-detection."
     ),
 )
 @click.option(
     "--pyi",
     is_flag=True,
     help=(
-        "Format all input files like typing stubs regardless of file extension (useful"
-        " when piping source on standard input)."
+        "Format all input files like typing stubs regardless of file extension. This"
+        " is useful when piping source on standard input."
     ),
 )
 @click.option(
     "--ipynb",
     is_flag=True,
     help=(
-        "Format all input files like Jupyter Notebooks regardless of file extension "
-        "(useful when piping source on standard input)."
+        "Format all input files like Jupyter Notebooks regardless of file extension."
+        "This is useful when piping source on standard input."
     ),
 )
 @click.option(
@@ -465,14 +465,22 @@ def validate_positive_integer(
 @click.option(
     "--diff",
     is_flag=True,
-    help="Don't write the files back, just output a diff for each file on stdout.",
+    help=(
+        "Don't write the files back, just output a diff to indicate what changes"
+        " Cercis would've made. They are printed to stdout so capturing them is simple."
+    ),
+)
+@click.option(
+    "--color/--no-color",
+    is_flag=True,
+    help="Show (or do not show) colored diff. Only applies when --diff is given.",
 )
 @click.option(
     "--line-ranges",
     multiple=True,
     metavar="START-END",
     help=(
-        "When specified, _Black_ will try its best to only format these lines. This"
+        "When specified, Cercis will try its best to only format these lines. This"
         " option can be specified multiple times, and a union of the lines will be"
         " formatted. Each range must be specified as two integers connected by a `-`:"
         " `<START>-<END>`. The `<START>` and `<END>` integer indices are 1-based and"
@@ -481,22 +489,66 @@ def validate_positive_integer(
     default=(),
 )
 @click.option(
-    "--color/--no-color",
-    is_flag=True,
-    help="Show colored diff. Only applies when `--diff` is given.",
-)
-@click.option(
     "--fast/--safe",
     is_flag=True,
-    help="If --fast given, skip temporary sanity checks. [default: --safe]",
+    help=(
+        "By default, Cercis performs an AST safety check after formatting your code."
+        " The --fast flag turns off this check and the --safe flag explicitly enables"
+        " it. [default: --safe]"
+    ),
 )
 @click.option(
     "--required-version",
     type=str,
     help=(
-        "Require a specific version of Cercis to be running (useful for unifying"
-        " results across many environments e.g. with a pyproject.toml file). It"
-        " can be either a major version number or an exact version."
+        "Require a specific version of Cercis to be running. This is useful for"
+        " ensuring that all contributors to your project are using the same"
+        " version, because different versions of Cercis may format code a little"
+        " differently. This option can be set in a configuration file for consistent"
+        " results across environments."
+    ),
+)
+@click.option(
+    "--exclude",
+    type=str,
+    callback=validate_regex,
+    help=(
+        "A regular expression that matches files and directories that should be"
+        " excluded on recursive searches. An empty value means no paths are excluded."
+        " Use forward slashes for directories on all platforms (Windows, too)."
+        " By default, Cercis also ignores all paths listed in .gitignore. Changing this"
+        f" value will override all default exclusions. [default: {DEFAULT_EXCLUDES}]"
+    ),
+    show_default=False,
+)
+@click.option(
+    "--extend-exclude",
+    type=str,
+    callback=validate_regex,
+    help=(
+        "Like --exclude, but adds additional files and directories on top of the"
+        " default values instead of overriding them."
+    ),
+)
+@click.option(
+    "--force-exclude",
+    type=str,
+    callback=validate_regex,
+    help=(
+        "Like --exclude, but files and directories matching this regex will be excluded"
+        " even when they are passed explicitly as arguments. This is useful when"
+        " invoking Cercis programmatically on changed files, such as in a pre-commit"
+        " hook or editor plugin."
+    ),
+)
+@click.option(
+    "--stdin-filename",
+    type=str,
+    is_eager=True,
+    help=(
+        "The name of the file when passing it through stdin. Useful to make sure Cercis"
+        " will respect the --force-exclude option on some editors that rely on using"
+        " stdin."
     ),
 )
 @click.option(
@@ -508,50 +560,10 @@ def validate_positive_integer(
         "A regular expression that matches files and directories that should be"
         " included on recursive searches. An empty value means all files are included"
         " regardless of the name. Use forward slashes for directories on all platforms"
-        " (Windows, too). Exclusions are calculated first, inclusions later."
+        " (Windows, too). Overrides all exclusions, including from .gitignore and"
+        " command line options."
     ),
     show_default=True,
-)
-@click.option(
-    "--exclude",
-    type=str,
-    callback=validate_regex,
-    help=(
-        "A regular expression that matches files and directories that should be"
-        " excluded on recursive searches. An empty value means no paths are excluded."
-        " Use forward slashes for directories on all platforms (Windows, too)."
-        " Exclusions are calculated first, inclusions later. [default:"
-        f" {DEFAULT_EXCLUDES}]"
-    ),
-    show_default=False,
-)
-@click.option(
-    "--extend-exclude",
-    type=str,
-    callback=validate_regex,
-    help=(
-        "Like --exclude, but adds additional files and directories on top of the"
-        " excluded ones. (Useful if you simply want to add to the default)"
-    ),
-)
-@click.option(
-    "--force-exclude",
-    type=str,
-    callback=validate_regex,
-    help=(
-        "Like --exclude, but files and directories matching this regex will be "
-        "excluded even when they are passed explicitly as arguments."
-    ),
-)
-@click.option(
-    "--stdin-filename",
-    type=str,
-    is_eager=True,
-    help=(
-        "The name of the file when passing it through stdin. Useful to make "
-        "sure Cercis will respect --force-exclude option on some "
-        "editors that rely on using stdin."
-    ),
 )
 @click.option(
     "-W",
@@ -559,8 +571,10 @@ def validate_positive_integer(
     type=click.IntRange(min=1),
     default=None,
     help=(
-        "Number of parallel workers [default: CERCIS_NUM_WORKERS environment variable "
-        "or number of CPUs in the system]"
+        "When Cercis formats multiple files, it may use a process pool to speed up"
+        " formatting. This option controls the number of parallel workers. This can"
+        " also be specified via the BLACK_NUM_WORKERS environment variable. Defaults"
+        " to the number of CPUs in the system."
     ),
 )
 @click.option(
@@ -568,8 +582,8 @@ def validate_positive_integer(
     "--quiet",
     is_flag=True,
     help=(
-        "Don't emit non-error messages to stderr. Errors are still emitted; silence"
-        " those with 2>/dev/null."
+        "Stop emitting all non-critical output. Error messages will still be emitted"
+        " (which can silenced by 2>/dev/null)."
     ),
 )
 @click.option(
@@ -577,8 +591,9 @@ def validate_positive_integer(
     "--verbose",
     is_flag=True,
     help=(
-        "Also emit messages to stderr about files that were not changed or were ignored"
-        " due to exclusion patterns."
+        "Emit messages about files that were not changed or were ignored due to"
+        " exclusion patterns. If Cercis is using a configuration file, a message"
+        " detailing which one it is using will be emitted."
     ),
 )
 @click.version_option(
@@ -609,7 +624,7 @@ def validate_positive_integer(
     ),
     is_eager=True,
     callback=read_pyproject_toml,
-    help="Read configuration from FILE path.",
+    help="Read configuration options from a configuration file.",
 )
 @click.pass_context
 def main(  # noqa: C901
@@ -1363,7 +1378,7 @@ def _format_str_once(
         for feature in {Feature.PARENTHESIZED_CONTEXT_MANAGERS}
         if supports_feature(versions, feature)
     }
-    normalize_fmt_off(src_node, mode)
+    normalize_fmt_off(src_node, mode, lines)
     if lines:
         # This should be called after normalize_fmt_off.
         convert_unchanged_lines(src_node, lines)
@@ -1518,7 +1533,7 @@ def get_features_used(  # noqa: C901
             if (
                 len(atom_children) == 3
                 and atom_children[0].type == token.LPAR
-                and atom_children[1].type == syms.testlist_gexp
+                and _contains_asexpr(atom_children[1])
                 and atom_children[2].type == token.RPAR
             ):
                 features.add(Feature.PARENTHESIZED_CONTEXT_MANAGERS)
@@ -1549,6 +1564,22 @@ def get_features_used(  # noqa: C901
             features.add(Feature.TYPE_PARAMS)
 
     return features
+
+
+def _contains_asexpr(node: Union[Node, Leaf]) -> bool:
+    """Return True if `node` contains an as-pattern."""
+    if node.type == syms.asexpr_test:
+        return True
+    elif node.type == syms.atom:
+        if (
+            len(node.children) == 3
+            and node.children[0].type == token.LPAR
+            and node.children[2].type == token.RPAR
+        ):
+            return _contains_asexpr(node.children[1])
+    elif node.type == syms.testlist_gexp:
+        return any(_contains_asexpr(child) for child in node.children)
+    return False
 
 
 def detect_target_versions(
@@ -1649,11 +1680,16 @@ def assert_stable(
         src: str, dst: str, mode: Mode, *, lines: Collection[Tuple[int, int]] = ()
 ) -> None:
     """Raise AssertionError if `dst` reformats differently the second time."""
+    if lines:
+        # Formatting specified lines requires `adjusted_lines` to map original lines
+        # to the formatted lines before re-formatting the previously formatted result.
+        # Due to less-ideal diff algorithm, some edge cases produce incorrect new line
+        # ranges. Hence for now, we skip the stable check.
+        # See https://github.com/psf/black/issues/4033 for context.
+        return
     # We shouldn't call format_str() here, because that formats the string
     # twice and may hide a bug where we bounce back and forth between two
     # versions.
-    if lines:
-        lines = adjusted_lines(lines, src, dst)
     newdst = _format_str_once(dst, mode=mode, lines=lines)
     if dst != newdst:
         log = dump_to_file(

@@ -74,9 +74,7 @@ def main(bind_host: str, bind_port: int) -> None:
     app = make_app()
     ver = cercis.__version__
     cercis.out(f"blackd version {ver} listening on {bind_host} port {bind_port}")
-    # TODO: aiohttp had an incorrect annotation for `print` argument,
-    #  It'll be fixed once aiohttp releases that code
-    web.run_app(app, host=bind_host, port=bind_port, handle_signals=True, print=None)  # type: ignore[arg-type]
+    web.run_app(app, host=bind_host, port=bind_port, handle_signals=True, print=None)
 
 
 def make_app() -> web.Application:
