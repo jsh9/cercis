@@ -11,7 +11,7 @@ Here are the steps to rebase:
 
 ## 1. Create a merge commit
 
-Go to GitHub Desktop, and in "History" (hear the top left corner), choose the branch
+Go to GitHub Desktop, and in "History" (near the top left corner), choose the branch
 "upstream/main".
 
 The "Behind" section shows the commits that we are behind _Black_. It should be
