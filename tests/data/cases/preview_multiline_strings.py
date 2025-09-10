@@ -1,4 +1,4 @@
-# flags: --preview
+# flags: --unstable
 """cow
 say""",
 call(3, "dogsay", textwrap.dedent("""dove
@@ -175,7 +175,82 @@ this_will_also_become_one_line = (  # comment
     "c"
 )
 
+assert some_var == expected_result, """
+test
+"""
+assert some_var == expected_result, f"""
+expected: {expected_result}
+actual: {some_var}"""
+
+
+def foo():
+    a = {
+        xxxx_xxxxxxx.xxxxxx_xxxxxxxxxxxx_xxxxxx_xx_xxx_xxxxxx: {
+            "xxxxx": """Sxxxxx xxxxxxxxxxxx xxx xxxxx (xxxxxx xxx xxxxxxx)""",
+            "xxxxxxxx": (
+                """Sxxxxxxx xxxxxxxx, xxxxxxx xx xxxxxxxxx
+                xxxxxxxxxxxxx xxxxxxx xxxxxxxxx xxx-xxxxxxxxxx xxxxxx xx xxx-xxxxxx"""
+            ),
+            "xxxxxxxx": """Sxxxxxxx xxxxxxxx, xxxxxxx xx xxxxxxxxx
+                xxxxxxxxxxxxx xxxxxxx xxxxxxxxx xxx-xxxxxxxxxx xxxxxx xx xxx-xxxxxx"""
+        },
+    }
+
+
+xxxx_xxxxxxx.xxxxxx_xxxxxxxxxxxx_xxxxxx_xx_xxx_xxxxxx = {
+    "xxxxx": """Sxxxxx xxxxxxxxxxxx xxx xxxxx (xxxxxx xxx xxxxxxx)""",
+    "xxxxxxxx": (
+        """Sxxxxxxx xxxxxxxx, xxxxxxx xx xxxxxxxxx
+    xxxxxxxxxxxxx xxxxxxx xxxxxxxxx xxx-xxxxxxxxxx xxxxxx xx xxx-xxxxxx"""
+    ),
+    "xxxxx_xxxxxxxxxx_xxxxxxxxx_xx": (
+        """
+a
+a
+a
+a
+a"""
+    ),
+    "xx_xxxxx_xxxxxxxxxx_xxxxxxxxx_xx": """
+a
+a
+a
+a
+a""",
+}
+
+a = """
+""" if """
+""" == """
+""" else """
+"""
+
+a = """
+""" if b else """
+"""
+
+a = """
+""" if """
+""" == """
+""" else b
+
+a = b if """
+""" == """
+""" else """
+"""
+
+a = """
+""" if b else c
+
+a = c if b else """
+"""
+
+a = b if """
+""" == """
+""" else c
+
 # output
+
 """cow
 say""",
 call(
@@ -355,13 +430,13 @@ barks""",
 
 
 def dastardly_default_value(
-        cow: String = json.loads("""this
+    cow: String = json.loads("""this
 is
 quite
 the
 dastadardly
 value!"""),
-        **kwargs,
+    **kwargs,
 ):
     pass
 
@@ -385,3 +460,113 @@ this_will_stay_on_three_lines = (
 )
 
 this_will_also_become_one_line = "abc"  # comment
+
+assert some_var == expected_result, """
+test
+"""
+assert some_var == expected_result, f"""
+expected: {expected_result}
+actual: {some_var}"""
+
+
+def foo():
+    a = {
+        xxxx_xxxxxxx.xxxxxx_xxxxxxxxxxxx_xxxxxx_xx_xxx_xxxxxx: {
+            "xxxxx": """Sxxxxx xxxxxxxxxxxx xxx xxxxx (xxxxxx xxx xxxxxxx)""",
+            "xxxxxxxx": (
+                """Sxxxxxxx xxxxxxxx, xxxxxxx xx xxxxxxxxx
+                xxxxxxxxxxxxx xxxxxxx xxxxxxxxx xxx-xxxxxxxxxx xxxxxx xx xxx-xxxxxx"""
+            ),
+            "xxxxxxxx": (
+                """Sxxxxxxx xxxxxxxx, xxxxxxx xx xxxxxxxxx
+                xxxxxxxxxxxxx xxxxxxx xxxxxxxxx xxx-xxxxxxxxxx xxxxxx xx xxx-xxxxxx"""
+            ),
+        },
+    }
+
+
+xxxx_xxxxxxx.xxxxxx_xxxxxxxxxxxx_xxxxxx_xx_xxx_xxxxxx = {
+    "xxxxx": """Sxxxxx xxxxxxxxxxxx xxx xxxxx (xxxxxx xxx xxxxxxx)""",
+    "xxxxxxxx": (
+        """Sxxxxxxx xxxxxxxx, xxxxxxx xx xxxxxxxxx
+    xxxxxxxxxxxxx xxxxxxx xxxxxxxxx xxx-xxxxxxxxxx xxxxxx xx xxx-xxxxxx"""
+    ),
+    "xxxxx_xxxxxxxxxx_xxxxxxxxx_xx": (
+        """
+a
+a
+a
+a
+a"""
+    ),
+    "xx_xxxxx_xxxxxxxxxx_xxxxxxxxx_xx": (
+        """
+a
+a
+a
+a
+a"""
+    ),
+}
+
+a = (
+    """
+"""
+    if """
+"""
+    == """
+"""
+    else """
+"""
+)
+
+a = (
+    """
+"""
+    if b
+    else """
+"""
+)
+
+a = (
+    """
+"""
+    if """
+"""
+    == """
+"""
+    else b
+)
+
+a = (
+    b
+    if """
+"""
+    == """
+"""
+    else """
+"""
+)
+
+a = (
+    """
+"""
+    if b
+    else c
+)
+
+a = (
+    c
+    if b
+    else """
+"""
+)
+
+a = (
+    b
+    if """
+"""
+    == """
+"""
+    else c
+)

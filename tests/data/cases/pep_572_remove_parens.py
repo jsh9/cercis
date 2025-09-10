@@ -1,4 +1,3 @@
-# flags: --minimum-version=3.8
 if (foo := 0):
     pass
 
@@ -96,18 +95,16 @@ assert (foo := 42 - 12)
 foo(x=(y := f(x)))
 
 
-def foo(answer=(p := 42)):
-    ...
+def foo(answer=(p := 42)): ...
 
 
-def foo2(answer: (p := 42) = 5):
-    ...
+def foo2(answer: (p := 42) = 5): ...
 
 
 lambda: (x := 1)
 
 a[(x := 12)]
-a[:(x := 13)]
+a[: (x := 13)]
 
 # we don't touch expressions in f-strings but if we do one day, don't break 'em
 f"{(x:=10)}"

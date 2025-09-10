@@ -1,4 +1,3 @@
-# flags: --preview
 """I am a very helpful module docstring.
 
 With trailing spaces:      

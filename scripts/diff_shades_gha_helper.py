@@ -1,4 +1,4 @@
-"""Helper script for psf/cercis's diff-shades Github Actions integration.
+"""Helper script for psf/black's diff-shades Github Actions integration.
 
 diff-shades is a tool for analyzing what happens when you run Black on
 OSS code capturing it for comparisons or other usage. It's used here to
@@ -24,16 +24,11 @@ import zipfile
 from base64 import b64encode
 from io import BytesIO
 from pathlib import Path
-from typing import Any
+from typing import Any, Final, Literal
 
 import click
 import urllib3
 from packaging.version import Version
-
-if sys.version_info >= (3, 8):
-    from typing import Final, Literal
-else:
-    from typing_extensions import Final, Literal
 
 COMMENT_FILE: Final = ".pr-comment.json"
 DIFF_STEP_NAME: Final = "Generate HTML diff report"
@@ -41,10 +36,10 @@ DOCS_URL: Final = (
     "https://black.readthedocs.io/en/latest/"
     "contributing/gauging_changes.html#diff-shades"
 )
-USER_AGENT: Final = f"psf/cercis diff-shades workflow via urllib3/{urllib3.__version__}"
+USER_AGENT: Final = f"psf/black diff-shades workflow via urllib3/{urllib3.__version__}"
 SHA_LENGTH: Final = 10
 GH_API_TOKEN: Final = os.getenv("GITHUB_TOKEN")
-REPO: Final = os.getenv("GITHUB_REPOSITORY", default="psf/cercis")
+REPO: Final = os.getenv("GITHUB_REPOSITORY", default="psf/black")
 http = urllib3.PoolManager()
 
 
@@ -122,7 +117,7 @@ def config(event: Literal["push", "pull_request"]) -> None:
     import diff_shades  # type: ignore[import-not-found]
 
     if event == "push":
-        jobs = [{"mode": "preview-changes", "force-flag": "--force-preview-style"}]
+        jobs = [{"mode": "preview-new-changes", "force-flag": "--force-unstable-style"}]
         # Push on main, let's use PyPI Black as the baseline.
         baseline_name = str(get_pypi_version())
         baseline_cmd = f"git checkout {baseline_name}"
@@ -133,7 +128,7 @@ def config(event: Literal["push", "pull_request"]) -> None:
 
     elif event == "pull_request":
         jobs = [
-            {"mode": "preview-changes", "force-flag": "--force-preview-style"},
+            {"mode": "preview-new-changes", "force-flag": "--force-unstable-style"},
             {"mode": "assert-no-changes", "force-flag": "--force-stable-style"},
         ]
         # PR, let's use main as the baseline.
@@ -170,7 +165,7 @@ def config(event: Literal["push", "pull_request"]) -> None:
 @click.argument("target-sha")
 @click.argument("pr-num", type=int)
 def comment_body(
-        baseline: Path, target: Path, baseline_sha: str, target_sha: str, pr_num: int
+    baseline: Path, target: Path, baseline_sha: str, target_sha: str, pr_num: int
 ) -> None:
     # fmt: off
     cmd = [
@@ -210,7 +205,7 @@ def comment_details(run_id: str) -> None:
 
     set_output("needs-comment", "true")
     jobs = http_get(data["jobs_url"])["jobs"]
-    job = next(j for j in jobs if j["name"] == "analysis / preview-changes")
+    job = next(j for j in jobs if j["name"] == "analysis / preview-new-changes")
     diff_step = next(s for s in job["steps"] if s["name"] == DIFF_STEP_NAME)
     diff_url = job["html_url"] + f"#step:{diff_step['number']}:1"
 

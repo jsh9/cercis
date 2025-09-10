@@ -1,2 +1,2 @@
-[tool.cercis]
+[tool.black]
 line-ranges = "1-1"

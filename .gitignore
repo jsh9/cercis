@@ -17,7 +17,7 @@ dist/
 pip-wheel-metadata/
 .eggs
 
-src/_cercis_version.py
+src/_black_version.py
 .idea
 
 .dmypy.json
@@ -25,3 +25,4 @@ src/_cercis_version.py
 .hypothesis/
 venv/
 .ipynb_checkpoints/
+node_modules/

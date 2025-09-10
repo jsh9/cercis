@@ -1,15 +1,15 @@
 import contextlib
 import pathlib
 import re
+from contextlib import AbstractContextManager
 from contextlib import ExitStack as does_not_raise
 from dataclasses import replace
-from typing import ContextManager
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from click.testing import CliRunner
 
-from cercis import (
+from black import (
     Mode,
     NothingChanged,
     format_cell,
@@ -17,7 +17,7 @@ from cercis import (
     format_file_in_place,
     main,
 )
-from cercis.handle_ipynb_magics import jupyter_dependencies_are_installed
+from black.handle_ipynb_magics import jupyter_dependencies_are_installed
 from tests.util import DATA_DIR, get_case_path, read_jupyter_notebook
 
 with contextlib.suppress(ModuleNotFoundError):
@@ -26,7 +26,7 @@ pytestmark = pytest.mark.jupyter
 pytest.importorskip("IPython", reason="IPython is an optional dependency")
 pytest.importorskip("tokenize_rt", reason="tokenize-rt is an optional dependency")
 
-JUPYTER_MODE = Mode(is_ipynb=True, single_quote=True)
+JUPYTER_MODE = Mode(is_ipynb=True)
 
 EMPTY_CONFIG = DATA_DIR / "empty_pyproject.toml"
 
@@ -34,7 +34,7 @@ runner = CliRunner()
 
 
 def test_noop() -> None:
-    src = "foo = 'a'"
+    src = 'foo = "a"'
     with pytest.raises(NothingChanged):
         format_cell(src, fast=True, mode=JUPYTER_MODE)
 
@@ -43,19 +43,19 @@ def test_noop() -> None:
 def test_trailing_semicolon(fast: bool) -> None:
     src = 'foo = "a" ;'
     result = format_cell(src, fast=fast, mode=JUPYTER_MODE)
-    expected = "foo = 'a';"
+    expected = 'foo = "a";'
     assert result == expected
 
 
 def test_trailing_semicolon_with_comment() -> None:
     src = 'foo = "a" ;  # bar'
     result = format_cell(src, fast=True, mode=JUPYTER_MODE)
-    expected = "foo = 'a';  # bar"
+    expected = 'foo = "a";  # bar'
     assert result == expected
 
 
 def test_trailing_semicolon_with_comment_on_next_line() -> None:
-    src = "import cercis;\n\n# this is a comment"
+    src = "import black;\n\n# this is a comment"
     with pytest.raises(NothingChanged):
         format_cell(src, fast=True, mode=JUPYTER_MODE)
 
@@ -67,7 +67,7 @@ def test_trailing_semicolon_indented() -> None:
 
 
 def test_trailing_semicolon_noop() -> None:
-    src = "foo = 'a';"
+    src = 'foo = "a";'
     with pytest.raises(NothingChanged):
         format_cell(src, fast=True, mode=JUPYTER_MODE)
 
@@ -109,16 +109,16 @@ def test_cell_magic_noop() -> None:
     "src, expected",
     (
         pytest.param("ls =!ls", "ls = !ls", id="System assignment"),
-        pytest.param('!ls\n"foo"', "!ls\n'foo'", id="System call"),
-        pytest.param('!!ls\n"foo"', "!!ls\n'foo'", id="Other system call"),
-        pytest.param('?str\n"foo"', "?str\n'foo'", id="Help"),
-        pytest.param('??str\n"foo"', "??str\n'foo'", id="Other help"),
+        pytest.param("!ls\n'foo'", '!ls\n"foo"', id="System call"),
+        pytest.param("!!ls\n'foo'", '!!ls\n"foo"', id="Other system call"),
+        pytest.param("?str\n'foo'", '?str\n"foo"', id="Help"),
+        pytest.param("??str\n'foo'", '??str\n"foo"', id="Other help"),
         pytest.param(
-            '%matplotlib inline\n"foo"',
             "%matplotlib inline\n'foo'",
+            '%matplotlib inline\n"foo"',
             id="Line magic with argument",
         ),
-        pytest.param('%time\n"foo"', "%time\n'foo'", id="Line magic without argument"),
+        pytest.param("%time\n'foo'", '%time\n"foo"', id="Line magic without argument"),
         pytest.param(
             "env =  %env var", "env = %env var", id="Assignment to environment variable"
         ),
@@ -174,6 +174,22 @@ def test_cell_magic_with_magic() -> None:
 
 
 @pytest.mark.parametrize(
+    "src, expected",
+    (
+        ("\n\n\n%time \n\n", "%time"),
+        ("  \n\t\n%%timeit -n4 \t \nx=2  \n\r\n", "%%timeit -n4\nx = 2"),
+        (
+            "  \t\n\n%%capture \nx=2 \n%config \n\n%env\n\t  \n \n\n",
+            "%%capture\nx = 2\n%config\n\n%env",
+        ),
+    ),
+)
+def test_cell_magic_with_empty_lines(src: str, expected: str) -> None:
+    result = format_cell(src, fast=True, mode=JUPYTER_MODE)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
     "mode, expected_output, expectation",
     [
         pytest.param(
@@ -197,7 +213,7 @@ def test_cell_magic_with_magic() -> None:
     ],
 )
 def test_cell_magic_with_custom_python_magic(
-        mode: Mode, expected_output: str, expectation: ContextManager[object]
+    mode: Mode, expected_output: str, expectation: AbstractContextManager[object]
 ) -> None:
     with expectation:
         result = format_cell(
@@ -206,6 +222,22 @@ def test_cell_magic_with_custom_python_magic(
             mode=mode,
         )
         assert result == expected_output
+
+
+@pytest.mark.parametrize(
+    "src",
+    (
+        "   %%custom_magic \nx=2",
+        "\n\n%%custom_magic\nx=2",
+        "# comment\n%%custom_magic\nx=2",
+        "\n  \n # comment with %%time\n\t\n %%custom_magic # comment \nx=2",
+    ),
+)
+def test_cell_magic_with_custom_python_magic_after_spaces_and_comments_noop(
+    src: str,
+) -> None:
+    with pytest.raises(NothingChanged):
+        format_cell(src, fast=True, mode=JUPYTER_MODE)
 
 
 def test_cell_magic_nested() -> None:
@@ -222,7 +254,7 @@ def test_cell_magic_with_magic_noop() -> None:
 
 
 def test_automagic() -> None:
-    src = "pip install cercis"
+    src = "pip install black"
     with pytest.raises(NothingChanged):
         format_cell(src, fast=True, mode=JUPYTER_MODE)
 
@@ -255,7 +287,6 @@ def test_empty_cell() -> None:
 def test_entire_notebook_empty_metadata() -> None:
     content = read_jupyter_notebook("jupyter", "notebook_empty_metadata")
     result = format_file_contents(content, fast=True, mode=JUPYTER_MODE)
-    # fmt: off
     expected = (
         "{\n"
         ' "cells": [\n'
@@ -269,7 +300,7 @@ def test_entire_notebook_empty_metadata() -> None:
         '   "source": [\n'
         '    "%%time\\n",\n'
         '    "\\n",\n'
-        '    "print(\'foo\')"\n'
+        '    "print(\\"foo\\")"\n'
         "   ]\n"
         "  },\n"
         "  {\n"
@@ -285,14 +316,12 @@ def test_entire_notebook_empty_metadata() -> None:
         ' "nbformat_minor": 4\n'
         "}\n"
     )
-    # fmt: on
     assert result == expected
 
 
 def test_entire_notebook_trailing_newline() -> None:
     content = read_jupyter_notebook("jupyter", "notebook_trailing_newline")
     result = format_file_contents(content, fast=True, mode=JUPYTER_MODE)
-    # fmt: off
     expected = (
         "{\n"
         ' "cells": [\n'
@@ -306,7 +335,7 @@ def test_entire_notebook_trailing_newline() -> None:
         '   "source": [\n'
         '    "%%time\\n",\n'
         '    "\\n",\n'
-        '    "print(\'foo\')"\n'
+        '    "print(\\"foo\\")"\n'
         "   ]\n"
         "  },\n"
         "  {\n"
@@ -322,7 +351,7 @@ def test_entire_notebook_trailing_newline() -> None:
         '   "hash": "e758f3098b5b55f4d87fe30bbdc1367f20f246b483f96267ee70e6c40cb185d8"\n'  # noqa:B950
         "  },\n"
         '  "kernelspec": {\n'
-        '   "display_name": "Python 3.8.10 64-bit (\'cercis\': venv)",\n'
+        '   "display_name": "Python 3.8.10 64-bit (\'black\': venv)",\n'
         '   "name": "python3"\n'
         "  },\n"
         '  "language_info": {\n'
@@ -334,14 +363,12 @@ def test_entire_notebook_trailing_newline() -> None:
         ' "nbformat_minor": 4\n'
         "}\n"
     )
-    # fmt: on
     assert result == expected
 
 
 def test_entire_notebook_no_trailing_newline() -> None:
     content = read_jupyter_notebook("jupyter", "notebook_no_trailing_newline")
     result = format_file_contents(content, fast=True, mode=JUPYTER_MODE)
-    # fmt: off
     expected = (
         "{\n"
         ' "cells": [\n'
@@ -355,7 +382,7 @@ def test_entire_notebook_no_trailing_newline() -> None:
         '   "source": [\n'
         '    "%%time\\n",\n'
         '    "\\n",\n'
-        '    "print(\'foo\')"\n'
+        '    "print(\\"foo\\")"\n'
         "   ]\n"
         "  },\n"
         "  {\n"
@@ -371,7 +398,7 @@ def test_entire_notebook_no_trailing_newline() -> None:
         '   "hash": "e758f3098b5b55f4d87fe30bbdc1367f20f246b483f96267ee70e6c40cb185d8"\n'  # noqa: B950
         "  },\n"
         '  "kernelspec": {\n'
-        '   "display_name": "Python 3.8.10 64-bit (\'cercis\': venv)",\n'
+        '   "display_name": "Python 3.8.10 64-bit (\'black\': venv)",\n'
         '   "name": "python3"\n'
         "  },\n"
         '  "language_info": {\n'
@@ -383,7 +410,6 @@ def test_entire_notebook_no_trailing_newline() -> None:
         ' "nbformat_minor": 4\n'
         "}"
     )
-    # fmt: on
     assert result == expected
 
 
@@ -421,7 +447,7 @@ def test_ipynb_diff_with_change() -> None:
             f"--config={EMPTY_CONFIG}",
         ],
     )
-    expected = "@@ -1,3 +1,3 @@\n %%time\n \n-print(\"foo\")\n+print('foo')\n"
+    expected = "@@ -1,3 +1,3 @@\n %%time\n \n-print('foo')\n+print(\"foo\")\n"
     assert expected in result.output
 
 
@@ -439,20 +465,20 @@ def test_ipynb_diff_with_no_change() -> None:
 
 
 def test_cache_isnt_written_if_no_jupyter_deps_single(
-        monkeypatch: MonkeyPatch, tmp_path: pathlib.Path
+    monkeypatch: MonkeyPatch, tmp_path: pathlib.Path
 ) -> None:
     # Check that the cache isn't written to if Jupyter dependencies aren't installed.
     jupyter_dependencies_are_installed.cache_clear()
     nb = get_case_path("jupyter", "notebook_trailing_newline.ipynb")
     tmp_nb = tmp_path / "notebook.ipynb"
     tmp_nb.write_bytes(nb.read_bytes())
-    monkeypatch.setattr("cercis.jupyter_dependencies_are_installed", lambda warn: False)
+    monkeypatch.setattr("black.jupyter_dependencies_are_installed", lambda warn: False)
     result = runner.invoke(
         main, [str(tmp_path / "notebook.ipynb"), f"--config={EMPTY_CONFIG}"]
     )
     assert "No Python files are present to be formatted. Nothing to do" in result.output
     jupyter_dependencies_are_installed.cache_clear()
-    monkeypatch.setattr("cercis.jupyter_dependencies_are_installed", lambda warn: True)
+    monkeypatch.setattr("black.jupyter_dependencies_are_installed", lambda warn: True)
     result = runner.invoke(
         main, [str(tmp_path / "notebook.ipynb"), f"--config={EMPTY_CONFIG}"]
     )
@@ -460,7 +486,7 @@ def test_cache_isnt_written_if_no_jupyter_deps_single(
 
 
 def test_cache_isnt_written_if_no_jupyter_deps_dir(
-        monkeypatch: MonkeyPatch, tmp_path: pathlib.Path
+    monkeypatch: MonkeyPatch, tmp_path: pathlib.Path
 ) -> None:
     # Check that the cache isn't written to if Jupyter dependencies aren't installed.
     jupyter_dependencies_are_installed.cache_clear()
@@ -468,13 +494,13 @@ def test_cache_isnt_written_if_no_jupyter_deps_dir(
     tmp_nb = tmp_path / "notebook.ipynb"
     tmp_nb.write_bytes(nb.read_bytes())
     monkeypatch.setattr(
-        "cercis.files.jupyter_dependencies_are_installed", lambda warn: False
+        "black.files.jupyter_dependencies_are_installed", lambda warn: False
     )
     result = runner.invoke(main, [str(tmp_path), f"--config={EMPTY_CONFIG}"])
     assert "No Python files are present to be formatted. Nothing to do" in result.output
     jupyter_dependencies_are_installed.cache_clear()
     monkeypatch.setattr(
-        "cercis.files.jupyter_dependencies_are_installed", lambda warn: True
+        "black.files.jupyter_dependencies_are_installed", lambda warn: True
     )
     result = runner.invoke(main, [str(tmp_path), f"--config={EMPTY_CONFIG}"])
     assert "reformatted" in result.output
@@ -493,7 +519,7 @@ def test_ipynb_flag(tmp_path: pathlib.Path) -> None:
             f"--config={EMPTY_CONFIG}",
         ],
     )
-    expected = "@@ -1,3 +1,3 @@\n %%time\n \n-print(\"foo\")\n+print('foo')\n"
+    expected = "@@ -1,3 +1,3 @@\n %%time\n \n-print('foo')\n+print(\"foo\")\n"
     assert expected in result.output
 
 
@@ -515,8 +541,8 @@ def test_ipynb_and_pyi_flags() -> None:
 
 
 def test_unable_to_replace_magics(monkeypatch: MonkeyPatch) -> None:
-    src = "%%time\na = 'foo'"
-    monkeypatch.setattr("cercis.handle_ipynb_magics.TOKEN_HEX", lambda _: "foo")
+    src = '%%time\na = b"foo"'
+    monkeypatch.setattr("secrets.token_hex", lambda _: "foo")
     with pytest.raises(
         AssertionError, match="Black was not able to replace IPython magic"
     ):

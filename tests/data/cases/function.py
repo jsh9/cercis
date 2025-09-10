@@ -133,12 +133,12 @@ async def coroutine(arg, exec=False):
 @asyncio.coroutine
 @some_decorator(with_args=True, many_args=[1, 2, 3])
 def function_signature_stress_test(
-        number: int,
-        no_annotation=None,
-        text: str = "default",
-        *,
-        debug: bool = False,
-        **kwargs,
+    number: int,
+    no_annotation=None,
+    text: str = "default",
+    *,
+    debug: bool = False,
+    **kwargs,
 ) -> str:
     return text[number:-1]
 
@@ -149,19 +149,16 @@ def spaces(a=1, b=(), c=[], d={}, e=True, f=-1, g=1 if False else 2, h="", i=r""
 
 
 def spaces_types(
-        a: int = 1,
-        b: tuple = (),
-        c: list = [],
-        d: dict = {},
-        e: bool = True,
-        f: int = -1,
-        g: int = 1 if False else 2,
-        h: str = "",
-        i: str = r"",
-):
-    ...
-
-
+    a: int = 1,
+    b: tuple = (),
+    c: list = [],
+    d: dict = {},
+    e: bool = True,
+    f: int = -1,
+    g: int = 1 if False else 2,
+    h: str = "",
+    i: str = r"",
+): ...
 def spaces2(result=_core.Value(None)):
     assert fut is self._read_fut, (fut, self._read_fut)
 
@@ -231,8 +228,8 @@ def trailing_comma():
 
 
 def f(
-        a,
-        **kwargs,
+    a,
+    **kwargs,
 ) -> A:
     return (
         yield from A(

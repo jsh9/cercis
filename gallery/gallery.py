@@ -7,15 +7,16 @@ import traceback
 import venv
 import zipfile
 from argparse import ArgumentParser, Namespace
+from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache, partial
 from pathlib import Path
-from typing import Generator, List, NamedTuple, Optional, Tuple, Union, cast
+from typing import NamedTuple, Optional, Union, cast
 from urllib.request import urlopen, urlretrieve
 
 PYPI_INSTANCE = "https://pypi.org/pypi"
 PYPI_TOP_PACKAGES = (
-    "https://hugovk.github.io/top-pypi-packages/top-pypi-packages-30-days.min.json"
+    "https://hugovk.github.io/top-pypi-packages/top-pypi-packages.min.json"
 )
 INTERNAL_BLACK_REPO = f"{tempfile.gettempdir()}/__black"
 
@@ -54,7 +55,7 @@ def get_pypi_download_url(package: str, version: Optional[str]) -> str:
     return cast(str, source["url"])
 
 
-def get_top_packages() -> List[str]:
+def get_top_packages() -> list[str]:
     with urlopen(PYPI_TOP_PACKAGES) as page:
         result = json.load(page)
 
@@ -103,7 +104,7 @@ def download_and_extract(package: str, version: Optional[str], directory: Path) 
 
 
 def get_package(
-        package: str, version: Optional[str], directory: Path
+    package: str, version: Optional[str], directory: Path
 ) -> Optional[Path]:
     try:
         return download_and_extract(package, version, directory)
@@ -117,9 +118,9 @@ DEFAULT_SLICE = slice(None)  # for flake8
 
 
 def download_and_extract_top_packages(
-        directory: Path,
-        workers: int = 8,
-        limit: slice = DEFAULT_SLICE,
+    directory: Path,
+    workers: int = 8,
+    limit: slice = DEFAULT_SLICE,
 ) -> Generator[Path, None, None]:
     with ThreadPoolExecutor(max_workers=workers) as executor:
         bound_downloader = partial(get_package, version=None, directory=directory)
@@ -139,7 +140,7 @@ def git_add_and_commit(msg: str, repo: Path) -> None:
 
 
 def git_switch_branch(
-        branch: str, repo: Path, new: bool = False, from_branch: Optional[str] = None
+    branch: str, repo: Path, new: bool = False, from_branch: Optional[str] = None
 ) -> None:
     args = ["git", "checkout"]
     if new:
@@ -150,7 +151,7 @@ def git_switch_branch(
     subprocess.run(args, cwd=repo)
 
 
-def init_repos(options: Namespace) -> Tuple[Path, ...]:
+def init_repos(options: Namespace) -> tuple[Path, ...]:
     options.output.mkdir(exist_ok=True)
 
     if options.top_packages:
@@ -196,19 +197,19 @@ def black_runner(version: str, black_repo: Path) -> Path:
 
 
 def format_repo_with_version(
-        repo: Path,
-        from_branch: Optional[str],
-        black_repo: Path,
-        black_version: BlackVersion,
-        input_directory: Path,
+    repo: Path,
+    from_branch: Optional[str],
+    black_repo: Path,
+    black_version: BlackVersion,
+    input_directory: Path,
 ) -> str:
-    current_branch = f"cercis-{black_version.version}"
+    current_branch = f"black-{black_version.version}"
     git_switch_branch(black_version.version, repo=black_repo)
     git_switch_branch(current_branch, repo=repo, new=True, from_branch=from_branch)
 
-    format_cmd: List[Union[Path, str]] = [
+    format_cmd: list[Union[Path, str]] = [
         black_runner(black_version.version, black_repo),
-        (black_repo / "cercis.py").resolve(),
+        (black_repo / "black.py").resolve(),
         ".",
     ]
     if black_version.config:
@@ -217,12 +218,12 @@ def format_repo_with_version(
     subprocess.run(format_cmd, cwd=repo, check=False)  # ensure the process
     # continuess to run even it can't format some files. Reporting those
     # should be enough
-    git_add_and_commit(f"Format with cercis:{black_version.version}", repo=repo)
+    git_add_and_commit(f"Format with black:{black_version.version}", repo=repo)
 
     return current_branch
 
 
-def format_repos(repos: Tuple[Path, ...], options: Namespace) -> None:
+def format_repos(repos: tuple[Path, ...], options: Namespace) -> None:
     black_versions = tuple(
         BlackVersion(*version.split(":")) for version in options.versions
     )
@@ -253,9 +254,7 @@ def main() -> None:
         "-t", "--top-packages", help="Top n PyPI packages to download.", type=int
     )
 
-    parser.add_argument(
-        "-b", "--cercis-repo", help="Black's Git repository.", type=Path
-    )
+    parser.add_argument("-b", "--black-repo", help="Black's Git repository.", type=Path)
     parser.add_argument(
         "-v",
         "--version",

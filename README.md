@@ -1,749 +1,230 @@
-# _Cercis_
+[![Black Logo](https://raw.githubusercontent.com/psf/black/main/docs/_static/logo2-readme.png)](https://black.readthedocs.io/en/stable/)
 
-[![](https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Red_bud_2009.jpg/320px-Red_bud_2009.jpg)](https://en.wikipedia.org/wiki/Cercis)
+<h2 align="center">The Uncompromising Code Formatter</h2>
 
-_**Cercis**_ /ˈsɜːrsɪs/ is a Python code formatter that is more configurable than
-[Black](https://github.com/psf/black) (a popular Python code formatter).
+<p align="center">
+<a href="https://github.com/psf/black/actions"><img alt="Actions Status" src="https://github.com/psf/black/workflows/Test/badge.svg"></a>
+<a href="https://black.readthedocs.io/en/stable/?badge=stable"><img alt="Documentation Status" src="https://readthedocs.org/projects/black/badge/?version=stable"></a>
+<a href="https://coveralls.io/github/psf/black?branch=main"><img alt="Coverage Status" src="https://coveralls.io/repos/github/psf/black/badge.svg?branch=main"></a>
+<a href="https://github.com/psf/black/blob/main/LICENSE"><img alt="License: MIT" src="https://black.readthedocs.io/en/stable/_static/license.svg"></a>
+<a href="https://pypi.org/project/black/"><img alt="PyPI" src="https://img.shields.io/pypi/v/black"></a>
+<a href="https://pepy.tech/project/black"><img alt="Downloads" src="https://static.pepy.tech/badge/black"></a>
+<a href="https://anaconda.org/conda-forge/black/"><img alt="conda-forge" src="https://img.shields.io/conda/dn/conda-forge/black.svg?label=conda-forge"></a>
+<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+</p>
 
-[_Cercis_](https://en.wikipedia.org/wiki/Cercis) is also the name of a deciduous tree
-that boasts vibrant pink to purple-hued flowers, which bloom in early spring.
+> “Any color you like.”
 
-This code repository is forked from and directly inspired by
-[Black](https://github.com/psf/black). The original license of Black is included in this
-repository (see [LICENSE_ORIGINAL](./LICENSE_ORIGINAL)).
+_Black_ is the uncompromising Python code formatter. By using it, you agree to cede
+control over minutiae of hand-formatting. In return, _Black_ gives you speed,
+determinism, and freedom from `pycodestyle` nagging about formatting. You will save time
+and mental energy for more important matters.
 
-_Cercis_ inherited Black's very comprehensive test cases, which means we are confident
-that our configurability addition does not introduce any undesirable side effects. We
-also thoroughly tested every configurable options that we added.
+Blackened code looks the same regardless of the project you're reading. Formatting
+becomes transparent after a while and you can focus on the content instead.
 
-In particular, via its configurable options, _Cercis_ can completely fall back to Black.
-See [Section 4.5](#45-how-to-fall-back-to-blacks-behavior) below for more details.
+_Black_ makes code review faster by producing the smallest diffs possible.
 
-**Table of Contents**
+Try it out now using the [Black Playground](https://black.vercel.app). Watch the
+[PyCon 2019 talk](https://youtu.be/esZLCuWs_2Y) to learn more.
 
-<!--TOC-->
+---
 
-- [1. Motivations](#1-motivations)
-- [2. Installation and usage](#2-installation-and-usage)
-  - [2.1. Installation](#21-installation)
-  - [2.2. Usage](#22-usage)
-    - [2.2.1. Command line usage](#221-command-line-usage)
-    - [2.2.2. As pre-commit hook](#222-as-pre-commit-hook)
-- [3. _Cercis_'s code style](#3-cerciss-code-style)
-  - [3.1. Line length](#31-line-length)
-  - [3.2. Single quote vs double quote](#32-single-quote-vs-double-quote)
-  - [3.3. Tabs vs spaces](#33-tabs-vs-spaces)
-  - [3.4. Base indentation spaces](#34-base-indentation-spaces)
-  - [3.5. Extra indentation at line continuations](#35-extra-indentation-at-line-continuations)
-    - [3.5.1. At function definition (`--function-definition-extra-indent`)](#351-at-function-definition---function-definition-extra-indent)
-    - [3.5.2. In other line continuations (`--other-line-continuation-extra-indent`)](#352-in-other-line-continuations---other-line-continuation-extra-indent)
-    - [3.5.3. At closing brackets (`--closing-bracket-extra-indent`)](#353-at-closing-brackets---closing-bracket-extra-indent)
-  - [3.6. "Simple" lines with long strings](#36-simple-lines-with-long-strings)
-  - [3.7. Collapse nested brackets](#37-collapse-nested-brackets)
-  - [3.8. Wrapping long lines ending with comments](#38-wrapping-long-lines-ending-with-comments)
-  - [3.9. Keep blank lines in brackets](#39-keep-blank-lines-in-brackets)
-- [4. How to configure _Cercis_](#4-how-to-configure-cercis)
-  - [4.1. Dynamically in the command line](#41-dynamically-in-the-command-line)
-  - [4.2. In your project's `pyproject.toml` file](#42-in-your-projects-pyprojecttoml-file)
-  - [4.3. In your project's `.pre-commit-config.yaml` file](#43-in-your-projects-pre-commit-configyaml-file)
-  - [4.4. Specify options in `tox.ini`](#44-specify-options-in-toxini)
-  - [4.5. How to fall back to Black's behavior](#45-how-to-fall-back-to-blacks-behavior)
-- [5. Maintainer resources](#5-maintainer-resources)
-  - [5.1. How to rebase on top of _Black_?](#51-how-to-rebase-on-top-of-black)
-  - [5.2. Change logs](#52-change-logs)
+**[Read the documentation on ReadTheDocs!](https://black.readthedocs.io/en/stable)**
 
-<!--TOC-->
+---
 
-## 1. Motivations
+## Installation and usage
 
-While we like the idea of auto-formatting and code readability, we take issue with some
-style choices and the lack of configurability of the Black formatter. Therefore,
-_Cercis_ aims at providing some configurability beyond Black's limited offering.
+### Installation
 
-## 2. Installation and usage
+_Black_ can be installed by running `pip install black`. It requires Python 3.9+ to run.
+If you want to format Jupyter Notebooks, install with `pip install "black[jupyter]"`.
 
-### 2.1. Installation
+If you can't wait for the latest _hotness_ and want to install from GitHub, use:
 
-_Cercis_ can be installed by running `pip install cercis`. It requires Python 3.8+ to
-run. If you want to format Jupyter Notebooks, install with
-`pip install "cercis[jupyter]"`.
+`pip install git+https://github.com/psf/black`
 
-### 2.2. Usage
-
-#### 2.2.1. Command line usage
+### Usage
 
 To get started right away with sensible defaults:
 
 ```sh
-cercis {source_file_or_directory}
+black {source_file_or_directory}
 ```
 
-You can run _Cercis_ as a package if running it as a script doesn't work:
+You can run _Black_ as a package if running it as a script doesn't work:
 
 ```sh
-python -m cercis {source_file_or_directory}
+python -m black {source_file_or_directory}
 ```
 
-The commands above reformat entire file(s) in place.
+Further information can be found in our docs:
 
-#### 2.2.2. As pre-commit hook
+- [Usage and Configuration](https://black.readthedocs.io/en/stable/usage_and_configuration/index.html)
 
-To format Python files (.py), put the following into your `.pre-commit-config.yaml`
-file. Remember to replace `<VERSION>` with your version of this tool (such as `v0.1.0`):
+_Black_ is already [successfully used](https://github.com/psf/black#used-by) by many
+projects, small and big. _Black_ has a comprehensive test suite, with efficient parallel
+tests, and our own auto formatting and parallel Continuous Integration runner. Now that
+we have become stable, you should not expect large formatting changes in the future.
+Stylistic changes will mostly be responses to bug reports and support for new Python
+syntax. For more information please refer to
+[The Black Code Style](https://black.readthedocs.io/en/stable/the_black_code_style/index.html).
 
-```yaml
-- repo: https://github.com/jsh9/cercis
-  rev: <VERSION>
-  hooks:
-    - id: cercis
-      args: [--line-length=88]
+Also, as a safety measure which slows down processing, _Black_ will check that the
+reformatted code still produces a valid AST that is effectively equivalent to the
+original (see the
+[Pragmatism](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html#ast-before-and-after-formatting)
+section for details). If you're feeling confident, use `--fast`.
+
+## The _Black_ code style
+
+_Black_ is a PEP 8 compliant opinionated formatter. _Black_ reformats entire files in
+place. Style configuration options are deliberately limited and rarely added. It doesn't
+take previous formatting into account (see
+[Pragmatism](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html#pragmatism)
+for exceptions).
+
+Our documentation covers the current _Black_ code style, but planned changes to it are
+also documented. They're both worth taking a look at:
+
+- [The _Black_ Code Style: Current style](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html)
+- [The _Black_ Code Style: Future style](https://black.readthedocs.io/en/stable/the_black_code_style/future_style.html)
+
+Changes to the _Black_ code style are bound by the Stability Policy:
+
+- [The _Black_ Code Style: Stability Policy](https://black.readthedocs.io/en/stable/the_black_code_style/index.html#stability-policy)
+
+Please refer to this document before submitting an issue. What seems like a bug might be
+intended behaviour.
+
+### Pragmatism
+
+Early versions of _Black_ used to be absolutist in some respects. They took after its
+initial author. This was fine at the time as it made the implementation simpler and
+there were not many users anyway. Not many edge cases were reported. As a mature tool,
+_Black_ does make some exceptions to rules it otherwise holds.
+
+- [The _Black_ code style: Pragmatism](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html#pragmatism)
+
+Please refer to this document before submitting an issue just like with the document
+above. What seems like a bug might be intended behaviour.
+
+## Configuration
+
+_Black_ is able to read project-specific default values for its command line options
+from a `pyproject.toml` file. This is especially useful for specifying custom
+`--include` and `--exclude`/`--force-exclude`/`--extend-exclude` patterns for your
+project.
+
+You can find more details in our documentation:
+
+- [The basics: Configuration via a file](https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#configuration-via-a-file)
+
+And if you're looking for more general configuration documentation:
+
+- [Usage and Configuration](https://black.readthedocs.io/en/stable/usage_and_configuration/index.html)
+
+**Pro-tip**: If you're asking yourself "Do I need to configure anything?" the answer is
+"No". _Black_ is all about sensible defaults. Applying those defaults will have your
+code in compliance with many other _Black_ formatted projects.
+
+## Used by
+
+The following notable open-source projects trust _Black_ with enforcing a consistent
+code style: pytest, tox, Pyramid, Django, Django Channels, Hypothesis, attrs,
+SQLAlchemy, Poetry, PyPA applications (Warehouse, Bandersnatch, Pipenv, virtualenv),
+pandas, Pillow, Twisted, LocalStack, every Datadog Agent Integration, Home Assistant,
+Zulip, Kedro, OpenOA, FLORIS, ORBIT, WOMBAT, and many more.
+
+The following organizations use _Black_: Dropbox, KeepTruckin, Lyft, Mozilla, Quora,
+Duolingo, QuantumBlack, Tesla, Archer Aviation.
+
+Are we missing anyone? Let us know.
+
+## Testimonials
+
+**Mike Bayer**, [author of `SQLAlchemy`](https://www.sqlalchemy.org/):
+
+> I can't think of any single tool in my entire programming career that has given me a
+> bigger productivity increase by its introduction. I can now do refactorings in about
+> 1% of the keystrokes that it would have taken me previously when we had no way for
+> code to format itself.
+
+**Dusty Phillips**,
+[writer](https://smile.amazon.com/s/ref=nb_sb_noss?url=search-alias%3Daps&field-keywords=dusty+phillips):
+
+> _Black_ is opinionated so you don't have to be.
+
+**Hynek Schlawack**, [creator of `attrs`](https://www.attrs.org/), core developer of
+Twisted and CPython:
+
+> An auto-formatter that doesn't suck is all I want for Xmas!
+
+**Carl Meyer**, [Django](https://www.djangoproject.com/) core developer:
+
+> At least the name is good.
+
+**Kenneth Reitz**, creator of [`requests`](https://requests.readthedocs.io/en/latest/)
+and [`pipenv`](https://readthedocs.org/projects/pipenv/):
+
+> This vastly improves the formatting of our code. Thanks a ton!
+
+## Show your style
+
+Use the badge in your project's README.md:
+
+```md
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 ```
 
-To format Jupyter notebooks (.ipynb), put the following into your
-`.pre-commit-config.yaml` file:
-
-```yaml
-- repo: https://github.com/jsh9/cercis
-  rev: <VERSION>
-  hooks:
-    - id: cercis-jupyter
-      args: [--line-length=88]
-```
-
-See [pre-commit](https://github.com/pre-commit/pre-commit) for more instructions. In
-particular, [here](https://pre-commit.com/#passing-arguments-to-hooks) is how to specify
-arguments in pre-commit config.
-
-## 3. _Cercis_'s code style
-
-_Cercis_'s code style is largely consistent with the
-[style of of Black](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html).
-
-The main difference is that _Cercis_ provides several configurable options that Black
-doesn't. Configurability is our main motivation behind creating _Cercis_.
-
-The next section ([How to configure _Cercis_](#4-how-to-configure-cercis)) contains
-detailed instructions of how to configure these options.
-
-### 3.1. Line length
-
-_Cercis_ uses 79 characters as the line length limit, instead of 88 (Black's default).
-
-You can override this default if necessary.
-
-| Option                 |                                           |
-| ---------------------- | ----------------------------------------- |
-| Name                   | `--line-length`                           |
-| Abbreviation           | `-l`                                      |
-| Default                | 79                                        |
-| Black's default        | 88                                        |
-| Command line usage     | `cercis -l=120 myScript.py`               |
-| `pyproject.toml` usage | `line-length = 120` under `[tool.cercis]` |
-| `pre-commit` usage     | `args: [--line-length=120]`               |
-
-### 3.2. Single quote vs double quote
-
-_Cercis_ uses single quotes (`'`) as the default for strings, instead of double quotes
-(`"`) which is Black's default.
-
-You can override this default if necessary.
-
-| Option                 |                                              |
-| ---------------------- | -------------------------------------------- |
-| Name                   | `--single-quote`                             |
-| Abbreviation           | `-sq`                                        |
-| Default                | `True`                                       |
-| Black's default        | `False`                                      |
-| Command line usage     | `cercis -sq=True myScript.py`                |
-| `pyproject.toml` usage | `single-quote = false` under `[tool.cercis]` |
-| `pre-commit` usage     | `args: [--single-quote=False]`               |
-
-### 3.3. Tabs vs spaces
-
-_Cercis_ offers users the ability to use tabs rather than spaces.
-
-There are two associated options:
-
-- `--use-tabs` (bool): whether to use tabs or spaces to format the code
-
-| Option                 |                                          |
-| ---------------------- | ---------------------------------------- |
-| Name                   | `--use-tabs`                             |
-| Abbreviation           | `-tab`                                   |
-| Default                | `False`                                  |
-| Black's default        | `False`                                  |
-| Command line usage     | `cercis -tab=True myScript.py`           |
-| `pyproject.toml` usage | `use-tabs = false` under `[tool.cercis]` |
-| `pre-commit` usage     | `args: [--use-tabs=False]`               |
-
-- `--tab-width` (int): when calculating line length (to determine whether to wrap
-  lines), how wide shall _Cercis_ treat each tab. Only effective when `--use-tabs` is
-  set to `True`.
-
-| Option                 |                                       |
-| ---------------------- | ------------------------------------- |
-| Name                   | `--tab-width`                         |
-| Abbreviation           | `-tw`                                 |
-| Default                | 4                                     |
-| Black's default        | N/A                                   |
-| Command line usage     | `cercis -tab=True -tw=2 myScript.py`  |
-| `pyproject.toml` usage | `tab-width = 2` under `[tool.cercis]` |
-| `pre-commit` usage     | `args: [--tab-width=2]`               |
-
-### 3.4. Base indentation spaces
-
-This option defines the number of spaces that each indentation level adds. This option
-has no effect when `--use-tabs` is set to `True`.
-
-For example, if you set it to 2, contents within a `for` block is indented 2 spaces:
-
-```python
-for i in (1, 2, 3, 4, 5):
-  print(i)
-```
-
-| Option                 |                                                     |
-| ---------------------- | --------------------------------------------------- |
-| Name                   | `--base-indentation-spaces`                         |
-| Abbreviation           | `-bis`                                              |
-| Default                | 4                                                   |
-| Black's default        | 4                                                   |
-| Command line usage     | `cercis -bis=True -tw=2 myScript.py`                |
-| `pyproject.toml` usage | `base-indentation-spaces = 2` under `[tool.cercis]` |
-| `pre-commit` usage     | `args: [--base-indentation-spaces=2]`               |
-
-### 3.5. Extra indentation at line continuations
-
-There are three associated options:
-
-- `--function-definition-extra-indent`
-- `--other-line-continuation-extra-indent`
-- `--closing-bracket-extra-indent`
-
-They control whether we add an **additional** indentation level in some situations. Note
-that these options can work well with tabs (`--use-tabs=True`).
-
-#### 3.5.1. At function definition (`--function-definition-extra-indent`)
-
-<table>
-  <tr>
-    <td>
-
-```python
-# Cercis's default style
-def some_function(
-        arg1_with_long_name: str,
-        arg2_with_longer_name: int,
-        arg3_with_longer_name: float,
-        arg4_with_longer_name: bool,
-) -> None:
-    ...
-```
-
-  </td>
-
-  <td>
-
-```python
-# Black's style (not configurable)
-def some_function(
-    arg1_with_long_name: str,
-    arg2_with_longer_name: int,
-    arg3_with_longer_name: float,
-    arg4_with_longer_name: bool,
-) -> None:
-    ...
-```
-
-  </td>
-
-  </tr>
-</table>
-
-We choose to add an extra indentation level when wrapping a function signature line.
-This is because `def␣` happens to be 4 characters, so when the base indentation is 4
-spaces, it can be difficult to visually distinguish the function name and the argument
-list if we don't add an extra indentation.
-
-If you set `--base-indentation-spaces` to other values than 4, this visual separation
-issue will disappear, and you may not need to turn this option on.
-
-This style is encouraged [in PEP8](https://peps.python.org/pep-0008/#indentation).
-
-| Option                 |                                                                 |
-| ---------------------- | --------------------------------------------------------------- |
-| Name                   | `--function-definition-extra-indent`                            |
-| Abbreviation           | `-fdei`                                                         |
-| Default                | `True`                                                          |
-| Black's default        | `False`                                                         |
-| Command line usage     | `cercis -fdei=False myScript.py`                                |
-| `pyproject.toml` usage | `function-definition-extra-indent = true` under `[tool.cercis]` |
-| `pre-commit` usage     | `args: [--function-definition-extra-indent=False]`              |
-
-#### 3.5.2. In other line continuations (`--other-line-continuation-extra-indent`)
-
-"Other line continuations" are cases other than in function definitions, such as:
-
-```python
-var = some_function(
-    arg1_with_long_name,
-    arg2_with_longer_name,
-)
-
-var2 = [
-    'something',
-    'something else',
-    'something more',
-]
-```
-
-So if you set this option (`--other-line-continuation-extra-indent`) to `True`, you can
-add an extra level of indentation in these cases:
-
-```python
-var = some_function(
-        arg1_with_long_name,
-        arg2_with_longer_name,
-)
-
-var2 = [
-        'something',
-        'something else',
-        'something more',
-]
-```
-
-| Option                 |                                                                     |
-| ---------------------- | ------------------------------------------------------------------- |
-| Name                   | `--other-line-continuation-extra-indent`                            |
-| Abbreviation           | `-olcei`                                                            |
-| Default                | `False`                                                             |
-| Black's default        | `False`                                                             |
-| Command line usage     | `cercis -olcei=True myScript.py`                                    |
-| `pyproject.toml` usage | `other-line-continuation-extra-indent = true` under `[tool.cercis]` |
-| `pre-commit` usage     | `args: [----other-line-continuation-extra-indent=False]`            |
-
-#### 3.5.3. At closing brackets (`--closing-bracket-extra-indent`)
-
-This option lets people customize where the closing bracket should be. Note that both
-styles are OK according to [PEP8](https://peps.python.org/pep-0008/#indentation).
-
-<table>
-  <tr>
-    <td>
-
-```python
-# --closing-bracket-extra-indent=False
-
-def function(
-        arg1: int,
-        arg2: float,
-        arg3_with_long_name: list,
-) -> None:
-    print('Hello world')
-
-
-result = func2(
-    12345,
-    3.1415926,
-    [1, 2, 3],
-)
-
-
-something = {
-    'a': 1,
-    'b': 2,
-    'c': 3,
-}
-```
-
-  </td>
-
-  <td>
-
-```python
-# --closing-bracket-extra-indent=True
-
-def function(
-        arg1: int,
-        arg2: float,
-        arg3_with_long_name: list,
-        ) -> None:
-    print('Hello world')
-
-
-result = func2(
-    12345,
-    3.1415926,
-    [1, 2, 3],
-    )
-
-
-something = {
-    'a': 1,
-    'b': 2,
-    'c': 3,
-    }
-```
-
-  </td>
-
-  </tr>
-</table>
-
-| Option                 |                                                             |
-| ---------------------- | ----------------------------------------------------------- |
-| Name                   | `--closing-bracket-extra-indent`                            |
-| Abbreviation           | `-cbei`                                                     |
-| Default                | `False`                                                     |
-| Black's default        | `False`                                                     |
-| Command line usage     | `cercis -cbei=True myScript.py`                             |
-| `pyproject.toml` usage | `closing-bracket-extra-indent = true` under `[tool.cercis]` |
-| `pre-commit` usage     | `args: [--closing-bracket-extra-indent=False]`              |
-
-### 3.6. "Simple" lines with long strings
-
-By default, Black wraps lines that exceed length limit. But for very simple lines (such
-as assigning a long string to a variable), line wrapping is not necessary.
-
-<table>
-  <tr>
-    <td>
-
-```python
-# Cercis's default style
-# (Suppose line length limit is 30 chars)
-
-# Cercis doesn't wrap slightly long lines
-var1 = 'This line has 31 chars'
-
-
-
-# Cercis doesn't wrap longer lines
-var2 = 'This line has 43 characters_______'
-
-
-# Falls back to Black when comments present
-var3 = (
-    'shorter line'  # comment
-)
-```
-
-  </td>
-
-  <td>
-
-```python
-# Black's style (not configurable)
-# (Suppose line length limit is 30 chars)
-
-# Black wraps slightly long lines
-var1 = (
-    "This line has 31 chars"
-)
-
-# But Black doesn't wrap longer lines
-var2 = "This line has 43 characters_______"
-
-
-# Black wraps comments like this:
-var3 = (
-    "shorter line"  # comment
-)
-```
-
-  </td>
-
-  </tr>
-</table>
-
-| Option                 |                                                           |
-| ---------------------- | --------------------------------------------------------- |
-| Name                   | `--wrap-line-with-long-string`                            |
-| Abbreviation           | `-wl`                                                     |
-| Default                | `False`                                                   |
-| Black's default        | `True`                                                    |
-| Command line usage     | `cercis -wl=True myScript.py`                             |
-| `pyproject.toml` usage | `wrap-line-with-long-string = true` under `[tool.cercis]` |
-| `pre-commit` usage     | `args: [--wrap-line-with-long-string=False]`              |
-
-### 3.7. Collapse nested brackets
-
-_Cercis_ by default collapses nested brackets to make the code more compact.
-
-<table>
-  <tr>
-    <td>
-
-```python
-# Cercis's default style
-
-# If line length limit is 30
-value = np.array([
-    [1, 2, 3, 4, 5],
-    [6, 7, 8, 9, 0],
-])
-
-
-
-# If line length limit is 10
-value = function({
-    1,
-    2,
-    3,
-    4,
-    5,
-})
-
+Using the badge in README.rst:
 
 ```
-
-  </td>
-
-  <td>
-
-```python
-# Black's style (not configurable)
-
-# If line length limit is 30
-value = np.array(
-    [
-        [1, 2, 3, 4, 5],
-        [6, 7, 8, 9, 0],
-    ]
-)
-
-# If line length limit is 10
-value = function(
-    {
-        1,
-        2,
-        3,
-        4,
-        5,
-    }
-)
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/psf/black
 ```
 
-  </td>
+Looks like this:
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-  </tr>
-</table>
+## License
 
-| Option                 |                                                         |
-| ---------------------- | ------------------------------------------------------- |
-| Name                   | `--collapse-nested-brackets`                            |
-| Abbreviation           | `-cnb`                                                  |
-| Default                | `True`                                                  |
-| Black's style          | `False`                                                 |
-| Command line usage     | `cercis -cnb=True myScript.py`                          |
-| `pyproject.toml` usage | `collapse-nested-brackets = true` under `[tool.cercis]` |
-| `pre-commit` usage     | `args: [--collapse-nested-brackets=False]`              |
+MIT
 
-The code implementation of this option comes from
-[Pyink](https://github.com/google/pyink), another forked project from Black.
+## Contributing
 
-### 3.8. Wrapping long lines ending with comments
+Welcome! Happy to see you willing to make the project better. You can get started by
+reading this:
 
-Sometimes we have lines that exceed the length limit only because of the in-line
-comment. If we do not want to wrap those lines, we can use two options provided here:
+- [Contributing: The basics](https://black.readthedocs.io/en/latest/contributing/the_basics.html)
 
-- `--wrap-comments`
-- `--wrap-pragma-comments`
+You can also take a look at the rest of the contributing docs or talk with the
+developers:
 
-"Pragma comments", in this context, mean the directives for Python linters usually to
-tell them to ignore certain errors. Pragma comments that _Cercis_ currently recognizes
-include:
+- [Contributing documentation](https://black.readthedocs.io/en/latest/contributing/index.html)
+- [Chat on Discord](https://discord.gg/RtVdv86PrH)
 
-- _noqa_: `# noqa: E501`
-- _type: ignore_: `# type: ignore[no-untyped-def]`
-- _pylint_: `# pylint: disable=protected-access`
-- _pytype_: `# pytype: disable=attribute-error`
+## Change log
 
-| Option                 |                                              |
-| ---------------------- | -------------------------------------------- |
-| Name                   | `--wrap-comments`                            |
-| Abbreviation           | `-wc`                                        |
-| Default                | `False`                                      |
-| Black's style          | `True`                                       |
-| Command line usage     | `cercis -wc=True myScript.py`                |
-| `pyproject.toml` usage | `wrap-comments = true` under `[tool.cercis]` |
-| `pre-commit` usage     | `args: [--wrap-comments=False]`              |
+The log has become rather long. It moved to its own file.
 
-| Option                 |                                                     |
-| ---------------------- | --------------------------------------------------- |
-| Name                   | `--wrap-pragma-comments`                            |
-| Abbreviation           | `-wpc`                                              |
-| Default                | `False`                                             |
-| Black's style          | `True`                                              |
-| Command line usage     | `cercis -wpc=True myScript.py`                      |
-| `pyproject.toml` usage | `wrap-pragma-comments = true` under `[tool.cercis]` |
-| `pre-commit` usage     | `args: [--wrap-pragma-comments=False]`              |
+See [CHANGES](https://black.readthedocs.io/en/latest/change_log.html).
 
-And below is a 2x2 matrix to explain how these two options work together:
+## Authors
 
-|              | `-wc=True`                          | `-wc=False`             |
-| ------------ | ----------------------------------- | ----------------------- |
-| `-wpc=True`  | All comments wrapped w.n.           | No comments are wrapped |
-| `-wpc=False` | p.c. not wrapped; o.c. wrapped w.n. | No comments are wrapped |
+The author list is quite long nowadays, so it lives in its own file.
 
-Note:
+See [AUTHORS.md](./AUTHORS.md)
 
-- "w.n." means "when necessary"
-- "p.c." means "pragma comments"
-- "o.c." means "other comments"
+## Code of Conduct
 
-### 3.9. Keep blank lines in brackets
+Everyone participating in the _Black_ project, and in particular in the issue tracker,
+pull requests, and social media activity, is expected to treat other people with respect
+and more generally to follow the guidelines articulated in the
+[Python Community Code of Conduct](https://www.python.org/psf/codeofconduct/).
 
-This option allows us to keep the blank lines that we intentionally add into the
-contents of brackets.
+At the same time, humor is encouraged. In fact, basic familiarity with Monty Python's
+Flying Circus is expected. We are not savages.
 
-<table>
-  <tr>
-    <td>
-
-Cercis's default style:
-
-```python
-my_list = [
-    # Group 1
-    1,
-    2,
-
-    # Group 2
-    3,
-    4,
-
-    # Group 3
-    5,
-    6,
-]
-```
-
-  </td>
-
-  <td>
-
-Black's default style (not configurable):
-
-```python
-my_list = [
-    # Group 1
-    1,
-    2,
-    # Group 2
-    3,
-    4,
-    # Group 3
-    5,
-    6,
-]
-
-
-```
-
-  </td>
-
-  </tr>
-</table>
-
-| Option                 |                                                             |
-| ---------------------- | ----------------------------------------------------------- |
-| Name                   | `--keep-blank-lines-in-brackets`                            |
-| Abbreviation           | `-kblib`                                                    |
-| Default                | `True`                                                      |
-| Black's style          | `False`                                                     |
-| Command line usage     | `cercis -kblib=True myScript.py`                            |
-| `pyproject.toml` usage | `keep-blank-lines-in-brackets = true` under `[tool.cercis]` |
-| `pre-commit` usage     | `args: [--keep-blank-lines-in-bracketss=False]`             |
-
-(Note: if `--keep-blank-lines-in-brackets` is `True`, multiple consecutive blank lines
-are compressed into one blank line after formatting.)
-
-## 4. How to configure _Cercis_
-
-### 4.1. Dynamically in the command line
-
-Here are some examples:
-
-- `cercis --single-quote=True myScript.py` to format files to single quotes
-- `cercis --function-definition-extra-indent=False myScript.py` to format files without
-  extra indentation at function definition
-- `cercis --line-length=79 myScript.py` to format files with a line length of 79
-  characters
-
-### 4.2. In your project's `pyproject.toml` file
-
-You can specify the options under the `[tool.cercis]` section of the file:
-
-```toml
-[tool.cercis]
-line-length = 88
-function-definition-extra-indent = true
-single-quote = false
-```
-
-### 4.3. In your project's `.pre-commit-config.yaml` file
-
-You can specify the options under the `args` section of your `.pre-commit-config.yaml`
-file.
-
-For example:
-
-```yaml
-repos:
-  - repo: https://github.com/jsh9/cercis
-    rev: 0.1.0
-    hooks:
-      - id: cercis
-        args: [--function-definition-extra-indent=False, --line-length=79]
-  - repo: https://github.com/jsh9/cercis
-    rev: 0.1.0
-    hooks:
-      - id: cercis-jupyter
-        args: [--function-definition-extra-indent=False, --line-length=79]
-```
-
-The value in `rev` can be any _Cercis_ release, or it can be `main`, which means to
-always use the latest (including unreleased) _Cercis_ features.
-
-### 4.4. Specify options in `tox.ini`
-
-Currently, _Cercis_ does not support a config section in `tox.ini`. Instead, you can
-specify the options in `pyproject.toml`.
-
-### 4.5. How to fall back to Black's behavior
-
-Here are the configuration options to fall back to Black's behavior. Put them in
-`pyproject.toml`:
-
-```toml
-[tool.cercis]
-line-length = 88
-single-quote = false
-use-tabs = false
-base-indentation-spaces = 4
-function-definition-extra-indent = false
-other-line-continuation-extra-indent = false
-closing-bracket-extra-indent = false
-wrap-line-with-long-string = true
-collapse-nested-brackets = false
-wrap-comments = true
-wrap-pragma-comments = true
-```
-
-## 5. Maintainer resources
-
-Here are some resources and notes for maintainers of _Cercis_:
-
-### 5.1. How to rebase on top of _Black_?
-
-Please refer to the file [HOW_TO_REBASE.md](./HOW_TO_REBASE.md).
-
-### 5.2. Change logs
-
-There are 2 files in this repo: [CHANGELOG.md](./CHANGELOG.md) and
-[CHANGES.md](./CHANGES.md).
-
-The former tracks the changes of _Cercis_ (_Black_ does not have this file). The latter
-tracks the changes on _Black_ (it exists in the _Black_ repo as well).
+And if you _really_ need to slap somebody, do it with a fish while dancing.

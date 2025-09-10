@@ -3,20 +3,20 @@ import functools
 import os
 import shlex
 import sys
-import traceback
 import unittest
+from collections.abc import Collection, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
 from functools import partial
 from pathlib import Path
-from typing import Any, Collection, Iterator, List, Optional, Tuple
+from typing import Any, Optional
 
-import cercis
-from cercis.const import DEFAULT_LINE_LENGTH
-from cercis.debug import DebugVisitor
-from cercis.mode import TargetVersion
-from cercis.output import diff, err, out
-from cercis.ranges import parse_line_ranges
+import black
+from black.const import DEFAULT_LINE_LENGTH
+from black.debug import DebugVisitor
+from black.mode import TargetVersion
+from black.output import diff, err, out
+from black.ranges import parse_line_ranges
 
 from . import conftest
 
@@ -36,18 +36,17 @@ PY36_VERSIONS = {
     TargetVersion.PY39,
 }
 
-DEFAULT_MODE = cercis.Mode()
-DEFAULT_MODE_88 = replace(DEFAULT_MODE, line_length=88)
-ff = partial(cercis.format_file_in_place, mode=DEFAULT_MODE_88, fast=True)
-fs = partial(cercis.format_str, mode=DEFAULT_MODE)
+DEFAULT_MODE = black.Mode()
+ff = partial(black.format_file_in_place, mode=DEFAULT_MODE, fast=True)
+fs = partial(black.format_str, mode=DEFAULT_MODE)
 
 
 @dataclass
 class TestCaseArgs:
-    mode: cercis.Mode = field(default_factory=cercis.Mode)
+    mode: black.Mode = field(default_factory=black.Mode)
     fast: bool = False
-    minimum_version: Optional[Tuple[int, int]] = None
-    lines: Collection[Tuple[int, int]] = ()
+    minimum_version: Optional[tuple[int, int]] = None
+    lines: Collection[tuple[int, int]] = ()
     no_preview_line_length_1: bool = False
 
 
@@ -59,7 +58,7 @@ def _assert_format_equal(expected: str, actual: str) -> None:
         if conftest.PRINT_FULL_TREE:
             out("Expected tree:", fg="green")
         try:
-            exp_node = cercis.lib2to3_parse(expected)
+            exp_node = black.lib2to3_parse(expected)
             bdv = DebugVisitor(print_output=conftest.PRINT_FULL_TREE)
             list(bdv.visit(exp_node))
             expected_out = "\n".join(bdv.list_output)
@@ -68,7 +67,7 @@ def _assert_format_equal(expected: str, actual: str) -> None:
         if conftest.PRINT_FULL_TREE:
             out("Actual tree:", fg="red")
         try:
-            exp_node = cercis.lib2to3_parse(actual)
+            exp_node = black.lib2to3_parse(actual)
             bdv = DebugVisitor(print_output=conftest.PRINT_FULL_TREE)
             list(bdv.visit(exp_node))
             actual_out = "\n".join(bdv.list_output)
@@ -94,11 +93,11 @@ class FormatFailure(Exception):
 def assert_format(
     source: str,
     expected: str,
-    mode: cercis.Mode = DEFAULT_MODE,
+    mode: black.Mode = DEFAULT_MODE,
     *,
     fast: bool = False,
-    minimum_version: Optional[Tuple[int, int]] = None,
-    lines: Collection[Tuple[int, int]] = (),
+    minimum_version: Optional[tuple[int, int]] = None,
+    lines: Collection[tuple[int, int]] = (),
     no_preview_line_length_1: bool = False,
 ) -> None:
     """Convenience function to check that Black formats as expected.
@@ -114,19 +113,26 @@ def assert_format(
     # For both preview and non-preview tests, ensure that Black doesn't crash on
     # this code, but don't pass "expected" because the precise output may differ.
     try:
+        if mode.unstable:
+            new_mode = replace(mode, unstable=False, preview=False)
+        else:
+            new_mode = replace(mode, preview=not mode.preview)
         _assert_format_inner(
             source,
             None,
-            replace(mode, preview=not mode.preview),
+            new_mode,
             fast=fast,
             minimum_version=minimum_version,
             lines=lines,
         )
     except Exception as e:
-        text = "non-preview" if mode.preview else "preview"
-        tb = traceback.format_exc()
+        text = (
+            "unstable"
+            if mode.unstable
+            else "non-preview" if mode.preview else "preview"
+        )
         raise FormatFailure(
-            f"Black crashed formatting this case in {text} mode.\n{e}\n{tb}"
+            f"Black crashed formatting this case in {text} mode."
         ) from e
     # Similarly, setting line length to 1 is a good way to catch
     # stability bugs. Some tests are known to be broken in preview mode with line length
@@ -141,7 +147,7 @@ def assert_format(
             _assert_format_inner(
                 source,
                 None,
-                replace(mode, preview=preview_mode, line_length=1),
+                replace(mode, preview=preview_mode, line_length=1, unstable=False),
                 fast=fast,
                 minimum_version=minimum_version,
                 lines=lines,
@@ -154,15 +160,15 @@ def assert_format(
 
 
 def _assert_format_inner(
-        source: str,
-        expected: Optional[str] = None,
-        mode: cercis.Mode = DEFAULT_MODE,
-        *,
-        fast: bool = False,
-        minimum_version: Optional[Tuple[int, int]] = None,
-        lines: Collection[Tuple[int, int]] = (),
+    source: str,
+    expected: Optional[str] = None,
+    mode: black.Mode = DEFAULT_MODE,
+    *,
+    fast: bool = False,
+    minimum_version: Optional[tuple[int, int]] = None,
+    lines: Collection[tuple[int, int]] = (),
 ) -> None:
-    actual = cercis.format_str(source, mode=mode, lines=lines)
+    actual = black.format_str(source, mode=mode, lines=lines)
     if expected is not None:
         _assert_format_equal(expected, actual)
     # It's not useful to run safety checks if we're expecting no changes anyway. The
@@ -173,8 +179,8 @@ def _assert_format_inner(
         # being able to parse the code being formatted. This doesn't always work out
         # when checking modern code on older versions.
         if minimum_version is None or sys.version_info >= minimum_version:
-            cercis.assert_equivalent(source, actual)
-        cercis.assert_stable(source, actual, mode=mode, lines=lines)
+            black.assert_equivalent(source, actual)
+        black.assert_stable(source, actual, mode=mode, lines=lines)
 
 
 def dump_to_stderr(*output: str) -> str:
@@ -190,14 +196,14 @@ def get_base_dir(data: bool) -> Path:
     return DATA_DIR if data else PROJECT_ROOT
 
 
-def all_data_cases(subdir_name: str, data: bool = True) -> List[str]:
+def all_data_cases(subdir_name: str, data: bool = True) -> list[str]:
     cases_dir = get_base_dir(data) / subdir_name
     assert cases_dir.is_dir()
     return [case_path.stem for case_path in cases_dir.iterdir()]
 
 
 def get_case_path(
-        subdir_name: str, name: str, data: bool = True, suffix: str = PYTHON_SUFFIX
+    subdir_name: str, name: str, data: bool = True, suffix: str = PYTHON_SUFFIX
 ) -> Path:
     """Get case path from name"""
     case_path = get_base_dir(data) / subdir_name / name
@@ -208,30 +214,30 @@ def get_case_path(
 
 
 def read_data_with_mode(
-        subdir_name: str, name: str, data: bool = True
-) -> Tuple[TestCaseArgs, str, str]:
+    subdir_name: str, name: str, data: bool = True
+) -> tuple[TestCaseArgs, str, str]:
     """read_data_with_mode('test_name') -> Mode(), 'input', 'output'"""
     return read_data_from_file(get_case_path(subdir_name, name, data))
 
 
-def read_data(subdir_name: str, name: str, data: bool = True) -> Tuple[str, str]:
+def read_data(subdir_name: str, name: str, data: bool = True) -> tuple[str, str]:
     """read_data('test_name') -> 'input', 'output'"""
     _, input, output = read_data_with_mode(subdir_name, name, data)
     return input, output
 
 
-def _parse_minimum_version(version: str) -> Tuple[int, int]:
+def _parse_minimum_version(version: str) -> tuple[int, int]:
     major, minor = version.split(".")
     return int(major), int(minor)
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def get_flags_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--target-version",
-        action="append",
-        type=lambda val: TargetVersion[val.upper()],
+        action="store",
+        type=lambda val: (TargetVersion[val.upper()],),
         default=(),
     )
     parser.add_argument("--line-length", default=DEFAULT_LINE_LENGTH, type=int)
@@ -244,6 +250,7 @@ def get_flags_parser() -> argparse.ArgumentParser:
         "--skip-magic-trailing-comma", default=False, action="store_true"
     )
     parser.add_argument("--preview", default=False, action="store_true")
+    parser.add_argument("--unstable", default=False, action="store_true")
     parser.add_argument("--fast", default=False, action="store_true")
     parser.add_argument(
         "--minimum-version",
@@ -251,7 +258,7 @@ def get_flags_parser() -> argparse.ArgumentParser:
         default=None,
         help=(
             "Minimum version of Python where this test case is parseable. If this is"
-            " set, the test case will be run twice: once with the specified"
+            " set, the test case will be run twice: once without the specified"
             " --target-version, and once with --target-version set to exactly the"
             " specified version. This ensures that Black's autodetection of the target"
             " version works correctly."
@@ -273,7 +280,7 @@ def get_flags_parser() -> argparse.ArgumentParser:
 def parse_mode(flags_line: str) -> TestCaseArgs:
     parser = get_flags_parser()
     args = parser.parse_args(shlex.split(flags_line))
-    mode = cercis.Mode(
+    mode = black.Mode(
         target_versions=set(args.target_version),
         line_length=args.line_length,
         string_normalization=not args.skip_string_normalization,
@@ -281,6 +288,7 @@ def parse_mode(flags_line: str) -> TestCaseArgs:
         is_ipynb=args.ipynb,
         magic_trailing_comma=not args.skip_magic_trailing_comma,
         preview=args.preview,
+        unstable=args.unstable,
     )
     if args.line_ranges:
         lines = parse_line_ranges(args.line_ranges)
@@ -295,11 +303,11 @@ def parse_mode(flags_line: str) -> TestCaseArgs:
     )
 
 
-def read_data_from_file(file_name: Path) -> Tuple[TestCaseArgs, str, str]:
-    with open(file_name, "r", encoding="utf8") as test:
+def read_data_from_file(file_name: Path) -> tuple[TestCaseArgs, str, str]:
+    with open(file_name, encoding="utf8") as test:
         lines = test.readlines()
-    _input: List[str] = []
-    _output: List[str] = []
+    _input: list[str] = []
+    _output: list[str] = []
     result = _input
     mode = TestCaseArgs()
     for line in lines:
@@ -321,26 +329,6 @@ def read_data_from_file(file_name: Path) -> Tuple[TestCaseArgs, str, str]:
     if _input and not _output:
         # If there's no output marker, treat the entire file as already pre-formatted.
         _output = _input[:]
-
-    mode.mode.single_quote = False
-    mode.mode.line_length = 88
-    mode.mode.use_tabs = False
-    mode.mode.base_indentation_spaces = 4
-    mode.mode.other_line_continuation_extra_indent = False
-    mode.mode.closing_bracket_extra_indent = False
-    mode.mode.wrap_line_with_long_string = True
-    mode.mode.collapse_nested_brackets = False
-    mode.mode.wrap_comments = True
-    mode.mode.wrap_pragma_comments = True
-    mode.mode.keep_blank_lines_in_brackets = False
-
-    if "/cases/" in file_name.as_posix():
-        mode.mode.function_definition_extra_indent = True
-    elif "/cases_2/" in file_name.as_posix():
-        mode.mode.function_definition_extra_indent = False
-    elif "/cases_3/" in file_name.as_posix():
-        mode.mode.single_quote = True
-
     return mode, "".join(_input).strip() + "\n", "".join(_output).strip() + "\n"
 
 

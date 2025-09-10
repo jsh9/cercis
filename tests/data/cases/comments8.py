@@ -1,5 +1,5 @@
 # The percent-percent comments are Spyder IDE cells.
-# Both `#%%`` and `# %%` are accepted, so `cercis` standardises
+# Both `#%%`` and `# %%` are accepted, so `black` standardises
 # to the latter.
 
 #%%
@@ -8,7 +8,7 @@
 # output
 
 # The percent-percent comments are Spyder IDE cells.
-# Both `#%%`` and `# %%` are accepted, so `cercis` standardises
+# Both `#%%`` and `# %%` are accepted, so `black` standardises
 # to the latter.
 
 # %%

@@ -5,14 +5,11 @@ generation.  You can run this file with `python`, `pytest`, or (soon)
 a coverage-guided fuzzer I'm working on.
 """
 
-import re
-
 import hypothesmith
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-import cercis
-from blib2to3.pgen2.tokenize import TokenError
+import black
 
 
 # This test uses the Hypothesis and Hypothesmith libraries to generate random
@@ -30,7 +27,7 @@ from blib2to3.pgen2.tokenize import TokenError
     src_contents=hypothesmith.from_grammar() | hypothesmith.from_node(),
     # Using randomly-varied modes helps us to exercise less common code paths.
     mode=st.builds(
-        cercis.FileMode,
+        black.FileMode,
         line_length=st.just(88) | st.integers(0, 200),
         string_normalization=st.booleans(),
         preview=st.booleans(),
@@ -39,35 +36,19 @@ from blib2to3.pgen2.tokenize import TokenError
     ),
 )
 def test_idempotent_any_syntatically_valid_python(
-        src_contents: str, mode: cercis.FileMode
+    src_contents: str, mode: black.FileMode
 ) -> None:
     # Before starting, let's confirm that the input string is valid Python:
     compile(src_contents, "<string>", "exec")  # else the bug is in hypothesmith
 
     # Then format the code...
-    try:
-        dst_contents = cercis.format_str(src_contents, mode=mode)
-    except cercis.InvalidInput:
-        # This is a bug - if it's valid Python code, as above, Black should be
-        # able to cope with it.  See issues #970, #1012
-        # TODO: remove this try-except block when issues are resolved.
-        return
-    except TokenError as e:
-        if (  # Special-case logic for backslashes followed by newlines or end-of-input
-            e.args[0] == "EOF in multi-line statement"
-            and re.search(r"\\($|\r?\n)", src_contents) is not None
-        ):
-            # This is a bug - if it's valid Python code, as above, Black should be
-            # able to cope with it.  See issue #1012.
-            # TODO: remove this block when the issue is resolved.
-            return
-        raise
+    dst_contents = black.format_str(src_contents, mode=mode)
 
     # And check that we got equivalent and stable output.
-    cercis.assert_equivalent(src_contents, dst_contents)
-    cercis.assert_stable(src_contents, dst_contents, mode=mode)
+    black.assert_equivalent(src_contents, dst_contents)
+    black.assert_stable(src_contents, dst_contents, mode=mode)
 
-    # Future test: check that pure-python and mypyc versions of cercis
+    # Future test: check that pure-python and mypyc versions of black
     # give identical output for identical input?
 
 
@@ -80,7 +61,7 @@ if __name__ == "__main__":
     try:
         import sys
 
-        import atheris  # type: ignore[import-not-found]
+        import atheris
     except ImportError:
         pass
     else:

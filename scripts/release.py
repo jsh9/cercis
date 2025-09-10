@@ -8,11 +8,11 @@ Tool to help automate changes needed in commits during and after releases
 
 import argparse
 import logging
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
-from subprocess import PIPE, run
-from typing import List
+from subprocess import run
 
 LOG = logging.getLogger(__name__)
 NEW_VERSION_CHANGELOG_TEMPLATE = """\
@@ -70,9 +70,9 @@ class NoGitTagsError(Exception): ...  # noqa: E701,E761
 
 # TODO: Do better with alpha + beta releases
 # Maybe we vendor packaging library
-def get_git_tags(versions_only: bool = True) -> List[str]:
+def get_git_tags(versions_only: bool = True) -> list[str]:
     """Pull out all tags or calvers only"""
-    cp = run(["git", "tag"], stdout=PIPE, stderr=PIPE, check=True, encoding="utf8")
+    cp = run(["git", "tag"], capture_output=True, check=True, encoding="utf8")
     if not cp.stdout:
         LOG.error(f"Returned no git tags stdout: {cp.stderr}")
         raise NoGitTagsError
@@ -143,19 +143,18 @@ class SourceFiles:
             changes_string = cfp.read()
 
         # Change Unreleased to next version
-        versioned_changes = changes_string.replace(
+        changes_string = changes_string.replace(
             "## Unreleased", f"## {self.next_version}"
         )
 
-        # Remove all comments (subheadings are harder - Human required still)
-        no_comments_changes = []
-        for line in versioned_changes.splitlines():
-            if line.startswith("<!--") or line.endswith("-->"):
-                continue
-            no_comments_changes.append(line)
+        # Remove all comments
+        changes_string = re.sub(r"^<!--(?>(?:.|\n)*?-->)\n\n", "", changes_string)
+
+        # Remove empty subheadings
+        changes_string = re.sub(r"^###.+\n\n(?=#)", "", changes_string)
 
         with self.changes_path.open("w") as cfp:
-            cfp.write("\n".join(no_comments_changes) + "\n")
+            cfp.write(changes_string)
 
         LOG.debug(f"Finished Cleaning up {self.changes_path}")
 
@@ -169,7 +168,9 @@ class SourceFiles:
         calver_parts = base_calver.split(".")
         base_calver = f"{calver_parts[0]}.{int(calver_parts[1])}"  # Remove leading 0
         git_tags = get_git_tags()
-        same_month_releases = [t for t in git_tags if t.startswith(base_calver)]
+        same_month_releases = [
+            t for t in git_tags if t.startswith(base_calver) and "a" not in t
+        ]
         if len(same_month_releases) < 1:
             return f"{base_calver}.0"
         same_month_version = same_month_releases[-1].split(".", 2)[-1]

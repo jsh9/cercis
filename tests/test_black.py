@@ -10,42 +10,36 @@ import re
 import sys
 import textwrap
 import types
+from collections.abc import Callable, Iterator, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager, redirect_stderr
-from dataclasses import replace
+from dataclasses import fields, replace
+from importlib.metadata import version as imp_version
 from io import BytesIO
-from pathlib import Path
+from pathlib import Path, WindowsPath
 from platform import system
 from tempfile import TemporaryDirectory
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterator,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Any, Optional, TypeVar, Union
 from unittest.mock import MagicMock, patch
 
 import click
 import pytest
 from click import unstyle
 from click.testing import CliRunner
+from packaging.version import Version
 from pathspec import PathSpec
 
-import cercis
-import cercis.files
-from cercis import Feature, TargetVersion
-from cercis import re_compile_maybe_verbose as compile_pattern
-from cercis.cache import FileData, get_cache_dir, get_cache_file
-from cercis.debug import DebugVisitor
-from cercis.output import color_diff, diff
-from cercis.report import Report
+import black
+import black.files
+from black import Feature, TargetVersion
+from black import re_compile_maybe_verbose as compile_pattern
+from black.cache import FileData, get_cache_dir, get_cache_file
+from black.debug import DebugVisitor
+from black.mode import Mode, Preview
+from black.output import color_diff, diff
+from black.parsing import ASTSafetyError
+from black.report import Report
+from black.strings import lines_with_leading_tabs_expanded
 
 # Import other test classes
 from tests.util import (
@@ -69,8 +63,8 @@ from tests.util import (
 THIS_FILE = Path(__file__)
 EMPTY_CONFIG = THIS_DIR / "data" / "empty_pyproject.toml"
 PY36_ARGS = [f"--target-version={version.name.lower()}" for version in PY36_VERSIONS]
-DEFAULT_EXCLUDE = cercis.re_compile_maybe_verbose(cercis.const.DEFAULT_EXCLUDES)
-DEFAULT_INCLUDE = cercis.re_compile_maybe_verbose(cercis.const.DEFAULT_INCLUDES)
+DEFAULT_EXCLUDE = black.re_compile_maybe_verbose(black.const.DEFAULT_EXCLUDES)
+DEFAULT_INCLUDE = black.re_compile_maybe_verbose(black.const.DEFAULT_INCLUDES)
 T = TypeVar("T")
 R = TypeVar("R")
 
@@ -84,14 +78,13 @@ def cache_dir(exists: bool = True) -> Iterator[Path]:
         cache_dir = Path(workspace)
         if not exists:
             cache_dir = cache_dir / "new"
-        with patch("cercis.cache.CACHE_DIR", cache_dir):
+        with patch("black.cache.CACHE_DIR", cache_dir):
             yield cache_dir
 
 
 @contextmanager
 def event_loop() -> Iterator[None]:
-    policy = asyncio.get_event_loop_policy()
-    loop = policy.new_event_loop()
+    loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
         yield
@@ -104,10 +97,11 @@ class FakeContext(click.Context):
     """A fake click Context for when calling functions that need it."""
 
     def __init__(self) -> None:
-        self.default_map: Dict[str, Any] = {}
-        self.params: Dict[str, Any] = {}
+        self.default_map: dict[str, Any] = {}
+        self.params: dict[str, Any] = {}
+        self.command: click.Command = black.main
         # Dummy root, since most of the tests don't care about it
-        self.obj: Dict[str, Any] = {"root": PROJECT_ROOT}
+        self.obj: dict[str, Any] = {"root": PROJECT_ROOT}
 
 
 class FakeParameter(click.Parameter):
@@ -121,16 +115,19 @@ class BlackRunner(CliRunner):
     """Make sure STDOUT and STDERR are kept separate when testing Black via its CLI."""
 
     def __init__(self) -> None:
-        super().__init__(mix_stderr=False)
+        if Version(imp_version("click")) >= Version("8.2.0"):
+            super().__init__()
+        else:
+            super().__init__(mix_stderr=False)  # type: ignore
 
 
 def invokeBlack(
-        args: List[str], exit_code: int = 0, ignore_config: bool = True
+    args: list[str], exit_code: int = 0, ignore_config: bool = True
 ) -> None:
     runner = BlackRunner()
     if ignore_config:
         args = ["--verbose", "--config", str(THIS_DIR / "empty.toml"), *args]
-    result = runner.invoke(cercis.main, args, catch_exceptions=False)
+    result = runner.invoke(black.main, args, catch_exceptions=False)
     assert result.stdout_bytes is not None
     assert result.stderr_bytes is not None
     msg = (
@@ -147,26 +144,24 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_empty_ff(self) -> None:
         expected = ""
-        tmp_file = Path(cercis.dump_to_file())
+        tmp_file = Path(black.dump_to_file())
         try:
-            self.assertFalse(ff(tmp_file, write_back=cercis.WriteBack.YES))
+            self.assertFalse(ff(tmp_file, write_back=black.WriteBack.YES))
             actual = tmp_file.read_text(encoding="utf-8")
         finally:
             os.unlink(tmp_file)
         self.assertFormatEqual(expected, actual)
 
-    @patch("cercis.dump_to_file", dump_to_stderr)
+    @patch("black.dump_to_file", dump_to_stderr)
     def test_one_empty_line(self) -> None:
-        mode = cercis.Mode(preview=True)
         for nl in ["\n", "\r\n"]:
             source = expected = nl
-            assert_format(source, expected, mode=mode)
+            assert_format(source, expected)
 
     def test_one_empty_line_ff(self) -> None:
-        mode = cercis.Mode(preview=True)
         for nl in ["\n", "\r\n"]:
             expected = nl
-            tmp_file = Path(cercis.dump_to_file(nl))
+            tmp_file = Path(black.dump_to_file(nl))
             if system() == "Windows":
                 # Writing files in text mode automatically uses the system newline,
                 # but in this case we don't want this for testing reasons. See:
@@ -174,75 +169,67 @@ class BlackTestCase(BlackBaseTestCase):
                 with open(tmp_file, "wb") as f:
                     f.write(nl.encode("utf-8"))
             try:
-                self.assertFalse(
-                    ff(tmp_file, mode=mode, write_back=cercis.WriteBack.YES)
-                )
+                self.assertFalse(ff(tmp_file, write_back=black.WriteBack.YES))
                 with open(tmp_file, "rb") as f:
                     actual = f.read().decode("utf-8")
             finally:
                 os.unlink(tmp_file)
             self.assertFormatEqual(expected, actual)
 
-    def test_experimental_string_processing_warns(self) -> None:
-        self.assertWarns(
-            cercis.mode.Deprecated, cercis.Mode, experimental_string_processing=True
-        )
-
     def test_piping(self) -> None:
         _, source, expected = read_data_from_file(
-            PROJECT_ROOT / "src/cercis/__init__.py"
+            PROJECT_ROOT / "src/black/__init__.py"
         )
         result = BlackRunner().invoke(
-            cercis.main,
+            black.main,
             [
                 "-",
                 "--fast",
-                "--line-length=88",
+                f"--line-length={black.DEFAULT_LINE_LENGTH}",
                 f"--config={EMPTY_CONFIG}",
-                "--single-quote=False",
             ],
             input=BytesIO(source.encode("utf-8")),
         )
         self.assertEqual(result.exit_code, 0)
-        self.assertFormatEqual(expected, result.output)
-        if source != result.output:
-            cercis.assert_equivalent(source, result.output)
-            cercis.assert_stable(source, result.output, DEFAULT_MODE)
+        self.assertFormatEqual(expected, result.stdout)
+        if source != result.stdout:
+            black.assert_equivalent(source, result.stdout)
+            black.assert_stable(source, result.stdout, DEFAULT_MODE)
 
     def test_piping_diff(self) -> None:
         diff_header = re.compile(
             r"(STDIN|STDOUT)\t\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d\d\d\d\d\d"
             r"\+\d\d:\d\d"
         )
-        source, _ = read_data("cases_3", "expression.py")
-        expected, _ = read_data("cases_3", "expression.diff")
+        source, _ = read_data("cases", "expression.py")
+        expected, _ = read_data("cases", "expression.diff")
         args = [
             "-",
             "--fast",
-            "--line-length=88",
+            f"--line-length={black.DEFAULT_LINE_LENGTH}",
             "--diff",
             f"--config={EMPTY_CONFIG}",
         ]
         result = BlackRunner().invoke(
-            cercis.main, args, input=BytesIO(source.encode("utf-8"))
+            black.main, args, input=BytesIO(source.encode("utf-8"))
         )
         self.assertEqual(result.exit_code, 0)
-        actual = diff_header.sub(DETERMINISTIC_HEADER, result.output)
+        actual = diff_header.sub(DETERMINISTIC_HEADER, result.stdout)
         actual = actual.rstrip() + "\n"  # the diff output has a trailing space
         self.assertEqual(expected, actual)
 
     def test_piping_diff_with_color(self) -> None:
-        source, _ = read_data("cases_3", "expression.py")
+        source, _ = read_data("cases", "expression.py")
         args = [
             "-",
             "--fast",
-            "--line-length=88",
+            f"--line-length={black.DEFAULT_LINE_LENGTH}",
             "--diff",
             "--color",
             f"--config={EMPTY_CONFIG}",
         ]
         result = BlackRunner().invoke(
-            cercis.main, args, input=BytesIO(source.encode("utf-8"))
+            black.main, args, input=BytesIO(source.encode("utf-8"))
         )
         actual = result.output
         # Again, the contents are checked in a different test, so only look for colors.
@@ -252,77 +239,70 @@ class BlackTestCase(BlackBaseTestCase):
         self.assertIn("\033[31m", actual)
         self.assertIn("\033[0m", actual)
 
-    @patch("cercis.dump_to_file", dump_to_stderr)
-    def _test_wip(self) -> None:
-        source, expected = read_data("miscellaneous", "wip")
-        sys.settrace(tracefunc)
-        mode = replace(
-            DEFAULT_MODE,
-            experimental_string_processing=False,
-            target_versions={cercis.TargetVersion.PY38},
-        )
-        actual = fs(source, mode=mode)
-        sys.settrace(None)
-        self.assertFormatEqual(expected, actual)
-        cercis.assert_equivalent(source, actual)
-        cercis.assert_stable(source, actual, cercis.FileMode())
-
     def test_pep_572_version_detection(self) -> None:
         source, _ = read_data("cases", "pep_572")
-        root = cercis.lib2to3_parse(source)
-        features = cercis.get_features_used(root)
-        self.assertIn(cercis.Feature.ASSIGNMENT_EXPRESSIONS, features)
-        versions = cercis.detect_target_versions(root)
-        self.assertIn(cercis.TargetVersion.PY38, versions)
+        root = black.lib2to3_parse(source)
+        features = black.get_features_used(root)
+        self.assertIn(black.Feature.ASSIGNMENT_EXPRESSIONS, features)
+        versions = black.detect_target_versions(root)
+        self.assertIn(black.TargetVersion.PY38, versions)
 
     def test_pep_695_version_detection(self) -> None:
         for file in ("type_aliases", "type_params"):
-            source, _ = read_data("cases_2", file)
-            root = cercis.lib2to3_parse(source)
-            features = cercis.get_features_used(root)
-            self.assertIn(cercis.Feature.TYPE_PARAMS, features)
-            versions = cercis.detect_target_versions(root)
-            self.assertIn(cercis.TargetVersion.PY312, versions)
+            source, _ = read_data("cases", file)
+            root = black.lib2to3_parse(source)
+            features = black.get_features_used(root)
+            self.assertIn(black.Feature.TYPE_PARAMS, features)
+            versions = black.detect_target_versions(root)
+            self.assertIn(black.TargetVersion.PY312, versions)
+
+    def test_pep_696_version_detection(self) -> None:
+        source, _ = read_data("cases", "type_param_defaults")
+        samples = [
+            source,
+            "type X[T=int] = float",
+            "type X[T:int=int]=int",
+            "type X[*Ts=int]=int",
+            "type X[*Ts=*int]=int",
+            "type X[**P=int]=int",
+        ]
+        for sample in samples:
+            root = black.lib2to3_parse(sample)
+            features = black.get_features_used(root)
+            self.assertIn(black.Feature.TYPE_PARAM_DEFAULTS, features)
 
     def test_expression_ff(self) -> None:
-        source, expected = read_data("cases_3", "expression.py")
-        tmp_file = Path(cercis.dump_to_file(source))
-        mode = replace(DEFAULT_MODE, line_length=88)
+        source, expected = read_data("cases", "expression.py")
+        tmp_file = Path(black.dump_to_file(source))
         try:
-            self.assertTrue(ff(tmp_file, write_back=cercis.WriteBack.YES))
+            self.assertTrue(ff(tmp_file, write_back=black.WriteBack.YES))
             actual = tmp_file.read_text(encoding="utf-8")
         finally:
             os.unlink(tmp_file)
         self.assertFormatEqual(expected, actual)
-        with patch("cercis.dump_to_file", dump_to_stderr):
-            cercis.assert_equivalent(source, actual)
-            cercis.assert_stable(source, actual, mode)
+        with patch("black.dump_to_file", dump_to_stderr):
+            black.assert_equivalent(source, actual)
+            black.assert_stable(source, actual, DEFAULT_MODE)
 
     def test_expression_diff(self) -> None:
-        source, _ = read_data("cases_3", "expression.py")
-        expected, _ = read_data("cases_3", "expression.diff")
-        tmp_file = Path(cercis.dump_to_file(source))
+        source, _ = read_data("cases", "expression.py")
+        expected, _ = read_data("cases", "expression.diff")
+        tmp_file = Path(black.dump_to_file(source))
         diff_header = re.compile(
             rf"{re.escape(str(tmp_file))}\t\d\d\d\d-\d\d-\d\d "
             r"\d\d:\d\d:\d\d\.\d\d\d\d\d\d\+\d\d:\d\d"
         )
         try:
             result = BlackRunner().invoke(
-                cercis.main,
-                [
-                    "--diff",
-                    str(tmp_file),
-                    f"--config={EMPTY_CONFIG}",
-                    "--line-length=88",
-                ],
+                black.main, ["--diff", str(tmp_file), f"--config={EMPTY_CONFIG}"]
             )
             self.assertEqual(result.exit_code, 0)
         finally:
             os.unlink(tmp_file)
-        actual = result.output
+        actual = result.stdout
         actual = diff_header.sub(DETERMINISTIC_HEADER, actual)
         if expected != actual:
-            dump = cercis.dump_to_file(actual)
+            dump = black.dump_to_file(actual)
             msg = (
                 "Expected diff isn't equal to the actual. If you made changes to"
                 " expression.py and this is an anticipated difference, overwrite"
@@ -331,12 +311,12 @@ class BlackTestCase(BlackBaseTestCase):
             self.assertEqual(expected, actual, msg)
 
     def test_expression_diff_with_color(self) -> None:
-        source, _ = read_data("cases_3", "expression.py")
-        expected, _ = read_data("cases_3", "expression.diff")
-        tmp_file = Path(cercis.dump_to_file(source))
+        source, _ = read_data("cases", "expression.py")
+        expected, _ = read_data("cases", "expression.diff")
+        tmp_file = Path(black.dump_to_file(source))
         try:
             result = BlackRunner().invoke(
-                cercis.main,
+                black.main,
                 ["--diff", "--color", str(tmp_file), f"--config={EMPTY_CONFIG}"],
             )
         finally:
@@ -352,51 +332,50 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_detect_pos_only_arguments(self) -> None:
         source, _ = read_data("cases", "pep_570")
-        root = cercis.lib2to3_parse(source)
-        features = cercis.get_features_used(root)
-        self.assertIn(cercis.Feature.POS_ONLY_ARGUMENTS, features)
-        versions = cercis.detect_target_versions(root)
-        self.assertIn(cercis.TargetVersion.PY38, versions)
+        root = black.lib2to3_parse(source)
+        features = black.get_features_used(root)
+        self.assertIn(black.Feature.POS_ONLY_ARGUMENTS, features)
+        versions = black.detect_target_versions(root)
+        self.assertIn(black.TargetVersion.PY38, versions)
 
     def test_detect_debug_f_strings(self) -> None:
-        root = cercis.lib2to3_parse("""f"{x=}" """)
-        features = cercis.get_features_used(root)
-        self.assertIn(cercis.Feature.DEBUG_F_STRINGS, features)
-        versions = cercis.detect_target_versions(root)
-        self.assertIn(cercis.TargetVersion.PY38, versions)
+        root = black.lib2to3_parse("""f"{x=}" """)
+        features = black.get_features_used(root)
+        self.assertIn(black.Feature.DEBUG_F_STRINGS, features)
+        versions = black.detect_target_versions(root)
+        self.assertIn(black.TargetVersion.PY38, versions)
 
-        root = cercis.lib2to3_parse(
+        root = black.lib2to3_parse(
             """f"{x}"\nf'{"="}'\nf'{(x:=5)}'\nf'{f(a="3=")}'\nf'{x:=10}'\n"""
         )
-        features = cercis.get_features_used(root)
-        self.assertNotIn(cercis.Feature.DEBUG_F_STRINGS, features)
+        features = black.get_features_used(root)
+        self.assertNotIn(black.Feature.DEBUG_F_STRINGS, features)
 
-        # We don't yet support feature version detection in nested f-strings
-        root = cercis.lib2to3_parse(
+        root = black.lib2to3_parse(
             """f"heard a rumour that { f'{1+1=}' } ... seems like it could be true" """
         )
-        features = cercis.get_features_used(root)
-        self.assertNotIn(cercis.Feature.DEBUG_F_STRINGS, features)
+        features = black.get_features_used(root)
+        self.assertIn(black.Feature.DEBUG_F_STRINGS, features)
 
-    @patch("cercis.dump_to_file", dump_to_stderr)
+    @patch("black.dump_to_file", dump_to_stderr)
     def test_string_quotes(self) -> None:
         source, expected = read_data("miscellaneous", "string_quotes")
-        mode = cercis.Mode(preview=True, single_quote=False)
+        mode = black.Mode(unstable=True)
         assert_format(source, expected, mode)
         mode = replace(mode, string_normalization=False)
         not_normalized = fs(source, mode=mode)
         self.assertFormatEqual(source.replace("\\\n", ""), not_normalized)
-        cercis.assert_equivalent(source, not_normalized)
-        cercis.assert_stable(source, not_normalized, mode=mode)
+        black.assert_equivalent(source, not_normalized)
+        black.assert_stable(source, not_normalized, mode=mode)
 
     def test_skip_source_first_line(self) -> None:
         source, _ = read_data("miscellaneous", "invalid_header")
-        tmp_file = Path(cercis.dump_to_file(source))
+        tmp_file = Path(black.dump_to_file(source))
         # Full source should fail (invalid syntax at header)
         self.invokeBlack([str(tmp_file), "--diff", "--check"], exit_code=123)
         # So, skipping the first line should work
         result = BlackRunner().invoke(
-            cercis.main, [str(tmp_file), "-x", f"--config={EMPTY_CONFIG}"]
+            black.main, [str(tmp_file), "-x", f"--config={EMPTY_CONFIG}"]
         )
         self.assertEqual(result.exit_code, 0)
         actual = tmp_file.read_text(encoding="utf-8")
@@ -409,38 +388,31 @@ class BlackTestCase(BlackBaseTestCase):
             test_file = Path(workspace) / "skip_header.py"
             test_file.write_bytes(code_mixing_newlines)
             mode = replace(DEFAULT_MODE, skip_source_first_line=True)
-            ff(test_file, mode=mode, write_back=cercis.WriteBack.YES)
+            ff(test_file, mode=mode, write_back=black.WriteBack.YES)
             self.assertEqual(test_file.read_bytes(), expected)
 
     def test_skip_magic_trailing_comma(self) -> None:
-        source, _ = read_data("cases_3", "expression")
+        source, _ = read_data("cases", "expression")
         expected, _ = read_data(
             "miscellaneous", "expression_skip_magic_trailing_comma.diff"
         )
-        tmp_file = Path(cercis.dump_to_file(source))
+        tmp_file = Path(black.dump_to_file(source))
         diff_header = re.compile(
             rf"{re.escape(str(tmp_file))}\t\d\d\d\d-\d\d-\d\d "
             r"\d\d:\d\d:\d\d\.\d\d\d\d\d\d\+\d\d:\d\d"
         )
         try:
             result = BlackRunner().invoke(
-                cercis.main,
-                [
-                    "-C",
-                    "--diff",
-                    str(tmp_file),
-                    f"--config={EMPTY_CONFIG}",
-                    "--line-length=88",
-                ],
+                black.main, ["-C", "--diff", str(tmp_file), f"--config={EMPTY_CONFIG}"]
             )
             self.assertEqual(result.exit_code, 0)
         finally:
             os.unlink(tmp_file)
-        actual = result.output
+        actual = result.stdout
         actual = diff_header.sub(DETERMINISTIC_HEADER, actual)
         actual = actual.rstrip() + "\n"  # the diff output has a trailing space
         if expected != actual:
-            dump = cercis.dump_to_file(actual)
+            dump = black.dump_to_file(actual)
             msg = (
                 "Expected diff isn't equal to the actual. If you made changes to"
                 " expression.py and this is an anticipated difference, overwrite"
@@ -449,22 +421,7 @@ class BlackTestCase(BlackBaseTestCase):
             )
             self.assertEqual(expected, actual, msg)
 
-    @patch("cercis.dump_to_file", dump_to_stderr)
-    def test_async_as_identifier(self) -> None:
-        source_path = get_case_path("miscellaneous", "async_as_identifier")
-        _, source, expected = read_data_from_file(source_path)
-        actual = fs(source)
-        self.assertFormatEqual(expected, actual)
-        major, minor = sys.version_info[:2]
-        if major < 3 or (major <= 3 and minor < 7):
-            cercis.assert_equivalent(source, actual)
-        cercis.assert_stable(source, actual, DEFAULT_MODE)
-        # ensure cercis can parse this when the target is 3.6
-        self.invokeBlack([str(source_path), "--target-version", "py36"])
-        # but not on 3.7, because async/await is no longer an identifier
-        self.invokeBlack([str(source_path), "--target-version", "py37"], exit_code=123)
-
-    @patch("cercis.dump_to_file", dump_to_stderr)
+    @patch("black.dump_to_file", dump_to_stderr)
     def test_python37(self) -> None:
         source_path = get_case_path("cases", "python37")
         _, source, expected = read_data_from_file(source_path)
@@ -472,12 +429,10 @@ class BlackTestCase(BlackBaseTestCase):
         self.assertFormatEqual(expected, actual)
         major, minor = sys.version_info[:2]
         if major > 3 or (major == 3 and minor >= 7):
-            cercis.assert_equivalent(source, actual)
-        cercis.assert_stable(source, actual, DEFAULT_MODE)
-        # ensure cercis can parse this when the target is 3.7
+            black.assert_equivalent(source, actual)
+        black.assert_stable(source, actual, DEFAULT_MODE)
+        # ensure black can parse this when the target is 3.7
         self.invokeBlack([str(source_path), "--target-version", "py37"])
-        # but not on 3.6, because we use async as a reserved keyword
-        self.invokeBlack([str(source_path), "--target-version", "py36"], exit_code=123)
 
     def test_tab_comment_indentation(self) -> None:
         contents_tab = "if 1:\n\tif 2:\n\t\tpass\n\t# comment\n\tpass\n"
@@ -490,43 +445,20 @@ class BlackTestCase(BlackBaseTestCase):
         self.assertFormatEqual(contents_spc, fs(contents_spc))
         self.assertFormatEqual(contents_spc, fs(contents_tab))
 
-        # mixed tabs and spaces (valid Python 2 code)
-        contents_tab = "if 1:\n        if 2:\n\t\tpass\n\t# comment\n        pass\n"
-        contents_spc = "if 1:\n    if 2:\n        pass\n    # comment\n    pass\n"
-        self.assertFormatEqual(contents_spc, fs(contents_spc))
-        self.assertFormatEqual(contents_spc, fs(contents_tab))
-
-        contents_tab = "if 1:\n        if 2:\n\t\tpass\n\t\t# comment\n        pass\n"
-        contents_spc = "if 1:\n    if 2:\n        pass\n        # comment\n    pass\n"
-        self.assertFormatEqual(contents_spc, fs(contents_spc))
-        self.assertFormatEqual(contents_spc, fs(contents_tab))
-
     def test_false_positive_symlink_output_issue_3384(self) -> None:
-        # Emulate the behavior when using the CLI (`cercis ./child  --verbose`), which
+        # Emulate the behavior when using the CLI (`black ./child  --verbose`), which
         # involves patching some `pathlib.Path` methods. In particular, `is_dir` is
         # patched only on its first call: when checking if "./child" is a directory it
         # should return True. The "./child" folder exists relative to the cwd when
         # running from CLI, but fails when running the tests because cwd is different
         project_root = Path(THIS_DIR / "data" / "nested_gitignore_tests")
         working_directory = project_root / "root"
-        target_abspath = working_directory / "child"
-        target_contents = list(target_abspath.iterdir())
 
-        def mock_n_calls(responses: List[bool]) -> Callable[[], bool]:
-            def _mocked_calls() -> bool:
-                if responses:
-                    return responses.pop(0)
-                return False
-
-            return _mocked_calls
-
-        with patch("pathlib.Path.iterdir", return_value=target_contents), patch(
-            "pathlib.Path.resolve", return_value=target_abspath
-        ), patch("pathlib.Path.is_dir", side_effect=mock_n_calls([True])):
+        with change_directory(working_directory):
             # Note that the root folder (project_root) isn't the folder
             # named "root" (aka working_directory)
             report = MagicMock(verbose=True)
-            cercis.get_sources(
+            black.get_sources(
                 root=project_root,
                 src=("./child",),
                 quiet=False,
@@ -558,21 +490,21 @@ class BlackTestCase(BlackBaseTestCase):
         def err(msg: str, **kwargs: Any) -> None:
             err_lines.append(msg)
 
-        with patch("cercis.output._out", out), patch("cercis.output._err", err):
-            report.done(Path("f1"), cercis.Changed.NO)
+        with patch("black.output._out", out), patch("black.output._err", err):
+            report.done(Path("f1"), black.Changed.NO)
             self.assertEqual(len(out_lines), 1)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(out_lines[-1], "f1 already well formatted, good job.")
             self.assertEqual(unstyle(str(report)), "1 file left unchanged.")
             self.assertEqual(report.return_code, 0)
-            report.done(Path("f2"), cercis.Changed.YES)
+            report.done(Path("f2"), black.Changed.YES)
             self.assertEqual(len(out_lines), 2)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(out_lines[-1], "reformatted f2")
             self.assertEqual(
                 unstyle(str(report)), "1 file reformatted, 1 file left unchanged."
             )
-            report.done(Path("f3"), cercis.Changed.CACHED)
+            report.done(Path("f3"), black.Changed.CACHED)
             self.assertEqual(len(out_lines), 3)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(
@@ -595,7 +527,7 @@ class BlackTestCase(BlackBaseTestCase):
                 " reformat.",
             )
             self.assertEqual(report.return_code, 123)
-            report.done(Path("f3"), cercis.Changed.YES)
+            report.done(Path("f3"), black.Changed.YES)
             self.assertEqual(len(out_lines), 4)
             self.assertEqual(len(err_lines), 1)
             self.assertEqual(out_lines[-1], "reformatted f3")
@@ -625,7 +557,7 @@ class BlackTestCase(BlackBaseTestCase):
                 " reformat.",
             )
             self.assertEqual(report.return_code, 123)
-            report.done(Path("f4"), cercis.Changed.NO)
+            report.done(Path("f4"), black.Changed.NO)
             self.assertEqual(len(out_lines), 6)
             self.assertEqual(len(err_lines), 2)
             self.assertEqual(out_lines[-1], "f4 already well formatted, good job.")
@@ -660,19 +592,19 @@ class BlackTestCase(BlackBaseTestCase):
         def err(msg: str, **kwargs: Any) -> None:
             err_lines.append(msg)
 
-        with patch("cercis.output._out", out), patch("cercis.output._err", err):
-            report.done(Path("f1"), cercis.Changed.NO)
+        with patch("black.output._out", out), patch("black.output._err", err):
+            report.done(Path("f1"), black.Changed.NO)
             self.assertEqual(len(out_lines), 0)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(unstyle(str(report)), "1 file left unchanged.")
             self.assertEqual(report.return_code, 0)
-            report.done(Path("f2"), cercis.Changed.YES)
+            report.done(Path("f2"), black.Changed.YES)
             self.assertEqual(len(out_lines), 0)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(
                 unstyle(str(report)), "1 file reformatted, 1 file left unchanged."
             )
-            report.done(Path("f3"), cercis.Changed.CACHED)
+            report.done(Path("f3"), black.Changed.CACHED)
             self.assertEqual(len(out_lines), 0)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(
@@ -692,7 +624,7 @@ class BlackTestCase(BlackBaseTestCase):
                 " reformat.",
             )
             self.assertEqual(report.return_code, 123)
-            report.done(Path("f3"), cercis.Changed.YES)
+            report.done(Path("f3"), black.Changed.YES)
             self.assertEqual(len(out_lines), 0)
             self.assertEqual(len(err_lines), 1)
             self.assertEqual(
@@ -720,7 +652,7 @@ class BlackTestCase(BlackBaseTestCase):
                 " reformat.",
             )
             self.assertEqual(report.return_code, 123)
-            report.done(Path("f4"), cercis.Changed.NO)
+            report.done(Path("f4"), black.Changed.NO)
             self.assertEqual(len(out_lines), 0)
             self.assertEqual(len(err_lines), 2)
             self.assertEqual(
@@ -744,7 +676,7 @@ class BlackTestCase(BlackBaseTestCase):
             )
 
     def test_report_normal(self) -> None:
-        report = cercis.Report()
+        report = black.Report()
         out_lines = []
         err_lines = []
 
@@ -754,20 +686,20 @@ class BlackTestCase(BlackBaseTestCase):
         def err(msg: str, **kwargs: Any) -> None:
             err_lines.append(msg)
 
-        with patch("cercis.output._out", out), patch("cercis.output._err", err):
-            report.done(Path("f1"), cercis.Changed.NO)
+        with patch("black.output._out", out), patch("black.output._err", err):
+            report.done(Path("f1"), black.Changed.NO)
             self.assertEqual(len(out_lines), 0)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(unstyle(str(report)), "1 file left unchanged.")
             self.assertEqual(report.return_code, 0)
-            report.done(Path("f2"), cercis.Changed.YES)
+            report.done(Path("f2"), black.Changed.YES)
             self.assertEqual(len(out_lines), 1)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(out_lines[-1], "reformatted f2")
             self.assertEqual(
                 unstyle(str(report)), "1 file reformatted, 1 file left unchanged."
             )
-            report.done(Path("f3"), cercis.Changed.CACHED)
+            report.done(Path("f3"), black.Changed.CACHED)
             self.assertEqual(len(out_lines), 1)
             self.assertEqual(len(err_lines), 0)
             self.assertEqual(out_lines[-1], "reformatted f2")
@@ -788,7 +720,7 @@ class BlackTestCase(BlackBaseTestCase):
                 " reformat.",
             )
             self.assertEqual(report.return_code, 123)
-            report.done(Path("f3"), cercis.Changed.YES)
+            report.done(Path("f3"), black.Changed.YES)
             self.assertEqual(len(out_lines), 2)
             self.assertEqual(len(err_lines), 1)
             self.assertEqual(out_lines[-1], "reformatted f3")
@@ -817,7 +749,7 @@ class BlackTestCase(BlackBaseTestCase):
                 " reformat.",
             )
             self.assertEqual(report.return_code, 123)
-            report.done(Path("f4"), cercis.Changed.NO)
+            report.done(Path("f4"), black.Changed.NO)
             self.assertEqual(len(out_lines), 2)
             self.assertEqual(len(err_lines), 2)
             self.assertEqual(
@@ -841,20 +773,20 @@ class BlackTestCase(BlackBaseTestCase):
             )
 
     def test_lib2to3_parse(self) -> None:
-        with self.assertRaises(cercis.InvalidInput):
-            cercis.lib2to3_parse("invalid syntax")
+        with self.assertRaises(black.InvalidInput):
+            black.lib2to3_parse("invalid syntax")
 
         straddling = "x + y"
-        cercis.lib2to3_parse(straddling)
-        cercis.lib2to3_parse(straddling, {TargetVersion.PY36})
+        black.lib2to3_parse(straddling)
+        black.lib2to3_parse(straddling, {TargetVersion.PY36})
 
         py2_only = "print x"
-        with self.assertRaises(cercis.InvalidInput):
-            cercis.lib2to3_parse(py2_only, {TargetVersion.PY36})
+        with self.assertRaises(black.InvalidInput):
+            black.lib2to3_parse(py2_only, {TargetVersion.PY36})
 
         py3_only = "exec(x, end=y)"
-        cercis.lib2to3_parse(py3_only)
-        cercis.lib2to3_parse(py3_only, {TargetVersion.PY36})
+        black.lib2to3_parse(py3_only)
+        black.lib2to3_parse(py3_only, {TargetVersion.PY36})
 
     def test_get_features_used_decorator(self) -> None:
         # Test the feature detection of new decorator syntax
@@ -864,11 +796,11 @@ class BlackTestCase(BlackBaseTestCase):
         simples, relaxed = read_data("miscellaneous", "decorators")
         # skip explanation comments at the top of the file
         for simple_test in simples.split("##")[1:]:
-            node = cercis.lib2to3_parse(simple_test)
+            node = black.lib2to3_parse(simple_test)
             decorator = str(node.children[0].children[0]).strip()
             self.assertNotIn(
                 Feature.RELAXED_DECORATORS,
-                cercis.get_features_used(node),
+                black.get_features_used(node),
                 msg=(
                     f"decorator '{decorator}' follows python<=3.8 syntax"
                     "but is detected as 3.9+"
@@ -877,11 +809,11 @@ class BlackTestCase(BlackBaseTestCase):
             )
         # skip the '# output' comment at the top of the output part
         for relaxed_test in relaxed.split("##")[1:]:
-            node = cercis.lib2to3_parse(relaxed_test)
+            node = black.lib2to3_parse(relaxed_test)
             decorator = str(node.children[0].children[0]).strip()
             self.assertIn(
                 Feature.RELAXED_DECORATORS,
-                cercis.get_features_used(node),
+                black.get_features_used(node),
                 msg=(
                     f"decorator '{decorator}' uses python3.9+ syntax"
                     "but is detected as python<=3.8"
@@ -939,6 +871,9 @@ class BlackTestCase(BlackBaseTestCase):
         self.check_features_used("a[*b]", {Feature.VARIADIC_GENERICS})
         self.check_features_used("a[x, *y(), z] = t", {Feature.VARIADIC_GENERICS})
         self.check_features_used("def fn(*args: *T): pass", {Feature.VARIADIC_GENERICS})
+        self.check_features_used(
+            "def fn(*args: *tuple[*T]): pass", {Feature.VARIADIC_GENERICS}
+        )
 
         self.check_features_used("with a: pass", set())
         self.check_features_used("with a, b: pass", set())
@@ -963,9 +898,9 @@ class BlackTestCase(BlackBaseTestCase):
             "with ((a, ((b as c)))): pass", {Feature.PARENTHESIZED_CONTEXT_MANAGERS}
         )
 
-    def check_features_used(self, source: str, expected: Set[Feature]) -> None:
-        node = cercis.lib2to3_parse(source)
-        actual = cercis.get_features_used(node)
+    def check_features_used(self, source: str, expected: set[Feature]) -> None:
+        node = black.lib2to3_parse(source)
+        actual = black.get_features_used(node)
         msg = f"Expected {expected} but got {actual} for {source!r}"
         try:
             self.assertEqual(actual, expected, msg=msg)
@@ -984,44 +919,42 @@ class BlackTestCase(BlackBaseTestCase):
             ("from __future__ import x, y", set()),
         ]:
             with self.subTest(src=src, features=features):
-                node = cercis.lib2to3_parse(src)
-                future_imports = cercis.get_future_imports(node)
+                node = black.lib2to3_parse(src)
+                future_imports = black.get_future_imports(node)
                 self.assertEqual(
-                    cercis.get_features_used(node, future_imports=future_imports),
+                    black.get_features_used(node, future_imports=future_imports),
                     features,
                 )
 
     def test_get_future_imports(self) -> None:
-        node = cercis.lib2to3_parse("\n")
-        self.assertEqual(set(), cercis.get_future_imports(node))
-        node = cercis.lib2to3_parse("from __future__ import cercis\n")
-        self.assertEqual({"cercis"}, cercis.get_future_imports(node))
-        node = cercis.lib2to3_parse("from __future__ import multiple, imports\n")
-        self.assertEqual({"multiple", "imports"}, cercis.get_future_imports(node))
-        node = cercis.lib2to3_parse("from __future__ import (parenthesized, imports)\n")
-        self.assertEqual({"parenthesized", "imports"}, cercis.get_future_imports(node))
-        node = cercis.lib2to3_parse(
+        node = black.lib2to3_parse("\n")
+        self.assertEqual(set(), black.get_future_imports(node))
+        node = black.lib2to3_parse("from __future__ import black\n")
+        self.assertEqual({"black"}, black.get_future_imports(node))
+        node = black.lib2to3_parse("from __future__ import multiple, imports\n")
+        self.assertEqual({"multiple", "imports"}, black.get_future_imports(node))
+        node = black.lib2to3_parse("from __future__ import (parenthesized, imports)\n")
+        self.assertEqual({"parenthesized", "imports"}, black.get_future_imports(node))
+        node = black.lib2to3_parse(
             "from __future__ import multiple\nfrom __future__ import imports\n"
         )
-        self.assertEqual({"multiple", "imports"}, cercis.get_future_imports(node))
-        node = cercis.lib2to3_parse("# comment\nfrom __future__ import cercis\n")
-        self.assertEqual({"cercis"}, cercis.get_future_imports(node))
-        node = cercis.lib2to3_parse('"""docstring"""\nfrom __future__ import cercis\n')
-        self.assertEqual({"cercis"}, cercis.get_future_imports(node))
-        node = cercis.lib2to3_parse(
-            "some(other, code)\nfrom __future__ import cercis\n"
-        )
-        self.assertEqual(set(), cercis.get_future_imports(node))
-        node = cercis.lib2to3_parse("from some.module import cercis\n")
-        self.assertEqual(set(), cercis.get_future_imports(node))
-        node = cercis.lib2to3_parse(
+        self.assertEqual({"multiple", "imports"}, black.get_future_imports(node))
+        node = black.lib2to3_parse("# comment\nfrom __future__ import black\n")
+        self.assertEqual({"black"}, black.get_future_imports(node))
+        node = black.lib2to3_parse('"""docstring"""\nfrom __future__ import black\n')
+        self.assertEqual({"black"}, black.get_future_imports(node))
+        node = black.lib2to3_parse("some(other, code)\nfrom __future__ import black\n")
+        self.assertEqual(set(), black.get_future_imports(node))
+        node = black.lib2to3_parse("from some.module import black\n")
+        self.assertEqual(set(), black.get_future_imports(node))
+        node = black.lib2to3_parse(
             "from __future__ import unicode_literals as _unicode_literals"
         )
-        self.assertEqual({"unicode_literals"}, cercis.get_future_imports(node))
-        node = cercis.lib2to3_parse(
+        self.assertEqual({"unicode_literals"}, black.get_future_imports(node))
+        node = black.lib2to3_parse(
             "from __future__ import unicode_literals as _lol, print"
         )
-        self.assertEqual({"unicode_literals", "print"}, cercis.get_future_imports(node))
+        self.assertEqual({"unicode_literals", "print"}, black.get_future_imports(node))
 
     @pytest.mark.incompatible_with_mypyc
     def test_debug_visitor(self) -> None:
@@ -1036,12 +969,12 @@ class BlackTestCase(BlackBaseTestCase):
         def err(msg: str, **kwargs: Any) -> None:
             err_lines.append(msg)
 
-        with patch("cercis.debug.out", out):
+        with patch("black.debug.out", out):
             DebugVisitor.show(source)
         actual = "\n".join(out_lines) + "\n"
         log_name = ""
         if expected != actual:
-            log_name = cercis.dump_to_file(*out_lines)
+            log_name = black.dump_to_file(*out_lines)
         self.assertEqual(
             expected,
             actual,
@@ -1051,41 +984,38 @@ class BlackTestCase(BlackBaseTestCase):
     def test_format_file_contents(self) -> None:
         mode = DEFAULT_MODE
         empty = ""
-        with self.assertRaises(cercis.NothingChanged):
-            cercis.format_file_contents(empty, mode=mode, fast=False)
+        with self.assertRaises(black.NothingChanged):
+            black.format_file_contents(empty, mode=mode, fast=False)
         just_nl = "\n"
-        with self.assertRaises(cercis.NothingChanged):
-            cercis.format_file_contents(just_nl, mode=mode, fast=False)
+        with self.assertRaises(black.NothingChanged):
+            black.format_file_contents(just_nl, mode=mode, fast=False)
         same = "j = [1, 2, 3]\n"
-        with self.assertRaises(cercis.NothingChanged):
-            cercis.format_file_contents(same, mode=mode, fast=False)
+        with self.assertRaises(black.NothingChanged):
+            black.format_file_contents(same, mode=mode, fast=False)
         different = "j = [1,2,3]"
         expected = same
-        actual = cercis.format_file_contents(different, mode=mode, fast=False)
+        actual = black.format_file_contents(different, mode=mode, fast=False)
         self.assertEqual(expected, actual)
         invalid = "return if you can"
-        with self.assertRaises(cercis.InvalidInput) as e:
-            cercis.format_file_contents(invalid, mode=mode, fast=False)
+        with self.assertRaises(black.InvalidInput) as e:
+            black.format_file_contents(invalid, mode=mode, fast=False)
         self.assertEqual(str(e.exception), "Cannot parse: 1:7: return if you can")
 
-        mode = cercis.Mode(preview=True)
         just_crlf = "\r\n"
-        with self.assertRaises(cercis.NothingChanged):
-            cercis.format_file_contents(just_crlf, mode=mode, fast=False)
+        with self.assertRaises(black.NothingChanged):
+            black.format_file_contents(just_crlf, mode=mode, fast=False)
         just_whitespace_nl = "\n\t\n \n\t \n \t\n\n"
-        actual = cercis.format_file_contents(just_whitespace_nl, mode=mode, fast=False)
+        actual = black.format_file_contents(just_whitespace_nl, mode=mode, fast=False)
         self.assertEqual("\n", actual)
         just_whitespace_crlf = "\r\n\t\r\n \r\n\t \r\n \t\r\n\r\n"
-        actual = cercis.format_file_contents(
-            just_whitespace_crlf, mode=mode, fast=False
-        )
+        actual = black.format_file_contents(just_whitespace_crlf, mode=mode, fast=False)
         self.assertEqual("\r\n", actual)
 
     def test_endmarker(self) -> None:
-        n = cercis.lib2to3_parse("\n")
-        self.assertEqual(n.type, cercis.syms.file_input)
+        n = black.lib2to3_parse("\n")
+        self.assertEqual(n.type, black.syms.file_input)
         self.assertEqual(len(n.children), 1)
-        self.assertEqual(n.children[0].type, cercis.token.ENDMARKER)
+        self.assertEqual(n.children[0].type, black.token.ENDMARKER)
 
     @patch("tests.conftest.PRINT_FULL_TREE", True)
     @patch("tests.conftest.PRINT_TREE_DIFF", False)
@@ -1100,7 +1030,7 @@ class BlackTestCase(BlackBaseTestCase):
         def err(msg: str, **kwargs: Any) -> None:
             err_lines.append(msg)
 
-        with patch("cercis.output._out", out), patch("cercis.output._err", err):
+        with patch("black.output._out", out), patch("black.output._err", err):
             with self.assertRaises(AssertionError):
                 self.assertFormatEqual("j = [1, 2, 3]", "j = [1, 2, 3,]")
 
@@ -1122,7 +1052,7 @@ class BlackTestCase(BlackBaseTestCase):
         def err(msg: str, **kwargs: Any) -> None:
             err_lines.append(msg)
 
-        with patch("cercis.output._out", out), patch("cercis.output._err", err):
+        with patch("black.output._out", out), patch("black.output._err", err):
             with self.assertRaises(AssertionError):
                 self.assertFormatEqual("j = [1, 2, 3]\n", "j = [1, 2, 3,]\n")
 
@@ -1145,20 +1075,15 @@ class BlackTestCase(BlackBaseTestCase):
 
     @event_loop()
     def test_check_diff_use_together(self) -> None:
-        sq = "--single-quote=False"
-        ll = "--line-length=88"
         with cache_dir():
             # Files which will be reformatted.
             src1 = get_case_path("miscellaneous", "string_quotes")
-            self.invokeBlack([str(src1), "--diff", "--check", sq, ll], exit_code=1)
+            self.invokeBlack([str(src1), "--diff", "--check"], exit_code=1)
             # Files which will not be reformatted.
             src2 = get_case_path("cases", "composition")
-            self.invokeBlack([str(src2), "--diff", "--check", sq, ll])
+            self.invokeBlack([str(src2), "--diff", "--check"])
             # Multi file command.
-            self.invokeBlack(
-                [str(src1), str(src2), "--diff", "--check", sq, ll],
-                exit_code=1,
-            )
+            self.invokeBlack([str(src1), str(src2), "--diff", "--check"], exit_code=1)
 
     def test_no_src_fails(self) -> None:
         with cache_dir():
@@ -1186,13 +1111,13 @@ class BlackTestCase(BlackBaseTestCase):
             self.invokeBlack([str(path), "--pyi"])
             actual = path.read_text(encoding="utf-8")
             # verify cache with --pyi is separate
-            pyi_cache = cercis.Cache.read(pyi_mode)
+            pyi_cache = black.Cache.read(pyi_mode)
             assert not pyi_cache.is_changed(path)
-            normal_cache = cercis.Cache.read(DEFAULT_MODE)
+            normal_cache = black.Cache.read(DEFAULT_MODE)
             assert normal_cache.is_changed(path)
         self.assertFormatEqual(expected, actual)
-        cercis.assert_equivalent(contents, actual)
-        cercis.assert_stable(contents, actual, pyi_mode)
+        black.assert_equivalent(contents, actual)
+        black.assert_stable(contents, actual, pyi_mode)
 
     @event_loop()
     def test_multi_file_force_pyi(self) -> None:
@@ -1211,8 +1136,8 @@ class BlackTestCase(BlackBaseTestCase):
                 actual = path.read_text(encoding="utf-8")
                 self.assertEqual(actual, expected)
             # verify cache with --pyi is separate
-            pyi_cache = cercis.Cache.read(pyi_mode)
-            normal_cache = cercis.Cache.read(reg_mode)
+            pyi_cache = black.Cache.read(pyi_mode)
+            normal_cache = black.Cache.read(reg_mode)
             for path in paths:
                 assert not pyi_cache.is_changed(path)
                 assert normal_cache.is_changed(path)
@@ -1220,7 +1145,7 @@ class BlackTestCase(BlackBaseTestCase):
     def test_pipe_force_pyi(self) -> None:
         source, expected = read_data("miscellaneous", "force_pyi")
         result = CliRunner().invoke(
-            cercis.main, ["-", "-q", "--pyi"], input=BytesIO(source.encode("utf-8"))
+            black.main, ["-", "-q", "--pyi"], input=BytesIO(source.encode("utf-8"))
         )
         self.assertEqual(result.exit_code, 0)
         actual = result.output
@@ -1236,9 +1161,9 @@ class BlackTestCase(BlackBaseTestCase):
             self.invokeBlack([str(path), *PY36_ARGS])
             actual = path.read_text(encoding="utf-8")
             # verify cache with --target-version is separate
-            py36_cache = cercis.Cache.read(py36_mode)
+            py36_cache = black.Cache.read(py36_mode)
             assert not py36_cache.is_changed(path)
-            normal_cache = cercis.Cache.read(reg_mode)
+            normal_cache = black.Cache.read(reg_mode)
             assert normal_cache.is_changed(path)
         self.assertEqual(actual, expected)
 
@@ -1259,8 +1184,8 @@ class BlackTestCase(BlackBaseTestCase):
                 actual = path.read_text(encoding="utf-8")
                 self.assertEqual(actual, expected)
             # verify cache with --target-version is separate
-            pyi_cache = cercis.Cache.read(py36_mode)
-            normal_cache = cercis.Cache.read(reg_mode)
+            pyi_cache = black.Cache.read(py36_mode)
+            normal_cache = black.Cache.read(reg_mode)
             for path in paths:
                 assert not pyi_cache.is_changed(path)
                 assert normal_cache.is_changed(path)
@@ -1268,7 +1193,7 @@ class BlackTestCase(BlackBaseTestCase):
     def test_pipe_force_py36(self) -> None:
         source, expected = read_data("miscellaneous", "force_py36")
         result = CliRunner().invoke(
-            cercis.main,
+            black.main,
             ["-", "-q", "--target-version=py36"],
             input=BytesIO(source.encode("utf-8")),
         )
@@ -1279,123 +1204,120 @@ class BlackTestCase(BlackBaseTestCase):
     @pytest.mark.incompatible_with_mypyc
     def test_reformat_one_with_stdin(self) -> None:
         with patch(
-            "cercis.format_stdin_to_stdout",
-            return_value=lambda *args, **kwargs: cercis.Changed.YES,
+            "black.format_stdin_to_stdout",
+            return_value=lambda *args, **kwargs: black.Changed.YES,
         ) as fsts:
             report = MagicMock()
             path = Path("-")
-            cercis.reformat_one(
+            black.reformat_one(
                 path,
                 fast=True,
-                write_back=cercis.WriteBack.YES,
+                write_back=black.WriteBack.YES,
                 mode=DEFAULT_MODE,
                 report=report,
             )
             fsts.assert_called_once()
-            report.done.assert_called_with(path, cercis.Changed.YES)
+            report.done.assert_called_with(path, black.Changed.YES)
 
     @pytest.mark.incompatible_with_mypyc
     def test_reformat_one_with_stdin_filename(self) -> None:
         with patch(
-            "cercis.format_stdin_to_stdout",
-            return_value=lambda *args, **kwargs: cercis.Changed.YES,
+            "black.format_stdin_to_stdout",
+            return_value=lambda *args, **kwargs: black.Changed.YES,
         ) as fsts:
             report = MagicMock()
             p = "foo.py"
             path = Path(f"__BLACK_STDIN_FILENAME__{p}")
             expected = Path(p)
-            cercis.reformat_one(
+            black.reformat_one(
                 path,
                 fast=True,
-                write_back=cercis.WriteBack.YES,
+                write_back=black.WriteBack.YES,
                 mode=DEFAULT_MODE,
                 report=report,
             )
             fsts.assert_called_once_with(
-                fast=True,
-                write_back=cercis.WriteBack.YES,
-                mode=DEFAULT_MODE,
-                lines=(),
+                fast=True, write_back=black.WriteBack.YES, mode=DEFAULT_MODE, lines=()
             )
             # __BLACK_STDIN_FILENAME__ should have been stripped
-            report.done.assert_called_with(expected, cercis.Changed.YES)
+            report.done.assert_called_with(expected, black.Changed.YES)
 
     @pytest.mark.incompatible_with_mypyc
     def test_reformat_one_with_stdin_filename_pyi(self) -> None:
         with patch(
-            "cercis.format_stdin_to_stdout",
-            return_value=lambda *args, **kwargs: cercis.Changed.YES,
+            "black.format_stdin_to_stdout",
+            return_value=lambda *args, **kwargs: black.Changed.YES,
         ) as fsts:
             report = MagicMock()
             p = "foo.pyi"
             path = Path(f"__BLACK_STDIN_FILENAME__{p}")
             expected = Path(p)
-            cercis.reformat_one(
+            black.reformat_one(
                 path,
                 fast=True,
-                write_back=cercis.WriteBack.YES,
+                write_back=black.WriteBack.YES,
                 mode=DEFAULT_MODE,
                 report=report,
             )
             fsts.assert_called_once_with(
                 fast=True,
-                write_back=cercis.WriteBack.YES,
+                write_back=black.WriteBack.YES,
                 mode=replace(DEFAULT_MODE, is_pyi=True),
                 lines=(),
             )
             # __BLACK_STDIN_FILENAME__ should have been stripped
-            report.done.assert_called_with(expected, cercis.Changed.YES)
+            report.done.assert_called_with(expected, black.Changed.YES)
 
     @pytest.mark.incompatible_with_mypyc
     def test_reformat_one_with_stdin_filename_ipynb(self) -> None:
         with patch(
-            "cercis.format_stdin_to_stdout",
-            return_value=lambda *args, **kwargs: cercis.Changed.YES,
+            "black.format_stdin_to_stdout",
+            return_value=lambda *args, **kwargs: black.Changed.YES,
         ) as fsts:
             report = MagicMock()
             p = "foo.ipynb"
             path = Path(f"__BLACK_STDIN_FILENAME__{p}")
             expected = Path(p)
-            cercis.reformat_one(
+            black.reformat_one(
                 path,
                 fast=True,
-                write_back=cercis.WriteBack.YES,
+                write_back=black.WriteBack.YES,
                 mode=DEFAULT_MODE,
                 report=report,
             )
             fsts.assert_called_once_with(
                 fast=True,
-                write_back=cercis.WriteBack.YES,
+                write_back=black.WriteBack.YES,
                 mode=replace(DEFAULT_MODE, is_ipynb=True),
                 lines=(),
             )
             # __BLACK_STDIN_FILENAME__ should have been stripped
-            report.done.assert_called_with(expected, cercis.Changed.YES)
+            report.done.assert_called_with(expected, black.Changed.YES)
 
     @pytest.mark.incompatible_with_mypyc
     def test_reformat_one_with_stdin_and_existing_path(self) -> None:
         with patch(
-            "cercis.format_stdin_to_stdout",
-            return_value=lambda *args, **kwargs: cercis.Changed.YES,
+            "black.format_stdin_to_stdout",
+            return_value=lambda *args, **kwargs: black.Changed.YES,
         ) as fsts:
             report = MagicMock()
-            # Even with an existing file, since we are forcing stdin, cercis
+            # Even with an existing file, since we are forcing stdin, black
             # should output to stdout and not modify the file inplace
             p = THIS_DIR / "data" / "cases" / "collections.py"
             # Make sure is_file actually returns True
             self.assertTrue(p.is_file())
             path = Path(f"__BLACK_STDIN_FILENAME__{p}")
             expected = Path(p)
-            cercis.reformat_one(
+            black.reformat_one(
                 path,
                 fast=True,
-                write_back=cercis.WriteBack.YES,
+                write_back=black.WriteBack.YES,
                 mode=DEFAULT_MODE,
                 report=report,
             )
             fsts.assert_called_once()
             # __BLACK_STDIN_FILENAME__ should have been stripped
-            report.done.assert_called_with(expected, cercis.Changed.YES)
+            report.done.assert_called_with(expected, black.Changed.YES)
 
     def test_reformat_one_with_stdin_empty(self) -> None:
         cases = [
@@ -1408,9 +1330,11 @@ class BlackTestCase(BlackBaseTestCase):
         ]
 
         def _new_wrapper(
-                output: io.StringIO, io_TextIOWrapper: Type[io.TextIOWrapper]
-        ) -> Callable[[Any, Any], io.TextIOWrapper]:
-            def get_output(*args: Any, **kwargs: Any) -> io.TextIOWrapper:
+            output: io.StringIO, io_TextIOWrapper: type[io.TextIOWrapper]
+        ) -> Callable[[Any, Any], Union[io.StringIO, io.TextIOWrapper]]:
+            def get_output(
+                *args: Any, **kwargs: Any
+            ) -> Union[io.StringIO, io.TextIOWrapper]:
                 if args == (sys.stdout.buffer,):
                     # It's `format_stdin_to_stdout()` calling `io.TextIOWrapper()`,
                     # return our mock object.
@@ -1422,37 +1346,37 @@ class BlackTestCase(BlackBaseTestCase):
 
             return get_output
 
-        mode = cercis.Mode(preview=True)
         for content, expected in cases:
             output = io.StringIO()
             io_TextIOWrapper = io.TextIOWrapper
 
             with patch("io.TextIOWrapper", _new_wrapper(output, io_TextIOWrapper)):
                 try:
-                    cercis.format_stdin_to_stdout(
+                    black.format_stdin_to_stdout(
                         fast=True,
                         content=content,
-                        write_back=cercis.WriteBack.YES,
-                        mode=mode,
+                        write_back=black.WriteBack.YES,
+                        mode=DEFAULT_MODE,
                     )
                 except io.UnsupportedOperation:
                     pass  # StringIO does not support detach
                 assert output.getvalue() == expected
 
-        # An empty string is the only test case for `preview=False`
-        output = io.StringIO()
-        io_TextIOWrapper = io.TextIOWrapper
-        with patch("io.TextIOWrapper", _new_wrapper(output, io_TextIOWrapper)):
-            try:
-                cercis.format_stdin_to_stdout(
-                    fast=True,
-                    content="",
-                    write_back=cercis.WriteBack.YES,
-                    mode=DEFAULT_MODE,
-                )
-            except io.UnsupportedOperation:
-                pass  # StringIO does not support detach
-            assert output.getvalue() == ""
+    def test_cli_unstable(self) -> None:
+        self.invokeBlack(["--unstable", "-c", "0"], exit_code=0)
+        self.invokeBlack(["--preview", "-c", "0"], exit_code=0)
+        # Must also pass --preview
+        self.invokeBlack(
+            ["--enable-unstable-feature", "string_processing", "-c", "0"], exit_code=1
+        )
+        self.invokeBlack(
+            ["--preview", "--enable-unstable-feature", "string_processing", "-c", "0"],
+            exit_code=0,
+        )
+        self.invokeBlack(
+            ["--unstable", "--enable-unstable-feature", "string_processing", "-c", "0"],
+            exit_code=0,
+        )
 
     def test_invalid_cli_regex(self) -> None:
         for option in ["--include", "--exclude", "--extend-exclude", "--force-exclude"]:
@@ -1460,33 +1384,28 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_required_version_matches_version(self) -> None:
         self.invokeBlack(
-            ["--required-version", cercis.__version__, "-c", "0"],
+            ["--required-version", black.__version__, "-c", "0"],
             exit_code=0,
             ignore_config=True,
         )
 
     def test_required_version_matches_partial_version(self) -> None:
         self.invokeBlack(
-            ["--required-version", cercis.__version__.split(".")[0], "-c", "0"],
+            ["--required-version", black.__version__.split(".")[0], "-c", "0"],
             exit_code=0,
             ignore_config=True,
         )
 
     def test_required_version_does_not_match_on_minor_version(self) -> None:
         self.invokeBlack(
-            [
-                "--required-version",
-                cercis.__version__.split(".")[0] + ".999",
-                "-c",
-                "0",
-            ],
+            ["--required-version", black.__version__.split(".")[0] + ".999", "-c", "0"],
             exit_code=1,
             ignore_config=True,
         )
 
     def test_required_version_does_not_match_version(self) -> None:
         result = BlackRunner().invoke(
-            cercis.main,
+            black.main,
             ["--required-version", "20.99b", "-c", "0"],
         )
         self.assertEqual(result.exit_code, 1)
@@ -1498,7 +1417,7 @@ class BlackTestCase(BlackBaseTestCase):
             for nl in ["\n", "\r\n"]:
                 contents = nl.join(["def f(  ):", "    pass"])
                 test_file.write_bytes(contents.encode())
-                ff(test_file, write_back=cercis.WriteBack.YES)
+                ff(test_file, write_back=black.WriteBack.YES)
                 updated_contents: bytes = test_file.read_bytes()
                 self.assertIn(nl.encode(), updated_contents)
                 if nl == "\n":
@@ -1509,7 +1428,7 @@ class BlackTestCase(BlackBaseTestCase):
             contents = nl.join(["def f(  ):", "    pass"])
             runner = BlackRunner()
             result = runner.invoke(
-                cercis.main, ["-", "--fast"], input=BytesIO(contents.encode("utf-8"))
+                black.main, ["-", "--fast"], input=BytesIO(contents.encode("utf-8"))
             )
             self.assertEqual(result.exit_code, 0)
             output = result.stdout_bytes
@@ -1525,12 +1444,8 @@ class BlackTestCase(BlackBaseTestCase):
                 (b"l\nl\r\n ", b"l\nl\n"),
             ):
                 test_file.write_bytes(data)
-                ff(test_file, write_back=cercis.WriteBack.YES)
+                ff(test_file, write_back=black.WriteBack.YES)
                 self.assertEqual(test_file.read_bytes(), expected)
-
-    def test_assert_equivalent_different_asts(self) -> None:
-        with self.assertRaises(AssertionError):
-            cercis.assert_equivalent("{}", "None")
 
     def test_root_logger_not_used_directly(self) -> None:
         def fail(*args: Any, **kwargs: Any) -> None:
@@ -1548,9 +1463,9 @@ class BlackTestCase(BlackBaseTestCase):
             ff(THIS_DIR / "util.py")
 
     def test_invalid_config_return_code(self) -> None:
-        tmp_file = Path(cercis.dump_to_file())
+        tmp_file = Path(black.dump_to_file())
         try:
-            tmp_config = Path(cercis.dump_to_file())
+            tmp_config = Path(black.dump_to_file())
             tmp_config.unlink()
             args = ["--config", str(tmp_config), str(tmp_file)]
             self.invokeBlack(args, exit_code=2, ignore_config=False)
@@ -1559,7 +1474,7 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_parse_pyproject_toml(self) -> None:
         test_toml_file = THIS_DIR / "test.toml"
-        config = cercis.parse_pyproject_toml(str(test_toml_file))
+        config = black.parse_pyproject_toml(str(test_toml_file))
         self.assertEqual(config["verbose"], 1)
         self.assertEqual(config["check"], "no")
         self.assertEqual(config["diff"], "y")
@@ -1570,6 +1485,22 @@ class BlackTestCase(BlackBaseTestCase):
         self.assertEqual(config["exclude"], r"\.pyi?$")
         self.assertEqual(config["include"], r"\.py?$")
 
+    def test_spellcheck_pyproject_toml(self) -> None:
+        test_toml_file = THIS_DIR / "data" / "incorrect_spelling.toml"
+        result = BlackRunner().invoke(
+            black.main,
+            [
+                "--code=print('hello world')",
+                "--verbose",
+                f"--config={str(test_toml_file)}",
+            ],
+        )
+
+        assert (
+            r"Invalid config keys detected: 'ine_length', 'target_ersion' (in"
+            rf" {test_toml_file})" in result.stderr
+        )
+
     def test_parse_pyproject_toml_project_metadata(self) -> None:
         for test_toml, expected in [
             ("only_black_pyproject.toml", ["py310"]),
@@ -1578,23 +1509,44 @@ class BlackTestCase(BlackBaseTestCase):
             ("both_pyproject.toml", ["py310"]),
         ]:
             test_toml_file = THIS_DIR / "data" / "project_metadata" / test_toml
-            config = cercis.parse_pyproject_toml(str(test_toml_file))
+            config = black.parse_pyproject_toml(str(test_toml_file))
             self.assertEqual(config.get("target_version"), expected)
 
     def test_infer_target_version(self) -> None:
         for version, expected in [
             ("3.6", [TargetVersion.PY36]),
             ("3.11.0rc1", [TargetVersion.PY311]),
-            (">=3.10", [TargetVersion.PY310, TargetVersion.PY311, TargetVersion.PY312]),
+            (
+                ">=3.10",
+                [
+                    TargetVersion.PY310,
+                    TargetVersion.PY311,
+                    TargetVersion.PY312,
+                    TargetVersion.PY313,
+                    TargetVersion.PY314,
+                ],
+            ),
             (
                 ">=3.10.6",
-                [TargetVersion.PY310, TargetVersion.PY311, TargetVersion.PY312],
+                [
+                    TargetVersion.PY310,
+                    TargetVersion.PY311,
+                    TargetVersion.PY312,
+                    TargetVersion.PY313,
+                    TargetVersion.PY314,
+                ],
             ),
             ("<3.6", [TargetVersion.PY33, TargetVersion.PY34, TargetVersion.PY35]),
             (">3.7,<3.10", [TargetVersion.PY38, TargetVersion.PY39]),
             (
                 ">3.7,!=3.8,!=3.9",
-                [TargetVersion.PY310, TargetVersion.PY311, TargetVersion.PY312],
+                [
+                    TargetVersion.PY310,
+                    TargetVersion.PY311,
+                    TargetVersion.PY312,
+                    TargetVersion.PY313,
+                    TargetVersion.PY314,
+                ],
             ),
             (
                 "> 3.9.4, != 3.10.3",
@@ -1603,6 +1555,8 @@ class BlackTestCase(BlackBaseTestCase):
                     TargetVersion.PY310,
                     TargetVersion.PY311,
                     TargetVersion.PY312,
+                    TargetVersion.PY313,
+                    TargetVersion.PY314,
                 ],
             ),
             (
@@ -1616,6 +1570,8 @@ class BlackTestCase(BlackBaseTestCase):
                     TargetVersion.PY310,
                     TargetVersion.PY311,
                     TargetVersion.PY312,
+                    TargetVersion.PY313,
+                    TargetVersion.PY314,
                 ],
             ),
             (
@@ -1631,6 +1587,8 @@ class BlackTestCase(BlackBaseTestCase):
                     TargetVersion.PY310,
                     TargetVersion.PY311,
                     TargetVersion.PY312,
+                    TargetVersion.PY313,
+                    TargetVersion.PY314,
                 ],
             ),
             ("==3.8.*", [TargetVersion.PY38]),
@@ -1646,13 +1604,13 @@ class BlackTestCase(BlackBaseTestCase):
             (">3.10,<3.11", None),
         ]:
             test_toml = {"project": {"requires-python": version}}
-            result = cercis.files.infer_target_version(test_toml)
+            result = black.files.infer_target_version(test_toml)
             self.assertEqual(result, expected)
 
     def test_read_pyproject_toml(self) -> None:
         test_toml_file = THIS_DIR / "test.toml"
         fake_ctx = FakeContext()
-        cercis.read_pyproject_toml(fake_ctx, FakeParameter(), str(test_toml_file))
+        black.read_pyproject_toml(fake_ctx, FakeParameter(), str(test_toml_file))
         config = fake_ctx.default_map
         self.assertEqual(config["verbose"], "1")
         self.assertEqual(config["check"], "no")
@@ -1684,7 +1642,7 @@ class BlackTestCase(BlackBaseTestCase):
             fake_ctx.params["stdin_filename"] = str(src_python)
 
             with change_directory(root):
-                cercis.read_pyproject_toml(fake_ctx, FakeParameter(), None)
+                black.read_pyproject_toml(fake_ctx, FakeParameter(), None)
 
             config = fake_ctx.default_map
             self.assertEqual(config["verbose"], "1")
@@ -1707,39 +1665,53 @@ class BlackTestCase(BlackBaseTestCase):
             src_dir.mkdir()
 
             root_pyproject = root / "pyproject.toml"
-            root_pyproject.touch()
+            root_pyproject.write_text("[tool.black]", encoding="utf-8")
             src_pyproject = src_dir / "pyproject.toml"
-            src_pyproject.touch()
+            src_pyproject.write_text("[tool.black]", encoding="utf-8")
             src_python = src_dir / "foo.py"
             src_python.touch()
 
             self.assertEqual(
-                cercis.find_project_root((src_dir, test_dir)),
+                black.find_project_root((src_dir, test_dir)),
                 (root.resolve(), "pyproject.toml"),
             )
             self.assertEqual(
-                cercis.find_project_root((src_dir,)),
+                black.find_project_root((src_dir,)),
                 (src_dir.resolve(), "pyproject.toml"),
             )
             self.assertEqual(
-                cercis.find_project_root((src_python,)),
+                black.find_project_root((src_python,)),
                 (src_dir.resolve(), "pyproject.toml"),
             )
 
             with change_directory(test_dir):
                 self.assertEqual(
-                    cercis.find_project_root(("-",), stdin_filename="../src/a.py"),
+                    black.find_project_root(("-",), stdin_filename="../src/a.py"),
                     (src_dir.resolve(), "pyproject.toml"),
                 )
 
+            src_sub = src_dir / "sub"
+            src_sub.mkdir()
+
+            src_sub_pyproject = src_sub / "pyproject.toml"
+            src_sub_pyproject.touch()  # empty
+
+            src_sub_python = src_sub / "bar.py"
+
+            # we skip src_sub_pyproject since it is missing the [tool.black] section
+            self.assertEqual(
+                black.find_project_root((src_sub_python,)),
+                (src_dir.resolve(), "pyproject.toml"),
+            )
+
     @patch(
-        "cercis.files.find_user_pyproject_toml",
+        "black.files.find_user_pyproject_toml",
     )
     def test_find_pyproject_toml(self, find_user_pyproject_toml: MagicMock) -> None:
         find_user_pyproject_toml.side_effect = RuntimeError()
 
         with redirect_stderr(io.StringIO()) as stderr:
-            result = cercis.files.find_pyproject_toml(
+            result = black.files.find_pyproject_toml(
                 path_search_start=(str(Path.cwd().root),)
             )
 
@@ -1748,8 +1720,8 @@ class BlackTestCase(BlackBaseTestCase):
         assert "Ignoring user configuration" in err
 
     @patch(
-        "cercis.files.find_user_pyproject_toml",
-        cercis.files.find_user_pyproject_toml.__wrapped__,
+        "black.files.find_user_pyproject_toml",
+        black.files.find_user_pyproject_toml.__wrapped__,
     )
     def test_find_user_pyproject_toml_linux(self) -> None:
         if system() == "Windows":
@@ -1757,27 +1729,27 @@ class BlackTestCase(BlackBaseTestCase):
 
         # Test if XDG_CONFIG_HOME is checked
         with TemporaryDirectory() as workspace:
-            tmp_user_config = Path(workspace) / "cercis"
+            tmp_user_config = Path(workspace) / "black"
             with patch.dict("os.environ", {"XDG_CONFIG_HOME": workspace}):
                 self.assertEqual(
-                    cercis.files.find_user_pyproject_toml(), tmp_user_config.resolve()
+                    black.files.find_user_pyproject_toml(), tmp_user_config.resolve()
                 )
 
         # Test fallback for XDG_CONFIG_HOME
         with patch.dict("os.environ"):
             os.environ.pop("XDG_CONFIG_HOME", None)
-            fallback_user_config = Path("~/.config").expanduser() / "cercis"
+            fallback_user_config = Path("~/.config").expanduser() / "black"
             self.assertEqual(
-                cercis.files.find_user_pyproject_toml(), fallback_user_config.resolve()
+                black.files.find_user_pyproject_toml(), fallback_user_config.resolve()
             )
 
     def test_find_user_pyproject_toml_windows(self) -> None:
         if system() != "Windows":
             return
 
-        user_config_path = Path.home() / ".cercis"
+        user_config_path = Path.home() / ".black"
         self.assertEqual(
-            cercis.files.find_user_pyproject_toml(), user_config_path.resolve()
+            black.files.find_user_pyproject_toml(), user_config_path.resolve()
         )
 
     def test_bpo_33660_workaround(self) -> None:
@@ -1785,12 +1757,15 @@ class BlackTestCase(BlackBaseTestCase):
             return
 
         # https://bugs.python.org/issue33660
+        # Can be removed when we drop support for Python 3.8.5
         root = Path("/")
         with change_directory(root):
             path = Path("workspace") / "project"
-            report = cercis.Report(verbose=True)
-            normalized_path = cercis.normalize_path_maybe_ignore(path, root, report)
-            self.assertEqual(normalized_path, "workspace/project")
+            report = black.Report(verbose=True)
+            resolves_outside = black.resolves_outside_root_or_cannot_stat(
+                path, root, report
+            )
+            self.assertIs(resolves_outside, False)
 
     def test_normalize_path_ignore_windows_junctions_outside_of_root(self) -> None:
         if system() != "Windows":
@@ -1802,19 +1777,19 @@ class BlackTestCase(BlackBaseTestCase):
             junction_target_outside_of_root = root / ".."
             os.system(f"mklink /J {junction_dir} {junction_target_outside_of_root}")
 
-            report = cercis.Report(verbose=True)
-            normalized_path = cercis.normalize_path_maybe_ignore(
+            report = black.Report(verbose=True)
+            resolves_outside = black.resolves_outside_root_or_cannot_stat(
                 junction_dir, root, report
             )
             # Manually delete for Python < 3.8
             os.system(f"rmdir {junction_dir}")
 
-            self.assertEqual(normalized_path, None)
+            self.assertIs(resolves_outside, True)
 
     def test_newline_comment_interaction(self) -> None:
         source = "class A:\\\r\n# type: ignore\n pass\n"
-        output = cercis.format_str(source, mode=DEFAULT_MODE)
-        cercis.assert_stable(source, output, mode=DEFAULT_MODE)
+        output = black.format_str(source, mode=DEFAULT_MODE)
+        black.assert_stable(source, output, mode=DEFAULT_MODE)
 
     def test_bpo_2142_workaround(self) -> None:
         # https://bugs.python.org/issue2142
@@ -1823,68 +1798,68 @@ class BlackTestCase(BlackBaseTestCase):
         # read_data adds a trailing newline
         source = source.rstrip()
         expected, _ = read_data("miscellaneous", "missing_final_newline.diff")
-        tmp_file = Path(cercis.dump_to_file(source, ensure_final_newline=False))
+        tmp_file = Path(black.dump_to_file(source, ensure_final_newline=False))
         diff_header = re.compile(
             rf"{re.escape(str(tmp_file))}\t\d\d\d\d-\d\d-\d\d "
             r"\d\d:\d\d:\d\d\.\d\d\d\d\d\d\+\d\d:\d\d"
         )
         try:
-            result = BlackRunner().invoke(cercis.main, ["--diff", str(tmp_file)])
+            result = BlackRunner().invoke(black.main, ["--diff", str(tmp_file)])
             self.assertEqual(result.exit_code, 0)
         finally:
             os.unlink(tmp_file)
-        actual = result.output
+        actual = result.stdout
         actual = diff_header.sub(DETERMINISTIC_HEADER, actual)
         self.assertEqual(actual, expected)
 
     @staticmethod
     def compare_results(
-            result: click.testing.Result, expected_value: str, expected_exit_code: int
+        result: click.testing.Result, expected_value: str, expected_exit_code: int
     ) -> None:
         """Helper method to test the value and exit code of a click Result."""
         assert (
-            result.output == expected_value
+            result.stdout == expected_value
         ), "The output did not match the expected value."
         assert result.exit_code == expected_exit_code, "The exit code is incorrect."
 
     def test_code_option(self) -> None:
         """Test the code option with no changes."""
-        code = "print('Hello world')\n"
-        args = ["--code", code, "--single-quote=True"]
-        result = CliRunner().invoke(cercis.main, args)
+        code = 'print("Hello world")\n'
+        args = ["--code", code]
+        result = CliRunner().invoke(black.main, args)
 
         self.compare_results(result, code, 0)
 
     def test_code_option_changed(self) -> None:
         """Test the code option when changes are required."""
-        code = 'print("hello world")'
-        formatted = cercis.format_str(code, mode=DEFAULT_MODE)
+        code = "print('hello world')"
+        formatted = black.format_str(code, mode=DEFAULT_MODE)
 
-        args = ["--code", code, "--single-quote=True"]
-        result = CliRunner().invoke(cercis.main, args)
+        args = ["--code", code]
+        result = CliRunner().invoke(black.main, args)
 
         self.compare_results(result, formatted, 0)
 
     def test_code_option_check(self) -> None:
         """Test the code option when check is passed."""
         args = ["--check", "--code", 'print("Hello world")\n']
-        result = CliRunner().invoke(cercis.main, args)
+        result = CliRunner().invoke(black.main, args)
         self.compare_results(result, "", 0)
 
     def test_code_option_check_changed(self) -> None:
         """Test the code option when changes are required, and check is passed."""
         args = ["--check", "--code", "print('hello world')"]
-        result = CliRunner().invoke(cercis.main, args)
+        result = CliRunner().invoke(black.main, args)
         self.compare_results(result, "", 1)
 
     def test_code_option_diff(self) -> None:
         """Test the code option when diff is passed."""
-        code = 'print("hello world")'
-        formatted = cercis.format_str(code, mode=DEFAULT_MODE)
+        code = "print('hello world')"
+        formatted = black.format_str(code, mode=DEFAULT_MODE)
         result_diff = diff(code, formatted, "STDIN", "STDOUT")
 
-        args = ["--diff", "--code", code, "--single-quote=True"]
-        result = CliRunner().invoke(cercis.main, args)
+        args = ["--diff", "--code", code]
+        result = CliRunner().invoke(black.main, args)
 
         # Remove time from diff
         output = DIFF_TIME.sub("", result.output)
@@ -1894,14 +1869,14 @@ class BlackTestCase(BlackBaseTestCase):
 
     def test_code_option_color_diff(self) -> None:
         """Test the code option when color and diff are passed."""
-        code = 'print("hello world")'
-        formatted = cercis.format_str(code, mode=DEFAULT_MODE)
+        code = "print('hello world')"
+        formatted = black.format_str(code, mode=DEFAULT_MODE)
 
         result_diff = diff(code, formatted, "STDIN", "STDOUT")
         result_diff = color_diff(result_diff)
 
-        args = ["--diff", "--color", "--code", code, "--single-quote=True"]
-        result = CliRunner().invoke(cercis.main, args)
+        args = ["--diff", "--color", "--code", code]
+        result = CliRunner().invoke(black.main, args)
 
         # Remove time from diff
         output = DIFF_TIME.sub("", result.output)
@@ -1912,25 +1887,26 @@ class BlackTestCase(BlackBaseTestCase):
     @pytest.mark.incompatible_with_mypyc
     def test_code_option_safe(self) -> None:
         """Test that the code option throws an error when the sanity checks fail."""
-        # Patch cercis.assert_equivalent to ensure the sanity checks fail
-        with patch.object(cercis, "assert_equivalent", side_effect=AssertionError):
+        # Patch black.assert_equivalent to ensure the sanity checks fail
+        with patch.object(black, "assert_equivalent", side_effect=AssertionError):
             code = 'print("Hello world")'
             error_msg = f"{code}\nerror: cannot format <string>: \n"
 
             args = ["--safe", "--code", code]
-            result = CliRunner().invoke(cercis.main, args)
+            result = CliRunner().invoke(black.main, args)
 
-            self.compare_results(result, error_msg, 123)
+            assert error_msg == result.output
+            assert result.exit_code == 123
 
     def test_code_option_fast(self) -> None:
         """Test that the code option ignores errors when the sanity checks fail."""
-        # Patch cercis.assert_equivalent to ensure the sanity checks fail
-        with patch.object(cercis, "assert_equivalent", side_effect=AssertionError):
-            code = "print('Hello world')"
-            formatted = cercis.format_str(code, mode=DEFAULT_MODE)
+        # Patch black.assert_equivalent to ensure the sanity checks fail
+        with patch.object(black, "assert_equivalent", side_effect=AssertionError):
+            code = 'print("Hello world")'
+            formatted = black.format_str(code, mode=DEFAULT_MODE)
 
-            args = ["--fast", "--code", code, "--single-quote=True"]
-            result = CliRunner().invoke(cercis.main, args)
+            args = ["--fast", "--code", code]
+            result = CliRunner().invoke(black.main, args)
 
             self.compare_results(result, formatted, 0)
 
@@ -1939,11 +1915,11 @@ class BlackTestCase(BlackBaseTestCase):
         """
         Test that the code option finds the pyproject.toml in the current directory.
         """
-        with patch.object(cercis, "parse_pyproject_toml", return_value={}) as parse:
+        with patch.object(black, "parse_pyproject_toml", return_value={}) as parse:
             args = ["--code", "print"]
             # This is the only directory known to contain a pyproject.toml
             with change_directory(PROJECT_ROOT):
-                CliRunner().invoke(cercis.main, args)
+                CliRunner().invoke(black.main, args)
                 pyproject_path = Path(Path.cwd(), "pyproject.toml").resolve()
 
             assert (
@@ -1960,10 +1936,10 @@ class BlackTestCase(BlackBaseTestCase):
         """
         Test that the code option finds the pyproject.toml in the parent directory.
         """
-        with patch.object(cercis, "parse_pyproject_toml", return_value={}) as parse:
+        with patch.object(black, "parse_pyproject_toml", return_value={}) as parse:
             with change_directory(THIS_DIR):
                 args = ["--code", "print"]
-                CliRunner().invoke(cercis.main, args)
+                CliRunner().invoke(black.main, args)
 
                 pyproject_path = Path(Path().cwd().parent, "pyproject.toml").resolve()
                 assert (
@@ -1979,20 +1955,10 @@ class BlackTestCase(BlackBaseTestCase):
         """
         Test that an unexpected EOF SyntaxError is nicely presented.
         """
-        with pytest.raises(cercis.parsing.InvalidInput) as exc_info:
-            cercis.lib2to3_parse("print(", {})
+        with pytest.raises(black.parsing.InvalidInput) as exc_info:
+            black.lib2to3_parse("print(", {})
 
-        exc_info.match("Cannot parse: 2:0: EOF in multi-line statement")
-
-    def test_equivalency_ast_parse_failure_includes_error(self) -> None:
-        with pytest.raises(AssertionError) as err:
-            cercis.assert_equivalent("a«»a  = 1", "a«»a  = 1")
-
-        err.match("--safe")
-        # Unfortunately the SyntaxError message has changed in newer versions so we
-        # can't match it directly.
-        err.match("invalid character")
-        err.match(r"\(<unknown>, line 1\)")
+        exc_info.match("Cannot parse: 1:6: Unexpected EOF in multi-line statement")
 
     def test_line_ranges_with_code_option(self) -> None:
         code = textwrap.dedent("""\
@@ -2000,7 +1966,7 @@ class BlackTestCase(BlackBaseTestCase):
                 print  ( "OK" )
             """)
         args = ["--line-ranges=1-1", "--code", code]
-        result = CliRunner().invoke(cercis.main, args)
+        result = CliRunner().invoke(black.main, args)
 
         expected = textwrap.dedent("""\
             if a == b:
@@ -2015,7 +1981,7 @@ class BlackTestCase(BlackBaseTestCase):
             """)
         runner = BlackRunner()
         result = runner.invoke(
-            cercis.main, ["--line-ranges=1-1", "-"], input=BytesIO(code.encode("utf-8"))
+            black.main, ["--line-ranges=1-1", "-"], input=BytesIO(code.encode("utf-8"))
         )
 
         expected = textwrap.dedent("""\
@@ -2035,7 +2001,7 @@ class BlackTestCase(BlackBaseTestCase):
                 encoding="utf-8",
             )
             args = ["--line-ranges=1-1", str(test_file)]
-            result = CliRunner().invoke(cercis.main, args)
+            result = CliRunner().invoke(black.main, args)
             assert not result.exit_code
 
             formatted = test_file.read_text(encoding="utf-8")
@@ -2052,7 +2018,7 @@ class BlackTestCase(BlackBaseTestCase):
             test2_file = Path(workspace) / "test2.py"
             test2_file.write_text("", encoding="utf-8")
             args = ["--line-ranges=1-1", str(test1_file), str(test2_file)]
-            result = CliRunner().invoke(cercis.main, args)
+            result = CliRunner().invoke(black.main, args)
             assert result.exit_code == 1
             assert "Cannot use --line-ranges to format multiple files" in result.output
 
@@ -2061,14 +2027,14 @@ class BlackTestCase(BlackBaseTestCase):
             test_file = Path(workspace) / "test.ipynb"
             test_file.write_text("{}", encoding="utf-8")
             args = ["--line-ranges=1-1", "--ipynb", str(test_file)]
-            result = CliRunner().invoke(cercis.main, args)
+            result = CliRunner().invoke(black.main, args)
             assert "Cannot use --line-ranges with ipynb files" in result.output
             assert result.exit_code == 1
 
     def test_line_ranges_in_pyproject_toml(self) -> None:
         config = THIS_DIR / "data" / "invalid_line_ranges.toml"
         result = BlackRunner().invoke(
-            cercis.main, ["--code", "print()", "--config", str(config)]
+            black.main, ["--code", "print()", "--config", str(config)]
         )
         assert result.exit_code == 2
         assert result.stderr_bytes is not None
@@ -2076,12 +2042,53 @@ class BlackTestCase(BlackBaseTestCase):
             b"Cannot use line-ranges in the pyproject.toml file." in result.stderr_bytes
         )
 
+    def test_lines_with_leading_tabs_expanded(self) -> None:
+        # See CVE-2024-21503. Mostly test that this completes in a reasonable
+        # time.
+        payload = "\t" * 10_000
+        assert lines_with_leading_tabs_expanded(payload) == [payload]
+
+        tab = " " * 8
+        assert lines_with_leading_tabs_expanded("\tx") == [f"{tab}x"]
+        assert lines_with_leading_tabs_expanded("\t\tx") == [f"{tab}{tab}x"]
+        assert lines_with_leading_tabs_expanded("\tx\n  y") == [f"{tab}x", "  y"]
+
+    def test_carriage_return_edge_cases(self) -> None:
+        # These tests are here instead of in the normal cases because
+        # of git's newline normalization and because it's hard to
+        # get `\r` vs `\r\n` vs `\n` to display properly
+        assert (
+            black.format_str(
+                "try:\\\r# type: ignore\n pass\nfinally:\n pass\n",
+                mode=black.FileMode(),
+            )
+            == "try:  # type: ignore\n    pass\nfinally:\n    pass\n"
+        )
+        assert black.format_str("{\r}", mode=black.FileMode()) == "{}\n"
+        assert black.format_str("pass #\r#\n", mode=black.FileMode()) == "pass  #\n#\n"
+
+        assert black.format_str("x=\\\r\n1", mode=black.FileMode()) == "x = 1\n"
+        assert black.format_str("x=\\\n1", mode=black.FileMode()) == "x = 1\n"
+        assert black.format_str("x=\\\r1", mode=black.FileMode()) == "x = 1\n"
+        assert (
+            black.format_str("class A\\\r\n:...", mode=black.FileMode())
+            == "class A: ...\n"
+        )
+        assert (
+            black.format_str("class A\\\n:...", mode=black.FileMode())
+            == "class A: ...\n"
+        )
+        assert (
+            black.format_str("class A\\\r:...", mode=black.FileMode())
+            == "class A: ...\n"
+        )
+
 
 class TestCaching:
     def test_get_cache_dir(
-            self,
-            tmp_path: Path,
-            monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         # Create multiple cache directories
         workspace1 = tmp_path / "ws1"
@@ -2091,7 +2098,7 @@ class TestCaching:
 
         # Force user_cache_dir to use the temporary directory for easier assertions
         patch_user_cache_dir = patch(
-            target="cercis.cache.user_cache_dir",
+            target="black.cache.user_cache_dir",
             autospec=True,
             return_value=str(workspace1),
         )
@@ -2105,16 +2112,40 @@ class TestCaching:
         monkeypatch.setenv("BLACK_CACHE_DIR", str(workspace2))
         assert get_cache_dir().parent == workspace2
 
+    def test_cache_file_length(self) -> None:
+        cases = [
+            DEFAULT_MODE,
+            # all of the target versions
+            Mode(target_versions=set(TargetVersion)),
+            # all of the features
+            Mode(enabled_features=set(Preview)),
+            # all of the magics
+            Mode(python_cell_magics={f"magic{i}" for i in range(500)}),
+            # all of the things
+            Mode(
+                target_versions=set(TargetVersion),
+                enabled_features=set(Preview),
+                python_cell_magics={f"magic{i}" for i in range(500)},
+            ),
+        ]
+        for case in cases:
+            cache_file = get_cache_file(case)
+            # Some common file systems enforce a maximum path length
+            # of 143 (issue #4174). We can't do anything if the directory
+            # path is too long, but ensure the name of the cache file itself
+            # doesn't get too crazy.
+            assert len(cache_file.name) <= 96
+
     def test_cache_broken_file(self) -> None:
         mode = DEFAULT_MODE
         with cache_dir() as workspace:
             cache_file = get_cache_file(mode)
             cache_file.write_text("this is not a pickle", encoding="utf-8")
-            assert cercis.Cache.read(mode).file_data == {}
+            assert black.Cache.read(mode).file_data == {}
             src = (workspace / "test.py").resolve()
             src.write_text("print('hello')", encoding="utf-8")
             invokeBlack([str(src)])
-            cache = cercis.Cache.read(mode)
+            cache = black.Cache.read(mode)
             assert not cache.is_changed(src)
 
     def test_cache_single_file_already_cached(self) -> None:
@@ -2122,7 +2153,7 @@ class TestCaching:
         with cache_dir() as workspace:
             src = (workspace / "test.py").resolve()
             src.write_text("print('hello')", encoding="utf-8")
-            cache = cercis.Cache.read(mode)
+            cache = black.Cache.read(mode)
             cache.write([src])
             invokeBlack([str(src)])
             assert src.read_text(encoding="utf-8") == "print('hello')"
@@ -2130,19 +2161,20 @@ class TestCaching:
     @event_loop()
     def test_cache_multiple_files(self) -> None:
         mode = DEFAULT_MODE
-        with cache_dir() as workspace, patch(
-            "concurrent.futures.ProcessPoolExecutor", new=ThreadPoolExecutor
+        with (
+            cache_dir() as workspace,
+            patch("concurrent.futures.ProcessPoolExecutor", new=ThreadPoolExecutor),
         ):
             one = (workspace / "one.py").resolve()
             one.write_text("print('hello')", encoding="utf-8")
             two = (workspace / "two.py").resolve()
             two.write_text("print('hello')", encoding="utf-8")
-            cache = cercis.Cache.read(mode)
+            cache = black.Cache.read(mode)
             cache.write([one])
             invokeBlack([str(workspace)])
             assert one.read_text(encoding="utf-8") == "print('hello')"
-            assert two.read_text(encoding="utf-8") == "print('hello')\n"
-            cache = cercis.Cache.read(mode)
+            assert two.read_text(encoding="utf-8") == 'print("hello")\n'
+            cache = black.Cache.read(mode)
             assert not cache.is_changed(one)
             assert not cache.is_changed(two)
 
@@ -2153,9 +2185,10 @@ class TestCaching:
         with cache_dir() as workspace:
             src = (workspace / "test.py").resolve()
             src.write_text("print('hello')", encoding="utf-8")
-            with patch.object(cercis.Cache, "read") as read_cache, patch.object(
-                cercis.Cache, "write"
-            ) as write_cache:
+            with (
+                patch.object(black.Cache, "read") as read_cache,
+                patch.object(black.Cache, "write") as write_cache,
+            ):
                 cmd = [str(src), "--diff"]
                 if color:
                     cmd.append("--color")
@@ -2173,7 +2206,7 @@ class TestCaching:
                 src = (workspace / f"test{tag}.py").resolve()
                 src.write_text("print('hello')", encoding="utf-8")
             with patch(
-                "cercis.concurrency.Manager", wraps=multiprocessing.Manager
+                "black.concurrency.Manager", wraps=multiprocessing.Manager
             ) as mgr:
                 cmd = ["--diff", str(workspace)]
                 if color:
@@ -2187,7 +2220,7 @@ class TestCaching:
         mode = DEFAULT_MODE
         with cache_dir():
             result = CliRunner().invoke(
-                cercis.main, ["-"], input=BytesIO(b"print('hello')")
+                black.main, ["-"], input=BytesIO(b"print('hello')")
             )
             assert not result.exit_code
             cache_file = get_cache_file(mode)
@@ -2196,16 +2229,16 @@ class TestCaching:
     def test_read_cache_no_cachefile(self) -> None:
         mode = DEFAULT_MODE
         with cache_dir():
-            assert cercis.Cache.read(mode).file_data == {}
+            assert black.Cache.read(mode).file_data == {}
 
     def test_write_cache_read_cache(self) -> None:
         mode = DEFAULT_MODE
         with cache_dir() as workspace:
             src = (workspace / "test.py").resolve()
             src.touch()
-            write_cache = cercis.Cache.read(mode)
+            write_cache = black.Cache.read(mode)
             write_cache.write([src])
-            read_cache = cercis.Cache.read(mode)
+            read_cache = black.Cache.read(mode)
             assert not read_cache.is_changed(src)
 
     @pytest.mark.incompatible_with_mypyc
@@ -2218,9 +2251,9 @@ class TestCaching:
             uncached.touch()
             cached.touch()
             cached_but_changed.touch()
-            cache = cercis.Cache.read(DEFAULT_MODE)
+            cache = black.Cache.read(DEFAULT_MODE)
 
-            orig_func = cercis.Cache.get_file_data
+            orig_func = black.Cache.get_file_data
 
             def wrapped_func(path: Path) -> FileData:
                 if path == cached:
@@ -2229,7 +2262,7 @@ class TestCaching:
                     return FileData(0.0, 0, "")
                 raise AssertionError
 
-            with patch.object(cercis.Cache, "get_file_data", side_effect=wrapped_func):
+            with patch.object(black.Cache, "get_file_data", side_effect=wrapped_func):
                 cache.write([cached, cached_but_changed])
             todo, done = cache.filtered_cached({uncached, cached, cached_but_changed})
             assert todo == {uncached, cached_but_changed}
@@ -2241,7 +2274,7 @@ class TestCaching:
             src = (path / "test.py").resolve()
             src.write_text("print('hello')", encoding="utf-8")
             st = src.stat()
-            cache = cercis.Cache.read(DEFAULT_MODE)
+            cache = black.Cache.read(DEFAULT_MODE)
             cache.write([src])
             cached_file_data = cache.file_data[str(src)]
 
@@ -2261,7 +2294,7 @@ class TestCaching:
             assert done == {src}
             assert cached_file_data.st_mtime < st.st_mtime
             assert cached_file_data.st_size == st.st_size
-            assert cached_file_data.hash == cercis.Cache.hash_digest(src)
+            assert cached_file_data.hash == black.Cache.hash_digest(src)
 
             # Modify contents
             src.write_text("print('hello world')", encoding="utf-8")
@@ -2271,35 +2304,36 @@ class TestCaching:
             assert done == set()
             assert cached_file_data.st_mtime < new_st.st_mtime
             assert cached_file_data.st_size != new_st.st_size
-            assert cached_file_data.hash != cercis.Cache.hash_digest(src)
+            assert cached_file_data.hash != black.Cache.hash_digest(src)
 
     def test_write_cache_creates_directory_if_needed(self) -> None:
         mode = DEFAULT_MODE
         with cache_dir(exists=False) as workspace:
             assert not workspace.exists()
-            cache = cercis.Cache.read(mode)
+            cache = black.Cache.read(mode)
             cache.write([])
             assert workspace.exists()
 
     @event_loop()
     def test_failed_formatting_does_not_get_cached(self) -> None:
         mode = DEFAULT_MODE
-        with cache_dir() as workspace, patch(
-            "concurrent.futures.ProcessPoolExecutor", new=ThreadPoolExecutor
+        with (
+            cache_dir() as workspace,
+            patch("concurrent.futures.ProcessPoolExecutor", new=ThreadPoolExecutor),
         ):
             failing = (workspace / "failing.py").resolve()
             failing.write_text("not actually python", encoding="utf-8")
             clean = (workspace / "clean.py").resolve()
             clean.write_text('print("hello")\n', encoding="utf-8")
             invokeBlack([str(workspace)], exit_code=123)
-            cache = cercis.Cache.read(mode)
+            cache = black.Cache.read(mode)
             assert cache.is_changed(failing)
             assert not cache.is_changed(clean)
 
     def test_write_cache_write_fail(self) -> None:
         mode = DEFAULT_MODE
         with cache_dir():
-            cache = cercis.Cache.read(mode)
+            cache = black.Cache.read(mode)
             with patch.object(Path, "open") as mock:
                 mock.side_effect = OSError
                 cache.write([])
@@ -2310,24 +2344,54 @@ class TestCaching:
         with cache_dir() as workspace:
             path = (workspace / "file.py").resolve()
             path.touch()
-            cache = cercis.Cache.read(mode)
+            cache = black.Cache.read(mode)
             cache.write([path])
-            one = cercis.Cache.read(mode)
+            one = black.Cache.read(mode)
             assert not one.is_changed(path)
-            two = cercis.Cache.read(short_mode)
+            two = black.Cache.read(short_mode)
             assert two.is_changed(path)
+
+    def test_cache_key(self) -> None:
+        # Test that all members of the mode enum affect the cache key.
+        for field in fields(Mode):
+            values: list[Any]
+            if field.name == "target_versions":
+                values = [
+                    {TargetVersion.PY312},
+                    {TargetVersion.PY313},
+                ]
+            elif field.name == "python_cell_magics":
+                values = [{"magic1"}, {"magic2"}]
+            elif field.name == "enabled_features":
+                # If you are looking to remove one of these features, just
+                # replace it with any other feature.
+                values = [
+                    {Preview.multiline_string_handling},
+                    {Preview.string_processing},
+                ]
+            elif field.type is bool:
+                values = [True, False]
+            elif field.type is int:
+                values = [1, 2]
+            else:
+                raise AssertionError(
+                    f"Unhandled field type: {field.type} for field {field.name}"
+                )
+            modes = [replace(DEFAULT_MODE, **{field.name: value}) for value in values]
+            keys = [mode.get_cache_key() for mode in modes]
+            assert len(set(keys)) == len(modes)
 
 
 def assert_collected_sources(
-        src: Sequence[Union[str, Path]],
-        expected: Sequence[Union[str, Path]],
-        *,
-        root: Optional[Path] = None,
-        exclude: Optional[str] = None,
-        include: Optional[str] = None,
-        extend_exclude: Optional[str] = None,
-        force_exclude: Optional[str] = None,
-        stdin_filename: Optional[str] = None,
+    src: Sequence[Union[str, Path]],
+    expected: Sequence[Union[str, Path]],
+    *,
+    root: Optional[Path] = None,
+    exclude: Optional[str] = None,
+    include: Optional[str] = None,
+    extend_exclude: Optional[str] = None,
+    force_exclude: Optional[str] = None,
+    stdin_filename: Optional[str] = None,
 ) -> None:
     gs_src = tuple(str(Path(s)) for s in src)
     gs_expected = [Path(s) for s in expected]
@@ -2337,7 +2401,7 @@ def assert_collected_sources(
         None if extend_exclude is None else compile_pattern(extend_exclude)
     )
     gs_force_exclude = None if force_exclude is None else compile_pattern(force_exclude)
-    collected = cercis.get_sources(
+    collected = black.get_sources(
         root=root or THIS_DIR,
         src=gs_src,
         quiet=False,
@@ -2346,7 +2410,7 @@ def assert_collected_sources(
         exclude=gs_exclude,
         extend_exclude=gs_extend_exclude,
         force_exclude=gs_force_exclude,
-        report=cercis.Report(),
+        report=black.Report(),
         stdin_filename=stdin_filename,
     )
     assert sorted(collected) == sorted(gs_expected)
@@ -2385,7 +2449,7 @@ class TestFileCollection:
         src = [root / "dir1", root / "dir2"]
         assert_collected_sources(src, expected, root=root)
 
-    @patch("cercis.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
+    @patch("black.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
     def test_exclude_for_issue_1572(self) -> None:
         # Exclude shouldn't touch files that were explicitly given to Black through the
         # CLI. Exclude is supposed to only apply to the recursive discovery of files.
@@ -2399,18 +2463,18 @@ class TestFileCollection:
         path = THIS_DIR / "data" / "include_exclude_tests"
         include = re.compile(r"\.pyi?$")
         exclude = re.compile(r"")
-        report = cercis.Report()
+        report = black.Report()
         gitignore = PathSpec.from_lines(
             "gitwildmatch", ["exclude/", ".definitely_exclude"]
         )
-        sources: List[Path] = []
+        sources: list[Path] = []
         expected = [
             Path(path / "b/dont_exclude/a.py"),
             Path(path / "b/dont_exclude/a.pyi"),
         ]
         this_abs = THIS_DIR.resolve()
         sources.extend(
-            cercis.gen_python_files(
+            black.gen_python_files(
                 path.iterdir(),
                 this_abs,
                 include,
@@ -2429,9 +2493,9 @@ class TestFileCollection:
         path = Path(THIS_DIR / "data" / "nested_gitignore_tests")
         include = re.compile(r"\.pyi?$")
         exclude = re.compile(r"")
-        root_gitignore = cercis.files.get_gitignore(path)
-        report = cercis.Report()
-        expected: List[Path] = [
+        root_gitignore = black.files.get_gitignore(path)
+        report = black.Report()
+        expected: list[Path] = [
             Path(path / "x.py"),
             Path(path / "root/b.py"),
             Path(path / "root/c.py"),
@@ -2439,7 +2503,7 @@ class TestFileCollection:
         ]
         this_abs = THIS_DIR.resolve()
         sources = list(
-            cercis.gen_python_files(
+            black.gen_python_files(
                 path.iterdir(),
                 this_abs,
                 include,
@@ -2465,25 +2529,33 @@ class TestFileCollection:
         path = THIS_DIR / "data" / "invalid_gitignore_tests"
         empty_config = path / "pyproject.toml"
         result = BlackRunner().invoke(
-            cercis.main, ["--verbose", "--config", str(empty_config), str(path)]
+            black.main, ["--verbose", "--config", str(empty_config), str(path)]
         )
         assert result.exit_code == 1
         assert result.stderr_bytes is not None
 
         gitignore = path / ".gitignore"
-        assert f"Could not parse {gitignore}" in result.stderr_bytes.decode()
+        assert re.search(
+            f"Could not parse {gitignore}".replace("\\", "\\\\"),
+            result.stderr_bytes.decode(),
+            re.IGNORECASE if isinstance(gitignore, WindowsPath) else 0,
+        )
 
     def test_invalid_nested_gitignore(self) -> None:
         path = THIS_DIR / "data" / "invalid_nested_gitignore_tests"
         empty_config = path / "pyproject.toml"
         result = BlackRunner().invoke(
-            cercis.main, ["--verbose", "--config", str(empty_config), str(path)]
+            black.main, ["--verbose", "--config", str(empty_config), str(path)]
         )
         assert result.exit_code == 1
         assert result.stderr_bytes is not None
 
         gitignore = path / "a" / ".gitignore"
-        assert f"Could not parse {gitignore}" in result.stderr_bytes.decode()
+        assert re.search(
+            f"Could not parse {gitignore}".replace("\\", "\\\\"),
+            result.stderr_bytes.decode(),
+            re.IGNORECASE if isinstance(gitignore, WindowsPath) else 0,
+        )
 
     def test_gitignore_that_ignores_subfolders(self) -> None:
         # If gitignore with */* is in root
@@ -2504,6 +2576,12 @@ class TestFileCollection:
         target = root / "subdir"
         expected = [target / "b.py"]
         assert_collected_sources([target], expected, root=root)
+
+    def test_gitignore_that_ignores_directory(self) -> None:
+        # If gitignore with a directory is in root
+        root = Path(DATA_DIR, "ignore_directory_gitignore_tests")
+        expected = [root / "z.py"]
+        assert_collected_sources([root], expected, root=root)
 
     def test_empty_include(self) -> None:
         path = DATA_DIR / "include_exclude_tests"
@@ -2559,38 +2637,38 @@ class TestFileCollection:
     @pytest.mark.incompatible_with_mypyc
     def test_symlinks(self) -> None:
         root = THIS_DIR.resolve()
-        include = re.compile(cercis.DEFAULT_INCLUDES)
-        exclude = re.compile(cercis.DEFAULT_EXCLUDES)
-        report = cercis.Report()
+        include = re.compile(black.DEFAULT_INCLUDES)
+        exclude = re.compile(black.DEFAULT_EXCLUDES)
+        report = black.Report()
         gitignore = PathSpec.from_lines("gitwildmatch", [])
 
         regular = MagicMock()
-        regular.absolute.return_value = root / "regular.py"
+        regular.relative_to.return_value = Path("regular.py")
         regular.resolve.return_value = root / "regular.py"
         regular.is_dir.return_value = False
         regular.is_file.return_value = True
 
         outside_root_symlink = MagicMock()
-        outside_root_symlink.absolute.return_value = root / "symlink.py"
+        outside_root_symlink.relative_to.return_value = Path("symlink.py")
         outside_root_symlink.resolve.return_value = Path("/nowhere")
         outside_root_symlink.is_dir.return_value = False
         outside_root_symlink.is_file.return_value = True
 
         ignored_symlink = MagicMock()
-        ignored_symlink.absolute.return_value = root / ".mypy_cache" / "symlink.py"
+        ignored_symlink.relative_to.return_value = Path(".mypy_cache") / "symlink.py"
         ignored_symlink.is_dir.return_value = False
         ignored_symlink.is_file.return_value = True
 
         # A symlink that has an excluded name, but points to an included name
         symlink_excluded_name = MagicMock()
-        symlink_excluded_name.absolute.return_value = root / "excluded_name"
+        symlink_excluded_name.relative_to.return_value = Path("excluded_name")
         symlink_excluded_name.resolve.return_value = root / "included_name.py"
         symlink_excluded_name.is_dir.return_value = False
         symlink_excluded_name.is_file.return_value = True
 
         # A symlink that has an included name, but points to an excluded name
         symlink_included_name = MagicMock()
-        symlink_included_name.absolute.return_value = root / "included_name.py"
+        symlink_included_name.relative_to.return_value = Path("included_name.py")
         symlink_included_name.resolve.return_value = root / "excluded_name"
         symlink_included_name.is_dir.return_value = False
         symlink_included_name.is_file.return_value = True
@@ -2605,7 +2683,7 @@ class TestFileCollection:
         ]
 
         files = list(
-            cercis.gen_python_files(
+            black.gen_python_files(
                 path.iterdir(),
                 root,
                 include,
@@ -2624,25 +2702,108 @@ class TestFileCollection:
         outside_root_symlink.resolve.assert_called_once()
         ignored_symlink.resolve.assert_not_called()
 
-    @patch("cercis.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
+    def test_get_sources_symlink_and_force_exclude(self) -> None:
+        with TemporaryDirectory() as tempdir:
+            tmp = Path(tempdir).resolve()
+            actual = tmp / "actual"
+            actual.mkdir()
+            symlink = tmp / "symlink"
+            symlink.symlink_to(actual)
+
+            actual_proj = actual / "project"
+            actual_proj.mkdir()
+            (actual_proj / "module.py").write_text("print('hello')", encoding="utf-8")
+
+            symlink_proj = symlink / "project"
+
+            with change_directory(symlink_proj):
+                assert_collected_sources(
+                    src=["module.py"],
+                    root=symlink_proj.resolve(),
+                    expected=["module.py"],
+                )
+
+                absolute_module = symlink_proj / "module.py"
+                assert_collected_sources(
+                    src=[absolute_module],
+                    root=symlink_proj.resolve(),
+                    expected=[absolute_module],
+                )
+
+                # a few tricky tests for force_exclude
+                flat_symlink = symlink_proj / "symlink_module.py"
+                flat_symlink.symlink_to(actual_proj / "module.py")
+                assert_collected_sources(
+                    src=[flat_symlink],
+                    root=symlink_proj.resolve(),
+                    force_exclude=r"/symlink_module.py",
+                    expected=[],
+                )
+
+                target = actual_proj / "target"
+                target.mkdir()
+                (target / "another.py").write_text("print('hello')", encoding="utf-8")
+                (symlink_proj / "nested").symlink_to(target)
+
+                assert_collected_sources(
+                    src=[symlink_proj / "nested" / "another.py"],
+                    root=symlink_proj.resolve(),
+                    force_exclude=r"nested",
+                    expected=[],
+                )
+                assert_collected_sources(
+                    src=[symlink_proj / "nested" / "another.py"],
+                    root=symlink_proj.resolve(),
+                    force_exclude=r"target",
+                    expected=[symlink_proj / "nested" / "another.py"],
+                )
+
+    def test_get_sources_with_stdin_symlink_outside_root(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tempdir:
+            tmp = Path(tempdir).resolve()
+
+            root = tmp / "root"
+            root.mkdir()
+            (root / "pyproject.toml").write_text("[tool.black]", encoding="utf-8")
+
+            target = tmp / "outside_root" / "a.py"
+            target.parent.mkdir()
+            target.write_text("print('hello')", encoding="utf-8")
+            (root / "a.py").symlink_to(target)
+
+            stdin_filename = str(root / "a.py")
+            assert_collected_sources(
+                root=root,
+                src=["-"],
+                expected=[],
+                stdin_filename=stdin_filename,
+            )
+
     def test_get_sources_with_stdin(self) -> None:
         src = ["-"]
         expected = ["-"]
-        assert_collected_sources(src, expected, include="", exclude=r"/exclude/|a\.py")
+        assert_collected_sources(
+            src,
+            root=THIS_DIR.resolve(),
+            expected=expected,
+            include="",
+            exclude=r"/exclude/|a\.py",
+        )
 
-    @patch("cercis.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
     def test_get_sources_with_stdin_filename(self) -> None:
         src = ["-"]
         stdin_filename = str(THIS_DIR / "data/collections.py")
         expected = [f"__BLACK_STDIN_FILENAME__{stdin_filename}"]
         assert_collected_sources(
             src,
-            expected,
+            root=THIS_DIR.resolve(),
+            expected=expected,
             exclude=r"/exclude/a\.py",
             stdin_filename=stdin_filename,
         )
 
-    @patch("cercis.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
     def test_get_sources_with_stdin_filename_and_exclude(self) -> None:
         # Exclude shouldn't exclude stdin_filename since it is mimicking the
         # file being passed directly. This is the same as
@@ -2653,12 +2814,12 @@ class TestFileCollection:
         expected = [f"__BLACK_STDIN_FILENAME__{stdin_filename}"]
         assert_collected_sources(
             src,
-            expected,
+            root=THIS_DIR.resolve(),
+            expected=expected,
             exclude=r"/exclude/|a\.py",
             stdin_filename=stdin_filename,
         )
 
-    @patch("cercis.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
     def test_get_sources_with_stdin_filename_and_extend_exclude(self) -> None:
         # Extend exclude shouldn't exclude stdin_filename since it is mimicking the
         # file being passed directly. This is the same as
@@ -2669,12 +2830,12 @@ class TestFileCollection:
         expected = [f"__BLACK_STDIN_FILENAME__{stdin_filename}"]
         assert_collected_sources(
             src,
-            expected,
+            root=THIS_DIR.resolve(),
+            expected=expected,
             extend_exclude=r"/exclude/|a\.py",
             stdin_filename=stdin_filename,
         )
 
-    @patch("cercis.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
     def test_get_sources_with_stdin_filename_and_force_exclude(self) -> None:
         # Force exclude should exclude the file when passing it through
         # stdin_filename
@@ -2682,27 +2843,32 @@ class TestFileCollection:
         stdin_filename = str(path / "b/exclude/a.py")
         assert_collected_sources(
             src=["-"],
+            root=THIS_DIR.resolve(),
             expected=[],
             force_exclude=r"/exclude/|a\.py",
             stdin_filename=stdin_filename,
         )
 
-    @patch("cercis.find_project_root", lambda *args: (THIS_DIR.resolve(), None))
     def test_get_sources_with_stdin_filename_and_force_exclude_and_symlink(
-            self,
+        self,
     ) -> None:
         # Force exclude should exclude a symlink based on the symlink, not its target
-        path = THIS_DIR / "data" / "include_exclude_tests"
-        stdin_filename = str(path / "symlink.py")
-        expected = [f"__BLACK_STDIN_FILENAME__{stdin_filename}"]
-        target = path / "b/exclude/a.py"
-        with patch("pathlib.Path.resolve", return_value=target):
-            assert_collected_sources(
-                src=["-"],
-                expected=expected,
-                force_exclude=r"exclude/a\.py",
-                stdin_filename=stdin_filename,
-            )
+        with TemporaryDirectory() as tempdir:
+            tmp = Path(tempdir).resolve()
+            (tmp / "exclude").mkdir()
+            (tmp / "exclude" / "a.py").write_text("print('hello')", encoding="utf-8")
+            (tmp / "symlink.py").symlink_to(tmp / "exclude" / "a.py")
+
+            stdin_filename = str(tmp / "symlink.py")
+            expected = [f"__BLACK_STDIN_FILENAME__{stdin_filename}"]
+            with change_directory(tmp):
+                assert_collected_sources(
+                    src=["-"],
+                    root=tmp,
+                    expected=expected,
+                    force_exclude=r"exclude/a\.py",
+                    stdin_filename=stdin_filename,
+                )
 
 
 class TestDeFactoAPI:
@@ -2715,45 +2881,166 @@ class TestDeFactoAPI:
 
     def test_format_str(self) -> None:
         # format_str and Mode should keep working
-        formatted: str = cercis.format_str(
-            "print('hello')", mode=cercis.Mode(single_quote=False)
+        assert (
+            black.format_str("print('hello')", mode=black.Mode()) == 'print("hello")\n'
         )
-        assert formatted == 'print("hello")\n'
 
         # you can pass line length
-        formatted_2: str = cercis.format_str(
-            "print('hello')", mode=cercis.Mode(line_length=42, single_quote=False)
+        assert (
+            black.format_str("print('hello')", mode=black.Mode(line_length=42))
+            == 'print("hello")\n'
         )
-        assert formatted_2 == 'print("hello")\n'
 
         # invalid input raises InvalidInput
-        with pytest.raises(cercis.InvalidInput):
-            cercis.format_str("syntax error", mode=cercis.Mode())
+        with pytest.raises(black.InvalidInput):
+            black.format_str("syntax error", mode=black.Mode())
 
     def test_format_file_contents(self) -> None:
         # You probably should be using format_str() instead, but let's keep
         # this one around since people do use it
         assert (
-            cercis.format_file_contents("x=1", fast=True, mode=cercis.Mode())
-            == "x = 1\n"
+            black.format_file_contents("x=1", fast=True, mode=black.Mode()) == "x = 1\n"
         )
 
-        with pytest.raises(cercis.NothingChanged):
-            cercis.format_file_contents("x = 1\n", fast=True, mode=cercis.Mode())
+        with pytest.raises(black.NothingChanged):
+            black.format_file_contents("x = 1\n", fast=True, mode=black.Mode())
+
+
+class TestASTSafety(BlackBaseTestCase):
+    def check_ast_equivalence(
+        self, source: str, dest: str, *, should_fail: bool = False
+    ) -> None:
+        # If we get a failure, make sure it's not because the code itself
+        # is invalid, since that will also cause assert_equivalent() to throw
+        # ASTSafetyError.
+        source = textwrap.dedent(source)
+        dest = textwrap.dedent(dest)
+        black.parse_ast(source)
+        black.parse_ast(dest)
+        if should_fail:
+            with self.assertRaises(ASTSafetyError):
+                black.assert_equivalent(source, dest)
+        else:
+            black.assert_equivalent(source, dest)
+
+    def test_assert_equivalent_basic(self) -> None:
+        self.check_ast_equivalence("{}", "None", should_fail=True)
+        self.check_ast_equivalence("1+2", "1    +   2")
+        self.check_ast_equivalence("hi # comment", "hi")
+
+    def test_assert_equivalent_del(self) -> None:
+        self.check_ast_equivalence("del (a, b)", "del a, b")
+
+    def test_assert_equivalent_strings(self) -> None:
+        self.check_ast_equivalence('x = "x"', 'x = " x "', should_fail=True)
+        self.check_ast_equivalence(
+            '''
+            """docstring  """
+            ''',
+            '''
+            """docstring"""
+            ''',
+        )
+        self.check_ast_equivalence(
+            '''
+            """docstring  """
+            ''',
+            '''
+            """ddocstring"""
+            ''',
+            should_fail=True,
+        )
+        self.check_ast_equivalence(
+            '''
+            class A:
+                """
+
+                docstring
+
+
+                """
+            ''',
+            '''
+            class A:
+                """docstring"""
+            ''',
+        )
+        self.check_ast_equivalence(
+            """
+            def f():
+                " docstring  "
+            """,
+            '''
+            def f():
+                """docstring"""
+            ''',
+        )
+        self.check_ast_equivalence(
+            """
+            async def f():
+                "   docstring  "
+            """,
+            '''
+            async def f():
+                """docstring"""
+            ''',
+        )
+        self.check_ast_equivalence(
+            """
+            if __name__ == "__main__":
+                "  docstring-like  "
+            """,
+            '''
+            if __name__ == "__main__":
+                """docstring-like"""
+            ''',
+        )
+        self.check_ast_equivalence(r'def f(): r" \n "', r'def f(): "\\n"')
+        self.check_ast_equivalence('try: pass\nexcept: " x "', 'try: pass\nexcept: "x"')
+
+        self.check_ast_equivalence(
+            'def foo(): return " x "', 'def foo(): return "x"', should_fail=True
+        )
+
+    def test_assert_equivalent_fstring(self) -> None:
+        major, minor = sys.version_info[:2]
+        if major < 3 or (major == 3 and minor < 12):
+            pytest.skip("relies on 3.12+ syntax")
+        # https://github.com/psf/black/issues/4268
+        self.check_ast_equivalence(
+            """print(f"{"|".join([a,b,c])}")""",
+            """print(f"{" | ".join([a,b,c])}")""",
+            should_fail=True,
+        )
+        self.check_ast_equivalence(
+            """print(f"{"|".join(['a','b','c'])}")""",
+            """print(f"{" | ".join(['a','b','c'])}")""",
+            should_fail=True,
+        )
+
+    def test_equivalency_ast_parse_failure_includes_error(self) -> None:
+        with pytest.raises(ASTSafetyError) as err:
+            black.assert_equivalent("a«»a  = 1", "a«»a  = 1")
+
+        err.match("--safe")
+        # Unfortunately the SyntaxError message has changed in newer versions so we
+        # can't match it directly.
+        err.match("invalid character")
+        err.match(r"\(<unknown>, line 1\)")
 
 
 try:
-    with open(cercis.__file__, "r", encoding="utf-8") as _bf:
+    with open(black.__file__, encoding="utf-8") as _bf:
         black_source_lines = _bf.readlines()
 except UnicodeDecodeError:
-    if not cercis.COMPILED:
+    if not black.COMPILED:
         raise
 
 
 def tracefunc(
-        frame: types.FrameType, event: str, arg: Any
+    frame: types.FrameType, event: str, arg: Any
 ) -> Callable[[types.FrameType, str, Any], Any]:
-    """Show function calls `from cercis/__init__.py` as they happen.
+    """Show function calls `from black/__init__.py` as they happen.
 
     Register this with `sys.settrace()` in a test you're debugging.
     """
@@ -2769,6 +3056,6 @@ def tracefunc(
     while funcname.startswith("@"):
         func_sig_lineno += 1
         funcname = black_source_lines[func_sig_lineno].strip()
-    if "cercis/__init__.py" in filename:
+    if "black/__init__.py" in filename:
         print(f"{' ' * stack}{lineno}:{funcname}")
     return tracefunc

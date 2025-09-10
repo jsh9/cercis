@@ -1,4 +1,4 @@
-# flags: --preview
+# flags: --unstable
 from .config import (
     Any,
     Bool,
@@ -177,7 +177,6 @@ from com.my_lovely_company.my_lovely_team.my_lovely_project.my_lovely_component 
     MyLovelyCompanyTeamProjectComponent as component,  # DRY
 )
 
-
 result = 1  # look ma, no comment migration xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 result = 1  # look ma, no comment migration xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -290,7 +289,7 @@ class C:
         ],
     )
     def test_fails_invalid_post_data(
-            self, pyramid_config, db_request, post_data, message
+        self, pyramid_config, db_request, post_data, message
     ): ...
 
 
